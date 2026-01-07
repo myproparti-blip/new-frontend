@@ -2300,8 +2300,7 @@ export function generateValuationReportHTML(data = {}) {
       <div style="margin-top: 5px;">
       <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 12pt;">
         <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
-          <td style="border: 1px solid #000; padding: 8px; width: 45%; font-weight: bold;">e) i. In case of variation of 20% or more in the valuation proposed by the valuer and the Guideline value provided in the State Govt. notification or Income Tax Gazette Justification on variation has to be given.</td>
+          <td style="border: 1px solid #000; padding: 8px; width: 50%; font-weight: bold;">e) i. In case of variation of 20% or more in the valuation proposed by the valuer and the Guideline value provided in the State Govt. notification or Income Tax Gazette Justification on variation has to be given.</td>
           <td style="border: 1px solid #000; padding: 8px; width: 50%;">
             <strong>a.</strong> Guideline value (Jantri rate) of land/property is the value of the land/property as determined by the government, based on it own metrics of facilities and infrastructure growth in that locality. The stamp duty and registration charges for registering a property deal, is based upon this guideline value. The guideline values are revised periodically but then in sync with the market value; Jantri rates are not relevant in current scenario, as they were last updated in April 2011. Actual market rates have more than doubled since then, depending upon area, locality, demand and supply and other various factors.<br><br>
             
@@ -2333,31 +2332,37 @@ export function generateValuationReportHTML(data = {}) {
           <p style="margin: 5px 0; font-weight: bold; font-style: italic;">10. Assumptions/Remarks</p>
           <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 12pt;">
           <tr>
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">Sr.No</td>
           <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">i</td>
-          <td style="border: 1px solid #000; padding: 8px; width: 45%; font-weight: bold;">Qualifications in TIR/Mitigation suggested, if any</td>
+          <td style="border: 1px solid #000; padding: 8px; width: 40%; font-weight: bold;">Qualifications in TIR/Mitigation suggested, if any</td>
           <td style="border: 1px solid #000; padding: 8px; width: 50%;">No</td>
           </tr>
           <tr>
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">2</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">2</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Property is SARFAESI compliant</td>
           <td style="border: 1px solid #000; padding: 8px;">Yes, Subject to title Clear report of panel advocate of Bank</td>
           </tr>
           <tr>
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">3</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">3</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Whether property belongs to social infrastructure like hospital, school, old age home etc.</td>
           <td style="border: 1px solid #000; padding: 8px;">No</td>
           </tr>
           <tr>
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">4</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">4</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Whether entire piece of land on which the unit is set up the property is situated has been mortgaged or to be mortgaged.</td>
           <td style="border: 1px solid #000; padding: 8px;">Yes</td>
           </tr>
           <tr>
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">5</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">5</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Details of last two transactions in the locality/area to be provided, if available.</td>
           <td style="border: 1px solid #000; padding: 8px;">As widely known, Market records at sub-Registrar office generally at Jantri value market value evidence is difficult to obtain for reasons of unrecorded/unaccounted market value. Thus, it is not possible to cite last two transactions, in the valuation report.</td>
           </tr>
           <tr>
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">6</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">6</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Any other aspect which has relevance on the value or marketability of the property</td>
           <td style="border: 1px solid #000; padding: 8px;">No</td>
