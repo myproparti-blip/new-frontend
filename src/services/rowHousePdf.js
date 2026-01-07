@@ -1666,7 +1666,7 @@ export function generateValuationReportHTML(data = {}) {
 
   <!-- CONTINUOUS DATA TABLE -->
   <div class="continuous-wrapper" >
-    <div style="padding: 0 12mm; padding-top: 5mm;">
+    <div style="padding: 0 12mm; padding-top: 2mm;">
       
       <!-- Property Details Table -->
       <div style="text-align: center; margin-bottom: 15px;">
@@ -1890,29 +1890,22 @@ export function generateValuationReportHTML(data = {}) {
         </td>
       </tr>
 
-      <tr>
-        <td style="border:none; padding:8px; font-weight:bold;">
-          Date:
-          ${formatDate(
-          pdfData.reportDate ||
-          pdfData.valuationDate ||
-          safeGet(pdfData, 'valuationMadeDate', 'NA')
-      )}
-        </td>
-        <td style="border:none; padding:8px; font-weight:bold; text-align:right;">
-          ${pdfData.valuersName || 'Valuer Name'}<br>
-          Govt. Registered Valuer
-        </td>
-      </tr>
-
-      <tr>
-        <td style="border:none; padding:8px;">
-          Place: ${safeGet(pdfData, 'valuationPlace', 'NA')}
-        </td>
-       
-      </tr>
-
       </table>
+      </div>
+
+      <div style="margin-top: 10px; padding: 0 12mm;">
+        <div style="display: flex; justify-content: space-between; font-weight:bold; padding:8px;">
+          <div>
+            Date: ${formatDate(pdfData.reportDate || pdfData.valuationDate || safeGet(pdfData, 'valuationMadeDate', 'NA'))}
+          </div>
+          <div style="text-align:right;">
+            ${pdfData.valuersName || 'Valuer Name'}<br>
+            Govt. Registered Valuer
+          </div>
+        </div>
+        <div style="border:none; padding:8px; font-weight:bold;">
+          Place: ${safeGet(pdfData, 'valuationPlace', 'NA')}
+        </div>
       </div>
   </div>
 
@@ -1940,7 +1933,7 @@ export function generateValuationReportHTML(data = {}) {
       </tr>
       </table>
 
-      <div style="margin-top: 5px;">
+      <div style="margin-top: 0px;">
       <p style="margin: 5px 0; font-weight: bold; font-style: italic;">1. Customer Details:</p>
       <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 12pt;">
         <tr>
@@ -2018,7 +2011,7 @@ export function generateValuationReportHTML(data = {}) {
       </table>
       </div>
 
-      <div style="margin-top: 5px;">
+      <div style="margin-top: 0px;">
       <p style="margin: 5px 0; font-weight: bold; font-style: italic;">4. Physical Details</p>
       <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 12pt;">
         <tr>
@@ -2299,70 +2292,89 @@ export function generateValuationReportHTML(data = {}) {
 
       <div style="margin-top: 5px;">
       <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 12pt;">
+       
         <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 50%; font-weight: bold;">e) i. In case of variation of 20% or more in the valuation proposed by the valuer and the Guideline value provided in the State Govt. notification or Income Tax Gazette Justification on variation has to be given.</td>
-          <td style="border: 1px solid #000; padding: 8px; width: 50%;">
-            <strong>a.</strong> Guideline value (Jantri rate) of land/property is the value of the land/property as determined by the government, based on it own metrics of facilities and infrastructure growth in that locality. The stamp duty and registration charges for registering a property deal, is based upon this guideline value. The guideline values are revised periodically but then in sync with the market value; Jantri rates are not relevant in current scenario, as they were last updated in April 2011. Actual market rates have more than doubled since then, depending upon area, locality, demand and supply and other various factors.<br><br>
-            
-            <strong>b.</strong> Being this the situation, it has been observed that sale deeds are executed at lower price of Jantri rates to save registration charges / stamp duty. So these instances does not reflect actual transaction amount / market rate. Moreover now days, in actual market, transactions are done on super built-p area, whereas guideline value (Jantri rate ) is based on carpet area. Both the areas have difference of about 40-50% This also makes difference between two values.<br><br>
-            
-            <strong>c.</strong> In present system certain value zones are established at macro levels, but within the same value zone the land prices of all the plots cannot be same. There are certain negative / positive factors, which are attached to any parcel of land, like width of the road on which a plot abuts, frontage to depth ratio, adjoining slum or hutments, title of the property, certain religious & sentimental factors, proximity to high tension electricity supply lines, crematorium, socio economic pattern, stage of infrastructure, development etc. whereas guideline rate are prescribes as uniform rates for particular FP/Zone.<br><br>
-            
-            <strong>d.</strong> Property/land/flat on the main road in any area is priced higher and should be valued higher than that in interiors, whereas guideline rate considered them all with equal perspective.<br><br>
-            
-            <strong>e.</strong> In real estate market, it has been observed that many type of values present in market like forced sale value, sentimental value, monopoly value etc. so it cannot be generalized, while guideline value (Jantri rate) considered them all with one value per zone.<br><br>
-            
-            <strong>f.</strong> Moreover two projects of two different builder having different reputation & quality work in same zone may fetch different values. different builders projects in same zone are now considered for valuation purpose.
-    
-            <strong>g.</strong> Government policies also change the trends/values in real estate market, for example demonetisation, GST etc. the real estate market reacts immediately for these policies for uptrend or downtrend. So this also affects the market rate heavily. While guideline rates remain same.<br><br>
-            
-            <strong>h.</strong> It may not be possible to have a method to fix guideline (Jantri rate) values without anomalies as each site has different characteristics. But it is always desired to revise guideline value (Jantri rate) at regular intervals (e.g. Six months) or so, as it is the trend observed in other states e.g. Maharashtra (Mumbai) & other states.<br><br>
-            
-            <strong>i.</strong> Recently in year 2023, Govt. has released Revised GR for Guideline rate calculation, Tharav No. 122023/20/H/1, Dt. 13/04/2023, as per that various revision are mentioned in Land Rate for Residential land, Composite Rate for Office use and Shop Use, and Agricultural Use etc. The GR is attached herewith
-          </td>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;">e) i. In case of variation of 20% or more in the valuation proposed by the valuer and the Guideline value provided in the State Govt. notification or Income Tax Gazette Justification on variation has to be given.</td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;">a. Guideline value (Jantri rate) of land/property is the value of the land/property as determined by the government, based on it own metrics of facilities and infrastructure growth in that locality. The stamp duty and registration charges for registering a property deal, is based upon this guideline value. The guideline values are revised periodically but then in sync with the market value; Jantri rates are not relevant in current scenario, as they were last updated in April 2011. Actual market rates have more than doubled since then, depending upon area, locality, demand and supply and other various factors.</td>
+        </tr>
+        <tr>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;">b.Being this the situation, it has been observed that sale deeds are executed at lower price of Jantri rates to save registration charges / stamp duty. So these instances does not reflect actual transaction amount / market rate. Moreover now days, in actual market, transactions are done on super built-p area, whereas guideline value (Jantri rate ) is based on carpet area. Both the areas have difference of about 40-50% This also makes difference between two values.</td>
+        </tr>
+        <tr>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;">c. In present system certain value zones are established at macro levels, but within the same value zone the land prices of all the plots cannot be same. There are certain negative / positive factors, which are attached to any parcel of land, like width of the road on which a plot abuts, frontage to depth ratio, adjoining slum or hutments, title of the property, certain religious & sentimental factors, proximity to high tension electricity supply lines, crematorium, socio economic pattern, stage of infrastructure, development etc. whereas guideline rate are prescribes as uniform rates for particular FP/Zone.</td>
+        </tr>
+        <tr>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;"> d.Property/land/flat on the main road in any area is priced higher and should be valued higher than that in interiors, whereas guideline rate considered them all with equal perspective.</td>
+        </tr>
+        <tr>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;"> e. In real estate market, it has been observed that many type of values present in market like forced sale value, sentimental value, monopoly value etc. so it cannot be generalized, while guideline value (Jantri rate) considered them all with one value per zone.</td>
+        </tr>
+        <tr>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;">f. Moreover two projects of two different builder having different reputation & quality work in same zone may fetch different values. different builders projects in same zone are now considered for valuation purpose.</td>
+        </tr>
+        <tr>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;">g. Government policies also change the trends/values in real estate market, for example demonetisation, GST etc. the real estate market reacts immediately for these policies for uptrend or downtrend. So this also affects the market rate heavily. While guideline rates remain same.</td>
+        </tr>
+        <tr>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;">h. It may not be possible to have a method to fix guideline (Jantri rate) values without anomalies as each site has different characteristics. But it is always desired to revise guideline value (Jantri rate) at regular intervals (e.g. Six months) or so, as it is the trend observed in other states e.g. Maharashtra (Mumbai) & other states.</td>
+        </tr>
+        <tr>
+           <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;"></td>
+           <td style="border: 1px solid #000; padding: 8px; width: 47.5%;">i. Recently in year 2023, Govt. has released Revised GR for Guideline rate calculation, Tharav No. 122023/20/H/1, Dt. 13/04/2023, as per that various revision are mentioned in Land Rate for Residential land, Composite Rate for Office use and Shop Use, and Agricultural Use etc. The GR is attached herewith</td>
+        </tr>
+          <tr>
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold;"></td>
+          <td style="border: 1px solid #000; padding: 8px; width: 47.5%; font-weight: bold;">Details of last two transactions in the locality/area to be provided, if available.</td>
+          <td style="border: 1px solid #000; padding: 8px; width: 47.5%;">Details not found, please considered above facts</td>
           </tr>
           <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 50%; font-weight: bold;">ii. Details of last two transactions in the locality/area to be provided, if available.</td>
-          <td style="border: 1px solid #000; padding: 8px; width: 50%;">Details not found, please considered above facts</td>
-          </tr>
-          <tr>
-              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-style: italic;">REMARKS</td>
+              <td colspan="3" style="border: 1px solid #000; padding: 8px; font-weight: bold; font-style: italic;">REMARKS</td>
           </tr>
           </table>
           <p style="margin: 5px 0; font-weight: bold; font-style: italic;">10. Assumptions/Remarks</p>
           <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 12pt;">
           <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">Sr.No</td>
           <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">i</td>
-          <td style="border: 1px solid #000; padding: 8px; width: 40%; font-weight: bold;">Qualifications in TIR/Mitigation suggested, if any</td>
+          <td style="border: 1px solid #000; padding: 8px; width: 45%; font-weight: bold;">Qualifications in TIR/Mitigation suggested, if any</td>
           <td style="border: 1px solid #000; padding: 8px; width: 50%;">No</td>
           </tr>
           <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">2</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">2</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Property is SARFAESI compliant</td>
           <td style="border: 1px solid #000; padding: 8px;">Yes, Subject to title Clear report of panel advocate of Bank</td>
           </tr>
           <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">3</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">3</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Whether property belongs to social infrastructure like hospital, school, old age home etc.</td>
           <td style="border: 1px solid #000; padding: 8px;">No</td>
           </tr>
           <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">4</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">4</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Whether entire piece of land on which the unit is set up the property is situated has been mortgaged or to be mortgaged.</td>
           <td style="border: 1px solid #000; padding: 8px;">Yes</td>
           </tr>
           <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">5</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">5</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Details of last two transactions in the locality/area to be provided, if available.</td>
           <td style="border: 1px solid #000; padding: 8px;">As widely known, Market records at sub-Registrar office generally at Jantri value market value evidence is difficult to obtain for reasons of unrecorded/unaccounted market value. Thus, it is not possible to cite last two transactions, in the valuation report.</td>
           </tr>
           <tr>
-          <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold; text-align: center;">6</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center;">6</td>
           <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Any other aspect which has relevance on the value or marketability of the property</td>
           <td style="border: 1px solid #000; padding: 8px;">No</td>
@@ -2410,8 +2422,8 @@ export function generateValuationReportHTML(data = {}) {
               <tr>
                <td style="border: 1px solid #000; padding: 8px; width: 5%;"></td>
 
-                <td style="border: 1px solid #000; padding: 8px; width: 40%; font-weight: bold;">Layout plan sketch of the area in which the property is located with latitude and longitude</td>
-                <td style="border: 1px solid #000; padding: 8px; width: 40%;">Attached as under</td>
+                <td style="border: 1px solid #000; padding: 8px; width: 70%; font-weight: bold;">Layout plan sketch of the area in which the property is located with latitude and longitude</td>
+                <td style="border: 1px solid #000; padding: 8px; width: 25%;">Attached as under</td>
               </tr>
               <tr>
                               <td style="border: 1px solid #000; padding: 8px;"></td>
@@ -2455,12 +2467,14 @@ export function generateValuationReportHTML(data = {}) {
                 <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">Any other relevant documents/ extracts</td>
                 <td style="border: 1px solid #000; padding: 8px;">NA</td>
               </tr>
-            </table>
-            <div style="margin-top: 20px;">
-            <p style="margin: 5px 0; font-size: 12pt; line-height: 1.6;">
+              </table>
+              </div>
+
+              <div style="margin-top: 5px;">
+              <p style="margin: 5px 0; font-size: 12pt; line-height: 1.6;">
               As a result of my appraisal and analysis, it is my considered opinion that the present <span style=";"><strong>Fair Market Value of the above property in the prevailing Condition with aforesaid specifications is ₹ ${safeGet(pdfData, 'fairMarketValue', 'NA')} (${safeGet(pdfData, 'fairMarketValueWords', 'NA')})</strong></span>
-            </p>
-          </div>
+              </p>
+              </div>
            <div style="margin-top: 10px;">
             <p style="margin: 5px 0; font-size: 12pt; line-height: 1.6;">
               <span style=";"><strong>The Realizable value of the above property ₹ ${safeGet(pdfData, 'realisableValue', 'NA')} (${safeGet(pdfData, 'realisableValueWords', 'NA')})</strong></span>
@@ -2483,8 +2497,7 @@ export function generateValuationReportHTML(data = {}) {
             <div style="margin-top: 10px; text-align: right;">
               <p style="margin: 5px 0; font-weight: bold;">GOVT. REGD APPROVED VALUER</p>
             </div>
-          </div>
-          </div>
+         
 
             <!-- Inspection Statement -->
             <div style="margin-top: 10px; line-height: 2; clear: both;">
@@ -2493,11 +2506,12 @@ export function generateValuationReportHTML(data = {}) {
               <p style="margin-top: 60px; text-align: right; font-weight: bold;">Signature</p>
               <p style="text-align: center; font-weight: bold;text-align: right;">(Name of the Branch Manager with Official seal)</p>
             </div>
-          </div>
+          
 
         
 
-          <div style="margin-top: 30px;">
+            <div style="margin-top: 0px; padding: 10px; page-break-before: always;">
+
             <p style="margin: 5px 0; text-align: center; font-weight: bold; text-decoration: underline;">CHECKLIST OF DOCUMENT</p>
             <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 11pt;">
               <tr>
@@ -2665,7 +2679,7 @@ export function generateValuationReportHTML(data = {}) {
     </div>
           </div>
 
-          <div style="margin-top: 20px; padding: 10px; page-break-before: always;">
+          <div style="margin-top: 0px; padding: 10px; page-break-before: always;">
             <p style="margin: 5px 0; font-weight: bold;">❖ PREAMBLE</p>
             <p style="margin: 10px 0; line-height: 1.6; text-align: justify; font-size: 11pt;">
               Bank valuers in India rely on Standard Operating Procedures (SOPs) for several good reasons. SOPs help ensure consistency in property valuations by providing a standardised approach. This results in uniformity in the valuation process across different regions and properties, reducing discrepancies and ensuring fair and objective valuations. Moreover, SOPs establish guidelines and best practices that bank valuers must follow to maintain high-quality and accurate valuations. This guarantees that the bank receives reliable valuations, reducing the risk of financial loss due to overvaluation or undervaluation.
@@ -2774,11 +2788,8 @@ export function generateValuationReportHTML(data = {}) {
       • Additional observations, assumptions, and any relevant limiting conditions are also disclosed in the corresponding sections of this report and its annexes.
     </li>
   </ul>
-
-
-            <p style="margin: 15px 0; font-weight: bold;">❖ <u>Our standard terms and conditions of professional engagement govern this report. They are outlined below:</u></p>
-
-          <ol style="margin: 10px 0; padding-left: 10px; line-height: 1.6; font-size: 11pt; list-style: none;">
+    <p style="margin: 10px 0; font-weight: bold;">❖ <u>Our standard terms and conditions of professional engagement govern this report. They are outlined below:</u></p>
+    <ol style="margin: 10px 0; padding-left: 10px; line-height: 1.6; font-size: 11pt; list-style: none;">
     <li style="margin-bottom: 8px;">
       1. Valuers will be liable for any issues or concerns related to the Valuation and/or other Services provided. This includes situations where the cause of action is in contract, tort (including negligence), statute, or any other form. However, the total amount of liability will not exceed the professional fees paid to VALUERS for this service.
     </li>
@@ -2833,105 +2844,288 @@ export function generateValuationReportHTML(data = {}) {
             <p style="margin: 8px 0 4px 0; font-size: 10pt;"> E-Mail: rajeshganatra2003@gmail.com</p>
           </div>
 
-          </div>
-          </div>
+              <div style="font-size: 12pt; line-height: 1.4; margin-top: 10px; margin-left: 0; margin-right: 0; width: 100%;" class="annexure-iv-section">
+    <div style="text-align: center; margin-bottom: 25px;">
+      <p style="margin: 0; font-weight: bold; font-size: 12pt;">ANNEXURE – IV</p>
+      <p style="margin: 8px 0 0 0; font-weight: bold; font-size: 12pt;">DECLARATION- CUM- UNDERTAKING</p>
+    </div>
 
-        
+    <p style="margin: 10px 0; font-weight: bold;">I, ${safeGet(pdfData, 'engineerName') || 'Rajesh Ganatra'}, son of ${safeGet(pdfData, 'fatherName') || 'Kishorbhai Ganatra'}, do hereby solemnly affirm and state that:</p>
 
-             <!-- PHOTOGRAPHS OF PROPERTY: Property Images in 4x3 grid layout -->
-             ${Array.isArray(pdfData.propertyImages) && pdfData.propertyImages.length > 0 ? `
-             <div>
-               ${(() => {
-                const propertyImgs = pdfData.propertyImages.filter(img => {
-                    const imgSrc = typeof img === 'string' ? img : (img.src || img.preview || img.data || img.url || img.secure_url || '');
-                    return imgSrc && imgSrc.trim();
+    <ol style="margin: 10px 0; padding-left: 20px; list-style-type: lower-alpha;">
+      <li style="margin: 6px 0;">I am a citizen of India</li>
+      <li style="margin: 6px 0;">I will not undertake valuation of any assets in which I have a direct or indirect interest or become so interested at any time during a period of three years prior to my appointment as valuer or three years after the valuation of assets was conducted by me</li>
+      <li style="margin: 6px 0;">The information furnished in my valuation report dated <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</span> is true and correct to the best of my knowledge and belief and I have made an impartial and true valuation of the property</li>
+      <li style="margin: 6px 0;">We have personally inspected the property on <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'inspectionDate')) || '26/11/2025'}</span> The work is not sub-contracted to any other valuer and carried out by myself.</li>
+      <li style="margin: 6px 0;">Valuation report is submitted in the format as prescribed by the Bank.</li>
+      <li style="margin: 6px 0;">I have been duly empanelled/ delisted by any other bank and in case any such de-panelment by other banks during my empanelment with you, I will inform you within 3 days of such de-panelment.</li>
+      <li style="margin: 6px 0;">I have not been removed/dismissed from service/employment earlier</li>
+      <li style="margin: 6px 0;">I have not been convicted of any offence and sentenced to a term of imprisonment</li>
+      <li style="margin: 6px 0;">I have not been found guilty of misconduct in professional capacity</li>
+      <li style="margin: 6px 0;">I have not been declared to be unsound mind</li>
+      <li style="margin: 6px 0;">I am not an un-discharged bankrupt, or has not applied to be adjudicated as a bankrupt;</li>
+      <li style="margin: 6px 0;">I am not an un-discharged insolvent</li>
+      <li style="margin: 6px 0;">I have not been levied a penalty under section 271J of Income-tax Act, 1961 (43 of 1961) and time limit for filing appeal before Commissioner of Income- tax (Appeals) or Income-tax Appellate Tribunal, as the case may be his expired, or such penalty has been confirmed by Income-tax Appellate Tribunal, and five years have not elapsed after levy of such penalty</li>
+      <li style="margin: 6px 0;">I have not been convicted of an offence connected with any proceeding under the Income Tax Act 1961, Wealth Tax Act 1957 or Gift Tax Act 1958 and</li>
+      <li style="margin: 6px 0;">My PAN Card number/Service Tax number as applicable is <span style="text-decoration: underline;">AELPG1208B</span></li>
+      <li style="margin: 6px 0;">I undertake to keep you informed of any events or happenings which would make me ineligible for empanelment as a valuer</li>
+      <li style="margin: 6px 0;">I have not concealed or suppressed any material information, facts and records and I have made a complete and full disclosure</li>
+      <li style="margin: 6px 0;">I have read the Handbook on Policy, Standards and procedure for Real Estate Valuation, 2011 of the IBA and this report is in conformity to the "Standards" enshrined for valuation in the Part-B of the above handbook to the best of my ability</li>
+      <li style="margin: 6px 0;">I am registered under Section 34 AB of the Wealth Tax Act, 1957. (Strike off, if not applicable)</li>
+      <li style="margin: 6px 0;">I am valuer registered with Insolvency & Bankruptcy Board of India (IBBI) (Strike off, if not applicable)</li>
+      <li style="margin: 6px 0;">My CIBIL Score and credit worthiness is as per Bank's guidelines.</li>
+      <li style="margin: 6px 0;">I am the proprietor / partner / authorized official of the firm / company, who is competent to sign this valuation report.</li>
+      <li style="margin: 6px 0;">I will undertake the valuation work on receipt of Letter of Engagement generated from the system (i.e. LLMS/LOS) only.</li>
+      <li style="margin: 6px 0;">Further, I hereby provide the following information.</li>
+    </ol>
+
+    
+  </div>
+</div>
+
+<!-- PAGE 23: VALUATION DETAILS TABLE -->
+<div class="" style=" background: white; width: 100%;" class="">
+  <div style="font-size: 12pt; line-height: 1.4;">
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0;; margin: 0; border: 1px solid #000;">
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center; width: 8%; font-weight: bold;">Sl. No.</td>
+        <td style="border: 1px solid #000; padding: 6px; width: 42%; font-weight: bold;">Particulars</td>
+        <td style="border: 1px solid #000; padding: 6px; width: 50%; font-weight: bold;">Valuer comment</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">1</td>
+        <td style="border: 1px solid #000; padding: 6px;">background information of the asset being valued;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Referred provided documents</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">2</td>
+        <td style="border: 1px solid #000; padding: 6px;">purpose of valuation and appointing authority</td>
+        <td style="border: 1px solid #000; padding: 6px;"><strong>Continue Financial Assistance Purpose</strong></td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">3</td>
+        <td style="border: 1px solid #000; padding: 6px;">identity of the valuer and any other experts involved in the valuation;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Self-assessment</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">4</td>
+        <td style="border: 1px solid #000; padding: 6px;">disclosure of valuer interest or conflict, if any;</td>
+        <td style="border: 1px solid #000; padding: 6px;">N.A.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">5</td>
+        <td style="border: 1px solid #000; padding: 6px;">date of appointment, valuation date and date of report;</td>
+        <td style="border: 1px solid #000; padding: 6px;"><strong>Date of report: 28/11/2025<br/>Date of Visit: 26/11/2025</strong></td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">6</td>
+        <td style="border: 1px solid #000; padding: 6px;">inspections and/or investigations undertaken;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Yes.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">7</td>
+        <td style="border: 1px solid #000; padding: 6px;">nature and sources of the information used or relied upon;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Local inquiries, brokers, known websites, i.e., magicbricks, 99acres, propertywall, proprtiger, housing, etc., if available</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">8</td>
+        <td style="border: 1px solid #000; padding: 6px;">procedures adopted in carrying out the valuation and valuation standards followed.</td>
+        <td style="border: 1px solid #000; padding: 6px;">Land & Building Method, with Market Approach for Land and Cost Approach for Building.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">9</td>
+        <td style="border: 1px solid #000; padding: 6px;">restrictions on use of the report, if any;</td>
+        <td style="border: 1px solid #000; padding: 6px;">As per purpose mentioned in report.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">10</td>
+        <td style="border: 1px solid #000; padding: 6px;">major factors that were taken into account during the valuation;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Location of the property, with developing of surroundings, for going-purpose valuation</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">11</td>
+        <td style="border: 1px solid #000; padding: 6px;">Caveats, limitations and disclaimers to the extent they explain or elucidate the limitations faced by valuer, which shall not be for the purpose of limiting his responsibility for the valuation report.</td>
+        <td style="border: 1px solid #000; padding: 6px;">Future market events and Government Policies.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center;">12</td>
+        <td style="border: 1px solid #000; padding: 6px;">Caveats, limitations and disclaimers to the extent they explain or elucidate the limitations faced by valuer, which shall not be for the purpose of limiting his responsibility for the valuation report.</td>
+        <td style="border: 1px solid #000; padding: 6px;">We are not responsible for Title of the subjected property and valuations affected by the same</td>
+      </tr>
+    </table>
+
+    <div style="margin-top: 20px;">
+      <p style="margin: 0;"><strong>Place: Ahmedabad</strong></p>
+      <p style="margin: 5px 0;"><strong>Date: ${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</strong></p>
+      <div style="margin-top: 20px; text-align: right;">
+        <p style="margin: 0; font-weight: bold;">Rajesh Ganatra</p>
+      </div>
+    </div>
+  </div>
+  </div>
+
+<!-- PAGE 24-25: MODEL CODE OF CONDUCT FOR VALUERS -->
+<div class="" style="margin: 0; background: white; width: 100%; box-sizing: border-box;" class="print-container">
+  <div style="font-size: 12pt; line-height: 1.5; ">
+    <div style="text-align: center; margin-bottom: 20px;">
+          <p style="margin: 0; font-weight: bold; font-size: 12pt;">(Annexure-V) </p>
+      <p style="margin: 0; font-weight: bold; font-size: 12pt;">MODEL CODE OF CONDUCT FOR VALUERS</p>
+    </div>
+
+    <p style="margin: 10px 0 8px 0; font-weight: bold;">Integrity and Fairness</p>
+    <ol style="margin: 5px 0 10px 20px; padding: 0;  ">
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall, in the conduct of his/its business, follow high standards of integrity and fairness in all his/its dealings with his/its clients and other valuers.</li>
+      <li style="margin: 4px 0; text-align: justify;">A valuer shall maintain integrity by being honest, straightforward, and forthright in all professional relationships.</li>
+      <li style="margin: 4px 0; text-align: justify;">A valuer shall endeavour to ensure that he/it provides true and adequate information and shall not misrepresent any facts or situations.</li>
+      <li style="margin: 4px 0; text-align: justify;">A valuer shall refrain from being involved in any action that would bring disrepute to the profession.</li>
+      <li style="margin: 4px 0; text-align: justify;">A valuer shall keep public interest foremost while delivering his services.</li>
+    </ol>
+
+    <p style="margin: 10px 0 8px 0; font-weight: bold;">Professional Competence and Due Care</p>
+    <ol style="margin: 5px 0 10px 20px; padding: 0;  ">
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall render at all times high standards of service, exercise due diligence, ensure proper care and exercise independent professional judgment.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall carry out professional services in accordance with the relevant technical and professional standards that may be specified from time to time</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall continuously maintain professional knowledge and skill to provide competent professional service based on up-to-date developments in practice, prevailing regulations/guidelines and techniques.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">In the preparation of a valuation report, the valuer shall not disclaim liability for his/its expertise or deny his/its duty of care, except to the extent that the assumptions are based on statements of fact provided by the company or its auditors or consultants or information unavailable in public domain and not generated by the valuer.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall not carry out any instruction of the client insofar as they are incompatible with the requirements of integrity, objectivity and independence.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall clearly state to his client the services that he would be competent to provide and the services for which he would be relying on other valuers or professionals or for which the client can have a separate arrangement with other valuers.</li>
+    </ol>
+
+    <p style="margin: 10px 0 8px 0; font-weight: bold;">Independence and Disclosure of Interest</p>
+    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="8">
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall act with objectivity in his/its professional dealings by ensuring that his/its decisions are made without the presence of any bias, conflict of interest, coercion, or undue influence of any party, whether directly connected to the valuation assignment or not.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall not take up an assignment if he/it or any of his/its relatives or associates is not independent in terms of association to the company.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall maintain complete independence in his/its professional relationships and shall conduct the valuation independent of external influences.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall wherever necessary disclose to the clients, possible sources of conflicts of duties and interests, while providing unbiased services.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall not deal in securities of any subject company after any time when he/it first becomes aware of the possibility of his/its association with the valuation, and in accordance with the Securities and Exchange Board of India (Prohibition of Insider Trading) Regulations, 2015 or till the time the valuation report becomes public, whichever is earlier.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall not indulge in "mandate snatching" or offering "convenience valuations" in order to cater to a company or client's needs.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">As an independent valuer, the valuer shall not charge success fee.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">In any fairness opinion or independent expert opinion submitted by a valuer, if there has been a prior engagement in an unconnected transaction, the valuer shall declare the association with the company during the last five years.</li>
+    </ol>
+
+    <p style="margin: 10px 0 8px 0; font-weight: bold;">Confidentiality</p>
+    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="20">
+      <li style="margin: 4px 0; text-align: justify;  "> 20 .A valuer shall not use or divulge to other clients or any other party any confidential information about the subject company, which has come to his/its knowledge without proper and specific authority or unless there is a legal or professional right or duty to disclose.</li>
+    </ol>
+
+    <p style="margin: 10px 0 8px 0; font-weight: bold;">Information Management</p>
+    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="21">
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall ensure that he/ it maintains written contemporaneous records for any decision taken, the reasons for taking the decision, and the information and evidence in support of such decision. This shall be maintained so as to sufficiently enable a reasonable person to take a view on the appropriateness of his/its decisions and actions.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall appear, co-operate and be available for inspections and investigations carried out by the authority, any person authorised by the authority, the registered valuers organisation with which he/it is registered or any other statutory regulatory body.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall provide all information and records as may be required by the authority, the Tribunal, Appellate Tribunal, the registered valuers organisation with which he/it is registered, or any other statutory regulatory body.</li>
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer while respecting the confidentiality of information acquired during the course of performing professional services, shall maintain proper working papers for a period of three years or such longer period as required in its contract for a specific valuation, for production before a regulatory authority or for a peer review. In the event of a pending case before the Tribunal or Appellate Tribunal, the record shall be maintained till the disposal of the case.</li>
+    </ol>
+
+    <p style="margin: 10px 0 8px 0; font-weight: bold;">Gifts and hospitality.</p>
+    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="25">
+      <li style="margin: 4px 0; text-align: justify;  ">A valuer or his/its relative shall not accept gifts or hospitality which undermines or affects his independence as a valuer.</li>
+    </ol>
+
+    <p style="margin: 10px 0 3px 0; font-size: 12pt;">Explanation: For the purposes of this code the term 'relative' shall have the same meaning as defined in clause (77) of Section 2 of the Companies Act, 2013 (18 of 2013).</p>
+
+    <ol style="margin: 10px 0 10px 20px; padding: 0;" start="26">
+      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;">A valuer shall not offer gifts or hospitality or a financial or any other advantage to a public servant or any other person with a view to obtain or retain work for himself/ itself, or to obtain or retain an advantage in the conduct of profession for himself/ itself.</li>
+    </ol>
+
+    <p style="margin: 12px 0 8px 0; font-weight: bold; font-size: 12pt;">Remuneration and Costs.</p>
+    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="27">
+      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall provide services for remuneration which is charged in a transparent manner, is a reasonable reflection of the work necessarily and properly undertaken, and is not inconsistent with the applicable rules.</li>
+      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall not accept any fees or charges other than those which are disclosed in a written contract with the person to whom he would be rendering service. <strong>Occupation, employability and restrictions.</strong></li>
+      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall refrain from accepting too many assignments, if he/it is unlikely to be able to devote adequate time to each of his/ its assignments.</li>
+      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall not conduct business which in the opinion of the authority or the registered valuer organisation discredits the profession.</li>
+    </ol>
+
+    <p style="margin: 12px 0 8px 0; font-weight: bold; font-size: 12pt;">Miscellaneous</p>
+    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="31">
+      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall refrain from undertaking to review the work of another valuer of the same client except under written orders from the bank or housing finance institutions and with knowledge of the concerned valuer.</li>
+      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall follow this code as amended or revised from time to time</li>
+    </ol>
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #000;">
+      <p style="margin: 10px 0; font-size: 12pt;"><strong>Signature of the valuer:</strong> _________________</p>
+      <p style="margin: 10px 0; font-size: 12pt;"><strong>Name of the Valuer:</strong> Rajesh Ganatra</p>
+      <p style="margin: 10px 0 0 0; font-size: 12pt;"><strong>Address of the valuer:</strong></p>
+      <p style="margin: 4px 0; font-size: 12pt;">5<sup>th</sup> floor, Shalvik Complex, behind Ganesh Plaza,</p>
+      <p style="margin: 4px 0; font-size: 12pt;">Opp. Sanmukh Complex, off. C G Road,</p>
+      <p style="margin: 4px 0 20px 0; font-size: 12pt;">Navrangpura, Ahmedabad – 380009</p>
+      <p style="margin: 4px 0; font-size: 12pt; background-color: #ffff00; padding: 4px; display: inline-block;"><strong>Date: 28/11/2025</strong></p></br>
+      <p style="margin: 10px 0; font-size: 12pt; background-color: #ffff00; padding: 4px; display: inline-block;"><strong>Place: Ahmedabad</strong></p>
+    </div>
+  </div>
+</div>
+
+
+<!-- PAGE 13: IMAGES SECTION -->
+  ${pdfData.areaImages && typeof pdfData.areaImages === 'object' && Object.keys(pdfData.areaImages).length > 0 ? `
+    ${(() => {
+                let allImages = [];
+                let globalIdx = 0;
+                Object.entries(pdfData.areaImages).forEach(([areaName, areaImageList]) => {
+                    if (Array.isArray(areaImageList)) {
+                        areaImageList.forEach((img, idx) => {
+                            const imgSrc = typeof img === 'string' ? img : (img?.url || img?.preview || img?.data || img?.src || '');
+                            if (imgSrc) {
+                                allImages.push({
+                                    src: imgSrc,
+                                    label: areaName + ' - Image ' + (idx + 1),
+                                    globalIdx: globalIdx++
+                                });
+                            }
+                        });
+                    }
                 });
 
-                if (propertyImgs.length === 0) return '';
-
-                const imagesPerPage = 12; // 4 columns x 3 rows
-                const pages = [];
-                for (let i = 0; i < propertyImgs.length; i += imagesPerPage) {
-                    pages.push(propertyImgs.slice(i, i + imagesPerPage));
+                let pages = [];
+                for (let i = 0; i < allImages.length; i += 6) {
+                    pages.push(allImages.slice(i, i + 6));
                 }
 
                 return pages.map((pageImages, pageIdx) => `
-                   <div class="page" style="page-break-before: always; page-break-inside: avoid; break-inside: avoid; padding: 12mm; margin: 0; min-height: 297mm; display: flex; flex-direction: column;">
-                     <h2 style="text-align: center; margin: 0 0 10px 0; padding: 0 0 5px 0; font-size: 12pt; font-weight: bold; text-decoration: underline; border-bottom: 1px solid #000;">Photographs of Property</h2>
-                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 0; padding: 0; width: 100%; flex: 1; page-break-inside: avoid; break-inside: avoid;">
-                       ${pageImages.map((img, imgIdx) => {
-                    const imgSrc = typeof img === 'string' ? img : (img.src || img.preview || img.data || img.url || img.secure_url || '');
-                    const imgLabel = typeof img === 'string' ? `Image ${pageIdx * imagesPerPage + imgIdx + 1}` : (img.label || img.name || `Image ${pageIdx * imagesPerPage + imgIdx + 1}`);
-                    return `
-                           <div class="image-container" style="page-break-inside: avoid; break-inside: avoid; margin: 0; padding: 3px; position: relative; overflow: hidden; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; width: 100%; border: 1px solid #333; background: #fff;">
-                             <img class="pdf-image" src="${imgSrc || ''}" alt="${imgLabel}" style="width: 100%; height: 100%; object-fit: contain; display: block; margin: 0; padding: 0; border: none;" onerror="this.closest('.image-container').remove();" />
-                             <div style="position: absolute; top: 1px; right: 1px; background: rgba(100,150,200,0.85); border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: bold; color: #fff;">${pageIdx * imagesPerPage + imgIdx + 1}</div>
-                           </div>
-                         `;
-                }).join('')}
-                     </div>
-                   </div>
-                 `).join('')
+        <div class="page images-section area-images-page" style=" page-break-after: always;   padding: 5px 10px; margin: 0; width: 100%; box-sizing: border-box;">
+             <div style="padding: 5px; font-size: 12pt;">
+                 ${pageIdx === 0 ? '<h2 style="text-align: center; margin: 0 0 8px 0; font-weight: bold;">PROPERTY AREA IMAGES</h2>' : ''}
+                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px;   margin: 0; padding: 0;">
+                     ${pageImages.map(item => `
+                     <div style="  border: 1px solid #ddd; padding: 1px; text-align: center; background: #fff; margin: 0;">
+                         <img class="pdf-image" src="${item.src}" alt="${item.label}" style="width: 100%; height: auto; max-height: 275px; object-fit: contain; display: block; margin: 0; padding: 0;">
+                         <p style="margin: 2px 0 0 0; font-size: 6.5pt; color: #333; font-weight: bold; padding: 0;">${item.label}</p>
+                      </div>`).join('')}
+                 </div>
+             </div>
+        </div>`).join('');
             })()}
-             </div>
-             ` : ''}
+     ` : ''}
 
-             ${Array.isArray(pdfData.locationImages) && pdfData.locationImages.length > 0 ? `
-             ${pdfData.locationImages.map((img, idx) => {
+   <!-- LOCATION IMAGES: Each image gets its own page -->
+   ${Array.isArray(pdfData.locationImages) && pdfData.locationImages.length > 0 ? `
+     ${pdfData.locationImages.map((img, idx) => {
                 const imgSrc = typeof img === 'string' ? img : img?.url;
                 return imgSrc ? `
-                 <div class="page images-section location-images-page" style="page-break-before: always; break-before: page; height: 297mm; width: 210mm; padding: 0; margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
-                     <h2 style="text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 15px;">LOCATION IMAGE ${idx + 1}</h2>
-                     <div style="flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; padding: 20px; box-sizing: border-box;">
-                         <img class="pdf-image" src="${imgSrc}" alt="Location Image ${idx + 1}" style="width: 100%; height: 100%; object-fit: contain; max-width: 95%; max-height: 80%;">
-                     </div>
-                 </div>
-                 ` : '';
+         <div class="page" location-images-page style="width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px 10px; box-sizing: border-box; margin: 0;  ">
+           <h2 style="text-align: center; margin-bottom: 30px; font-weight: bold; font-size: 18pt;">LOCATION IMAGE ${idx + 1}</h2>
+           <img class="pdf-image" src="${imgSrc}" alt="Location Image ${idx + 1}" style="width: 90%; height: auto; max-height: 600px; object-fit: contain; margin: 0 auto;">
+         </div>
+       ` : '';
             }).join('')}
-             ` : ''}
+   ` : ''}
 
-             ${pdfData.areaImages && typeof pdfData.areaImages === 'object' && Object.keys(pdfData.areaImages).length > 0 ? `
-             <div class="page images-section area-images-page" style="page-break-before: always; break-before: page;">
-                 <div style="padding: 20px 12mm; font-size: 12pt;">
-                     <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold;">PROPERTY AREA IMAGES</h2>
-                     ${Object.entries(pdfData.areaImages).map(([areaName, areaImageList]) => {
-                return Array.isArray(areaImageList) && areaImageList.length > 0 ? `
-                         <div style="margin-bottom: 25px; page-break-inside: avoid; break-inside: avoid;">
-                             <h3 style="font-size: 13pt; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 5px; page-break-after: avoid;">${areaName}</h3>
-                             <div class="area-image-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; page-break-inside: avoid; break-inside: avoid;">
-                                 ${areaImageList.map((img, idx) => {
-                    const imgSrc = typeof img === 'string' ? img : (img?.url || img?.preview || img?.data || img?.src || '');
-                    return imgSrc ? `
-                                 <div style="page-break-inside: avoid; break-inside: avoid; border: 1px solid #ccc; padding: 6px; text-align: center;">
-                                     <img class="pdf-image" src="${imgSrc}" alt="${areaName} Image ${idx + 1}" style="width: 100%; height: auto; max-height: 240px; object-fit: contain;">
-                                     <p style="margin-top: 4px; font-size: 8pt; color: #666;">${areaName} - Image ${idx + 1}</p>
-                                  </div>
-                                     ` : '';
-                }).join('')}
-                             </div>
-                         </div>
-                         ` : '';
-            }).join('')}
-                  </div>
-             </div>
-             ` : ''}
-
-             ${Array.isArray(pdfData.documentPreviews) && pdfData.documentPreviews.length > 0 ? `
-             <div class="page images-section supporting-docs-page" style="page-break-before: always; break-before: page;">
-                 <div style="padding: 20px 12mm; font-size: 12pt;">
-                     <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold;">SUPPORTING DOCUMENTS</h2>
-                     ${pdfData.documentPreviews.map((img, idx) => {
+   <!-- SUPPORTING DOCUMENTS: Each document gets its own page -->
+     ${Array.isArray(pdfData.documentPreviews) && pdfData.documentPreviews.length > 0 ? `
+     <div class="supporting-docs-section">
+    ${pdfData.documentPreviews.map((img, idx) => {
                 const imgSrc = typeof img === 'string' ? img : img?.url;
                 return imgSrc ? `
-                     <div class="image-container" style="page-break-inside: avoid; text-align: center; margin-bottom: 30px;">
-                         <img class="pdf-image" src="${imgSrc}" alt="Supporting Document ${idx + 1}" style="width: 90%; height: auto; max-height: 400px; object-fit: contain;">
-                         <p style="margin-top: 10px; font-size: 11pt; font-weight: bold;">Supporting Document ${idx + 1}</p>
-                     </div>
-                     ` : '';
+        <div class="page images-section supporting-docs-page" style="  width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 10px; box-sizing: border-box; margin: 0;">
+            ${idx === 0 ? '<h2 style="text-align: center; margin-bottom: 30px; font-weight: bold; width: 100%; font-size: 18pt;">SUPPORTING DOCUMENTS</h2>' : ''}
+            <div class="image-container" style="border: 1px solid #ddd; padding: 5px; background: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 90%; max-width: 800px; height: auto;">
+                <img class="pdf-image" src="${imgSrc}" alt="Supporting Document ${idx + 1}" style="width: 100%; height: auto; max-height: 550px; object-fit: contain; margin: 0 auto;">
+                <p style="margin: 10px 0 0 0; font-size: 10pt; color: #666; text-align: center;">Document ${idx + 1}</p>
+            </div>
+        </div>
+        ` : '';
             }).join('')}
-                 </div>
-             </div>
-             ` : ''}
+     </div>
+     ` : ''}<br/>
              </div>
              </div>
 
@@ -3032,39 +3226,39 @@ export async function previewValuationPDF(record) {
  * Compress image and convert to base64
  */
 const compressImage = async (blob) => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const img = new Image();
+   return new Promise((resolve) => {
+     const canvas = document.createElement('canvas');
+     const img = new Image();
 
-    img.onload = () => {
-      // Scale down image: max 1200px width
-      const maxWidth = 1200;
-      let width = img.width;
-      let height = img.height;
+     img.onload = () => {
+       // Scale down image: max 1000px width for balanced speed/quality
+       const maxWidth = 1000;
+       let width = img.width;
+       let height = img.height;
 
-      if (width > maxWidth) {
-        const ratio = maxWidth / width;
-        width = maxWidth;
-        height = height * ratio;
-      }
+       if (width > maxWidth) {
+         const ratio = maxWidth / width;
+         width = maxWidth;
+         height = height * ratio;
+       }
 
-      canvas.width = width;
-      canvas.height = height;
+       canvas.width = width;
+       canvas.height = height;
 
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
+       const ctx = canvas.getContext('2d');
+       ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert to JPEG with 70% quality for compression
-      canvas.toBlob(
-        (compressedBlob) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(compressedBlob);
-        },
-        'image/jpeg',
-        0.7
-      );
-    };
+       // Convert to JPEG with 60% quality for good clarity
+       canvas.toBlob(
+         (compressedBlob) => {
+           const reader = new FileReader();
+           reader.onloadend = () => resolve(reader.result);
+           reader.readAsDataURL(compressedBlob);
+         },
+         'image/jpeg',
+         0.6
+       );
+     };
 
     img.onerror = () => resolve('');
 
@@ -3227,7 +3421,7 @@ export async function generateRecordPDFOffline(record) {
       return new Promise((resolve) => {
         const alt = img.getAttribute('alt') || 'unknown';
         const timeoutId = setTimeout(() => {
-          // If image hasn't loaded after 5 seconds, mark for removal
+          // If image hasn't loaded after 2 seconds, mark for removal (faster timeout)
           if (!img.complete || img.naturalHeight === 0) {
             console.log(`⏭️ Image timeout/failed to load: ${alt}`);
             let parentContainer = img.closest('.image-container');
@@ -3237,7 +3431,7 @@ export async function generateRecordPDFOffline(record) {
             }
           }
           resolve();
-        }, 5000);
+        }, 2000);
 
         img.onload = () => {
           clearTimeout(timeoutId);
@@ -3290,17 +3484,17 @@ export async function generateRecordPDFOffline(record) {
     console.log(`📄 Total .page elements found: ${pageElements.length}`);
 
     // Render continuous wrapper first
-    let mainCanvas = null;
-    if (continuousWrapper) {
-      mainCanvas = await html2canvas(continuousWrapper, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true,
-        imageTimeout: 10000,
-        windowHeight: continuousWrapper.scrollHeight,
-        windowWidth: 793,
+     let mainCanvas = null;
+     if (continuousWrapper) {
+       mainCanvas = await html2canvas(continuousWrapper, {
+         scale: 1.2,
+         useCORS: true,
+         logging: false,
+         backgroundColor: '#ffffff',
+         allowTaint: true,
+         imageTimeout: 3000,
+         windowHeight: continuousWrapper.scrollHeight,
+         windowWidth: 793,
         onclone: (clonedDocument) => {
           const clonedImages = clonedDocument.querySelectorAll('img');
           clonedImages.forEach(img => {
@@ -3326,14 +3520,14 @@ export async function generateRecordPDFOffline(record) {
       pageEl.style.margin = '0';
 
       const pageCanvas = await html2canvas(pageEl, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true,
-        imageTimeout: 10000,
-        windowHeight: pageEl.scrollHeight,
-        windowWidth: 793,
+         scale: 1.2,
+         useCORS: true,
+         logging: false,
+         backgroundColor: '#ffffff',
+         allowTaint: true,
+         imageTimeout: 3000,
+         windowHeight: pageEl.scrollHeight,
+         windowWidth: 793,
         x: 0,
         y: 0,
         onclone: (clonedDocument) => {
