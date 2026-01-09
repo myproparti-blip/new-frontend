@@ -200,6 +200,46 @@ const extractImageUrl = (img) => {
     return '';
 };
 
+// Helper function to compress image to base64 for faster PDF generation
+const compressImageToBase64 = async (imageUrl) => {
+     if (!imageUrl) return '';
+     
+     try {
+         const response = await fetch(imageUrl, { mode: 'cors' });
+         const blob = await response.blob();
+         
+         // Create canvas for compression
+         return new Promise((resolve) => {
+             const img = new Image();
+             img.crossOrigin = 'anonymous';
+             img.onload = () => {
+                 const canvas = document.createElement('canvas');
+                 // Reduce size: max width 400px
+                 const maxWidth = 400;
+                 let width = img.width;
+                 let height = img.height;
+                 
+                 if (width > maxWidth) {
+                     height = (maxWidth / width) * height;
+                     width = maxWidth;
+                 }
+                 
+                 canvas.width = width;
+                 canvas.height = height;
+                 canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                 
+                 // Compress to JPEG quality 0.6 for faster generation
+                 resolve(canvas.toDataURL('image/jpeg', 0.6));
+             };
+             img.onerror = () => resolve('');
+             img.src = URL.createObjectURL(blob);
+         });
+     } catch (e) {
+         console.warn('Image compression failed:', e?.message);
+         return imageUrl;
+     }
+ };
+
 // Helper function to validate and format image for PDF
 const getImageSource = (imageUrl) => {
     // Ensure imageUrl is a string
@@ -237,8 +277,8 @@ const getImageSource = (imageUrl) => {
 const createTableRow = (label, value, bgColor = '#ffffff', valueBgColor = '#ffffff', labelWidth = '35%', valueWidth = '65%', fontSize = '12pt') => {
     return `
     <tr >
-      <td style="width: ${labelWidth}; background: ${bgColor}; font-weight: bold; border: 1.5px solid #000000 !important; padding: 5px 8px; font-size: ${fontSize}; vertical-align: middle;">${label}</td>
-      <td style="width: ${valueWidth}; background: ${valueBgColor}; border: 1.5px solid #000000 !important; padding: 5px 8px; font-size: ${fontSize}; vertical-align: middle;">${value}</td>
+      <td style="width: ${labelWidth}; background: ${bgColor}; font-weight: bold; border: 1px solid #000000 !important; padding: 5px 8px; font-size: ${fontSize}; vertical-align: middle;">${label}</td>
+      <td style="width: ${valueWidth}; background: ${valueBgColor}; border: 1px solid #000000 !important; padding: 5px 8px; font-size: ${fontSize}; vertical-align: middle;">${value}</td>
     </tr>`;
 };
 
@@ -246,8 +286,8 @@ const createTableRow = (label, value, bgColor = '#ffffff', valueBgColor = '#ffff
 const createTableRowTopAlign = (label, value, bgColor = '#ffffff', valueBgColor = '#ffffff', labelWidth = '50%', valueWidth = '50%', fontSize = '12pt') => {
     return `
     <tr >
-      <td style="width: ${labelWidth}; background: ${bgColor}; font-weight: bold; border: 1.5px solid #000000 !important; padding: 5px 8px; font-size: ${fontSize}; vertical-align: top;">${label}</td>
-      <td style="width: ${valueWidth}; background: ${valueBgColor}; border: 1.5px solid #000000 !important; padding: 5px 8px; font-size: ${fontSize}; vertical-align: top;">${value}</td>
+      <td style="width: ${labelWidth}; background: ${bgColor}; font-weight: bold; border: 1px solid #000000 !important; padding: 5px 8px; font-size: ${fontSize}; vertical-align: top;">${label}</td>
+      <td style="width: ${valueWidth}; background: ${valueBgColor}; border: 1px solid #000000 !important; padding: 5px 8px; font-size: ${fontSize}; vertical-align: top;">${value}</td>
     </tr>`;
 };
 // Dynamic table builder from array of row data
@@ -1657,7 +1697,7 @@ export function generateValuationReportHTML(data = {}) {
 
     <!-- Bank Image Below Table -->
     <div class="image-container" style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
-      ${safeGet(pdfData, 'bankImage') ? `<img src="${getImageSource(safeGet(pdfData, 'bankImage'))}" alt="Bank Image" style="max-width: 90%; height: auto; max-width: 600px; display: block; margin: 0 auto; border: none; background: #f5f5f5; padding: 5px;" class="pdf-image" crossorigin="anonymous" />` : ''}
+      ${safeGet(pdfData, 'bankImage') ? `<img src="${getImageSource(safeGet(pdfData, 'bankImage'))}" alt="Bank Image" style="width: 100%; max-width: 700px; height: auto; display: block; margin: 0 auto; border: none; background: #f5f5f5; padding: 5px; box-sizing: border-box;" crossorigin="anonymous" loading="eager" />` : ''}
     </div>
     </div>
 
@@ -1693,28 +1733,28 @@ export function generateValuationReportHTML(data = {}) {
             <!-- PAGE 2: Summary Values Table - Dynamically Generated -->
                     <div style="padding: 5px 20px; margin: 0; box-sizing: border-box; width: 100%;">
             <p style="font-size: 14pt; font-weight: bold;text-align: center; margin: 5px 0 10px 0; color: #4472C4; text-decoration: underline;">VALUED PROPERTY AT A GLANCE WITH VALUATION CERTIFICATE</p>
-    <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11pt; border: 1px solid #000000;">
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12pt; border: 1px solid #000000;">
     ${getSummaryValuesTableData(pdfData).map(row =>
             `<tr>
-        <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000000; padding: 5px 6px; vertical-align: middle;">${row.label}</td>
+        <td style="width: 35%; background: #ffffff; border: 1px solid #000000; padding: 5px 6px; vertical-align: middle;">${row.label}</td>
         <td style="width: 65%; background: #ffffff; border: 1px solid #000000; padding: 5px 6px; ${row.label.includes('TOTAL') || row.label.includes('VALUE') ? 'font-weight: bold;' : ''} vertical-align: middle;">${row.value}</td>
       </tr>`
         ).join('')}
     </table>
     <div style="margin-top: 3px; margin-bottom: 3px; background-color: #ffffffff; padding: 5px 8px; border: 1px solid #ffffffff;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-      <div style="font-size: 10pt;">
-        <span style="font-weight: bold;">Date:</span> <span style="background-color: #ffff00;">${formatDate(safeGet(pdfData, 'pdfDetails.dateOfValuationReport'))}</span>
+      <div style="font-size: 12pt;">
+        <span style="font-weight: bold;">Date:</span> <span style="background-color: #ffffffff;">${formatDate(safeGet(pdfData, 'pdfDetails.dateOfValuationReport'))}</span>
       </div>
-      <div style="font-size: 10pt; text-align: right;">
+      <div style="font-size: 12pt; text-align: right;">
         <span style="font-weight: bold;">"Rajesh Ganatra"</span>
       </div>
     </div>
     <div style="display: flex; justify-content: space-between; align-items: center;">
-      <div style="font-size: 10pt;">
-        <span style="font-weight: bold;">Place:</span> <span style="background-color: #ffff00;">${safeGet(pdfData, 'city') || safeGet(pdfData, 'pdfDetails.city')}</span>
+      <div style="font-size: 12pt;">
+        <span style="font-weight: bold;">Place:</span> <span style="background-color: #ffffffff;">${safeGet(pdfData, 'city') || safeGet(pdfData, 'pdfDetails.city')}</span>
       </div>
-      <div style="font-size: 10pt; text-align: right;">
+      <div style="font-size: 12pt; text-align: right;">
         <span style="font-weight: bold;">${safeGet(pdfData, 'pdfDetails.designation', 'Govt. Registered Valuer')}</span>
       </div>
     </div>
@@ -1723,34 +1763,34 @@ export function generateValuationReportHTML(data = {}) {
     <!-- END: valued-property-summary-section -->
 
     <!-- PAGE 2 FOOTER -->
-    <!-- PAGE 3 HEADER - ANNEXURE-123 START -->
+    <!-- PAGE 3 HEADER - ANNEXURE-II START -->
     <div class="" style="page-break-before: always !important; clear: both; margin-top: 0px; margin-bottom: 0px; padding: 5px 20px; width: 100%; box-sizing: border-box; display: block;">
     <div style="text-align: center; margin-bottom: 3px;">
       ${(() => {
-             const company = safeGet(pdfData, 'pdfDetails.valuationCompany', '');
-             const subtitle = safeGet(pdfData, 'pdfDetails.valuationCompanySubtitle', '');
-             const master = safeGet(pdfData, 'pdfDetails.masterValuation', '');
-             const regValuer = safeGet(pdfData, 'pdfDetails.regValuer', '');
-             const govtReg = safeGet(pdfData, 'pdfDetails.govtReg', '');
+            const company = safeGet(pdfData, 'pdfDetails.valuationCompany', '');
+            const subtitle = safeGet(pdfData, 'pdfDetails.valuationCompanySubtitle', '');
+            const master = safeGet(pdfData, 'pdfDetails.masterValuation', '');
+            const regValuer = safeGet(pdfData, 'pdfDetails.regValuer', '');
+            const govtReg = safeGet(pdfData, 'pdfDetails.govtReg', '');
 
-             let html = '';
-             if (company && company !== 'NA') html += `<p style="font-size: 14pt; font-weight: bold; margin: 0;">${company}</p>`;
-             if (subtitle && subtitle !== 'NA') html += `<p style="font-size: 12pt; font-weight: bold; margin: 3px 0;">(${subtitle})</p>`;
+            let html = '';
+            if (company && company !== 'NA') html += `<p style="font-size: 14pt; font-weight: bold; margin: 0;">${company}</p>`;
+            if (subtitle && subtitle !== 'NA') html += `<p style="font-size: 12pt; font-weight: bold; margin: 3px 0;">(${subtitle})</p>`;
 
-             let credentials = '';
-             if (master && master !== 'NA') credentials += master + '<br/>';
-             if (regValuer && regValuer !== 'NA') credentials += regValuer + '<br/>';
-             if (govtReg && govtReg !== 'NA') credentials += govtReg;
+            let credentials = '';
+            if (master && master !== 'NA') credentials += master + '<br/>';
+            if (regValuer && regValuer !== 'NA') credentials += regValuer + '<br/>';
+            if (govtReg && govtReg !== 'NA') credentials += govtReg;
 
-             if (credentials) html += `<p style="font-size: 12pt; margin: 2px 0; color: #333;">${credentials}</p>`;
+            if (credentials) html += `<p style="font-size: 12pt; margin: 2px 0; color: #333;">${credentials}</p>`;
 
-             return html || '';
-         })()
-         }
+            return html || '';
+        })()
+        }
     </div>
     <!-- Header Text with yellow background -->
     <div style="margin-top: 20px; margin-bottom: 15px;">
-      <p style="margin: 0; font-size: 12pt; text-align: center; background-color: #ffffff; padding: 5px; font-weight: bold;">ANNEXURE-123 </p>
+      <p style="margin: 0; font-size: 12pt; text-align: center; background-color: #ffffff; padding: 5px; font-weight: bold;">ANNEXURE-II </p>
      <p style="margin: 0; font-size: 12pt; text-align: center; background-color: #ffffff; padding: 5px; font-weight: bold;">VALUATION REPORT </p>
      <p style="margin: 0; font-size: 12pt; text-align: center; background-color: #ffffff; padding: 5px; font-weight: bold;">(to be used for all properties of value above Rs.5 Crore)</p>
     </div>
@@ -1769,7 +1809,7 @@ export function generateValuationReportHTML(data = {}) {
 
   <!-- Introduction Section -->
   <div style="margin-bottom: 5px;">
-    <p style="font-size: 11pt; font-weight: bold; margin: 3px 0;">1. Introduction</p>
+    <p style="font-size: 12pt; font-weight: bold; margin: 3px 0;">1. Introduction</p>
   </div>
 
   <!-- PAGE 3: Introduction Table - Dynamically Generated -->
@@ -1779,7 +1819,7 @@ export function generateValuationReportHTML(data = {}) {
 
   <!-- Physical Characteristics Section -->
   <div style="margin-bottom: 5px;">
-    <p style="font-size: 11pt; font-weight: bold; margin: 3px 0;">2. Physical Characteristics of the Property</p>
+    <p style="font-size: 12pt; font-weight: bold; margin: 3px 0;">2. Physical Characteristics of the Property</p>
   </div>
 
   <!-- PAGE 3 & 4: Physical Characteristics Table (i-iii) + Detailed Property Table (IV-X) - COMBINED -->
@@ -1791,51 +1831,51 @@ export function generateValuationReportHTML(data = {}) {
                 if (row.isHeader) {
                     html += `
             <tr >
-            <td style="width: 8%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top; text-align: center;">${row.number}</td>
-            <td colspan="2" style="width: 92%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.label}</td>
+            <td style="width: 8%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top; text-align: center;">${row.number}</td>
+            <td colspan="2" style="width: 92%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.label}</td>
             </tr>`;
                 } else {
                     html += `
             <tr >
             <td style="width: 8%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top; text-align: center;">${row.number}</td>
-            <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.label}</td>
+            <td style="width: 35%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.label}</td>
             <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.value}</td>
             </tr>`;
                 }
             });
 
             // Continue with IV onwards from getDetailedPropertyTableData
-             getDetailedPropertyTableData(pdfData).slice(0, 8).forEach(row => {
-                 html += `
+            getDetailedPropertyTableData(pdfData).slice(0, 8).forEach(row => {
+                html += `
             <tr >
-             <td style="width: 8%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top; text-align: center;">${row.label}</td>
-             <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.item}</td>
+             <td style="width: 8%; background: #ffffff;font-weight: bold;  border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top; text-align: center;">${row.label}</td>
+             <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.item}</td>
              <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.value}</td>
             </tr>`;
-             });
+            });
 
             // Add XI and XII
-             getDetailedPropertyTableData(pdfData).slice(8, 10).forEach(row => {
-                 html += `
+            getDetailedPropertyTableData(pdfData).slice(8, 10).forEach(row => {
+                html += `
             <tr >
              <td style="width: 8%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top; text-align: center;">${row.label}</td>
-             <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.item}</td>
+             <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.item}</td>
              <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${row.value}</td>
             </tr>`;
-             });
+            });
 
             // Add item b) - Plinth area, carpet area, and saleable area
-             html += `
+            html += `
             <tr >
              <td style="width: 8%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top; text-align: center;">b)</td>
-             <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">Plinth area, carpet area, and saleable area to be mentioned separately and clarified</td>
+             <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">Plinth area, carpet area, and saleable area to be mentioned separately and clarified</td>
              <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${safeGet(pdfData, 'plinthArea')}</td>
             </tr>`;
 
             // Add item C) - Boundaries of the Plot
             html += `
  <tr ><td style="width: 8%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top; text-align: center;">C)</td>
-            <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">Boundaries of the Plot</td>
+            <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">Boundaries of the Plot</td>
             <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">As per Document</td>
           </tr>`;
 
@@ -1844,7 +1884,7 @@ export function generateValuationReportHTML(data = {}) {
                 html += `
            <tr >
             <td style="width: 8%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top;"></td>
-            <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">${boundary.direction}</td>
+            <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">${boundary.direction}</td>
             <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${boundary.value}</td>
           </tr>`;
             });
@@ -1853,7 +1893,7 @@ export function generateValuationReportHTML(data = {}) {
             html += `
            <tr >
             <td style="width: 8%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top;"></td>
-            <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">Boundaries of the Plot</td>
+            <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">Boundaries of the Plot</td>
             <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">As per Actual on Site</td>
           </tr>`;
 
@@ -1861,22 +1901,22 @@ export function generateValuationReportHTML(data = {}) {
             html += `
            <tr >
             <td style="width: 8%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top;"></td>
-            <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">NORTH</td>
+            <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">NORTH</td>
             <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${safeGet(pdfData, 'boundaryActualNorth')}</td>
           </tr>
            <tr >
             <td style="width: 8%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top;"></td>
-            <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">SOUTH</td>
+            <td style="width: 35%; background: #ffffff; ; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">SOUTH</td>
             <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${safeGet(pdfData, 'boundaryActualSouth')}</td>
           </tr>
            <tr >
             <td style="width: 8%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top;"></td>
-            <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">EAST</td>
+            <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">EAST</td>
             <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${safeGet(pdfData, 'boundaryActualEast')}</td>
           </tr>
            <tr >
             <td style="width: 8%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; vertical-align: top;"></td>
-            <td style="width: 35%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">WEST</td>
+            <td style="width: 35%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top; text-align: center;">WEST</td>
             <td style="width: 57%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt; vertical-align: top;">${safeGet(pdfData, 'boundaryActualWest')}</td>
           </tr>`;
 
@@ -1917,35 +1957,35 @@ export function generateValuationReportHTML(data = {}) {
 
   <!-- Section 3: Town Planning Parameters - DYNAMIC DATA BINDING -->
   <div style="margin-bottom: 8px;">
-    <p style="font-size: 11pt; font-weight: bold; margin: 3px 0;">3. Town Planning parameters</p>
+    <p style="font-size: 12pt; font-weight: bold; margin: 3px 0;">3. Town Planning parameters</p>
   </div>
 
   <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 8px; border: 1px solid #000 !important;">
     ${getTownPlanningTableData(pdfData).map((row, idx) => `
     <tr>
       <td style="width: 5%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; text-align: center;">${String.fromCharCode(105 + idx)}.</td>
-      <td style="width: 50%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">${row.item}</td>
+      <td style="width: 50%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">${row.item}</td>
       <td style="width: 45%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">${row.value}</td>
     </tr>
     `).join('')}
     <tr>
       <td style="width: 5%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; text-align: center;">x.</td>
-      <td style="width: 50%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">Comment on the surrounding land uses and adjoining properties in terms of uses</td>
+      <td style="width: 50%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">Comment on the surrounding land uses and adjoining properties in terms of uses</td>
       <td style="width: 45%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.surroundingAreaWithCommercialAndResidential') || 'NA'}</td>
     </tr>
     <tr>
       <td style="width: 5%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; text-align: center;">xi.</td>
-      <td style="width: 50%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">Comment on demolition proceedings if any</td>
+      <td style="width: 50%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">Comment on demolition proceedings if any</td>
       <td style="width: 45%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.demolitionProceedings') || 'NA'}</td>
     </tr>
     <tr>
       <td style="width: 5%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; text-align: center;">xii.</td>
-      <td style="width: 50%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">Comment on compounding/regularization proceedings</td>
+      <td style="width: 50%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">Comment on compounding/regularization proceedings</td>
       <td style="width: 45%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.compoundingRegularizationProceedings') || 'NA'}</td>
     </tr>
     <tr>
       <td style="width: 5%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 3px; font-size: 12pt; text-align: center;">xiii.</td>
-      <td style="width: 50%; background: #ffffff; font-weight: bold; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">Any other Aspect</td>
+      <td style="width: 50%; background: #ffffff;  border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">Any other Aspect</td>
       <td style="width: 45%; background: #ffffff; border: 1px solid #000 !important; padding: 4px 6px; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.anyOtherAspect') || 'NA'}</td>
     </tr>
   </table>
@@ -1955,20 +1995,20 @@ export function generateValuationReportHTML(data = {}) {
   
   <!-- Section 4: Document Details and Legal Aspects of Property -->
   <div style="margin-bottom: 8px; margin-top: 0;">
-    <p style="font-size: 11pt; font-weight: bold; margin: 3px 0;">4. Document Details and Legal Aspects of Property</p>
+    <p style="font-size: 12pt; font-weight: bold; margin: 3px 0;">4. Document Details and Legal Aspects of Property</p>
   </div>
 
-  <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1.5px solid #000000; margin-bottom: 0; margin-top: 10px;">
+  <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #000000; margin-bottom: 0; margin-top: 10px;">
     <tr>
-      <td style="width: 5%; background: #ffffff; font-weight: bold; border: 1.5px solid #000000; padding: 4px 3px; font-size: 11pt;">a)</td>
-      <td style="width: 45%; background: #ffffff; font-weight: bold; border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">Ownership Documents, i. Sale Deed, Gift Deed, Lease Deed ii. TIR of the Property</td>
-      <td style="width: 50%; background: #ffffff; font-weight: bold; border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">List of documents produced for perusal:</td>
+      <td style="width: 5%; background: #ffffff; font-weight: bold; border: 1px solid #000000; padding: 4px 3px; font-size: 12pt;">a)</td>
+      <td style="width: 45%; background: #ffffff; border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">Ownership Documents, i. Sale Deed, Gift Deed, Lease Deed ii. TIR of the Property</td>
+      <td style="width: 50%; background: #ffffff; font-weight: bold; border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">List of documents produced for perusal:</td>
     </tr>
     ${getDocumentDetailsData(pdfData).map((doc, idx) => `
     <tr>
-       <td style="width: 5%; background: #ffffff; border: 1.5px solid #000000; padding: 4px 3px; font-size: 11pt;"></td>
-       <td style="width: 45%; background: #ffffff; border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">${idx + 1}. ${doc.label}</td>
-       <td style="width: 50%; background: #ffffff; border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">${doc.value}</td>
+       <td style="width: 5%; background: #ffffff; border: 1px solid #000000; padding: 4px 3px; font-size: 12pt;"></td>
+       <td style="width: 45%; background: #ffffff; border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">${idx + 1}. ${doc.label}</td>
+       <td style="width: 50%; background: #ffffff; border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">${doc.value}</td>
      </tr>
     `).join('')}
     
@@ -1976,193 +2016,193 @@ export function generateValuationReportHTML(data = {}) {
     
     <!-- Row: 4. AMC Tax Bill -->
     <tr>
-      <td style="width: 5%; border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"></td>
-      <td style="width: 45%; border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="width: 5%; border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"></td>
+      <td style="width: 45%; border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         4. AMC Tax Bill
       </td>
-      <td style="width: 50%; border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="width: 50%; border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         ${safeGet(pdfData, 'pdfDetails.amcTheBill') || 'NA'}
       </td>
     </tr>
     
     <!-- Row: b) Name of the Owner's -->
     <tr>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>b)</strong></td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>b)</strong></td>
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         Name of the Owner/s
       </td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         ${safeGet(pdfData, 'pdfDetails.nameOfTheOwners') || 'NA.'}
       </td>
     </tr>
     
     <!-- Row: Ordinary status -->
     <tr>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"></td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"></td>
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         Ordinary status of freehold or leasehold including restrictions on transfer
       </td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         ${safeGet(pdfData, 'pdfDetails.certainStatusOfFreeholdOrLeasehold') || 'Freehold – Please Refer Adv. Title report.'}
       </td>
     </tr>
     
     <!-- Row: d) Agreement of easement -->
     <tr>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>d)</strong></td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>d)</strong></td>
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         Agreement of easement if any
       </td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         ${safeGet(pdfData, 'pdfDetails.amenity') || 'NA'}
       </td>
     </tr>
     
     <!-- Row: e) Notification of acquisition -->
     <tr>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>e)</strong></td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>e)</strong></td>
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         Notification of acquisition if any
       </td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         ${safeGet(pdfData, 'pdfDetails.heritageEasement') || 'NA'}
       </td>
     </tr>
     
     <!-- Row: f) Notification of road widening -->
     <tr>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>f)</strong></td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>f)</strong></td>
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         Notification of road widening if any
       </td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         ${safeGet(pdfData, 'pdfDetails.notificationOfRoadWidening') || 'NA'}
       </td>
     </tr>
     
     <!-- Row: g) Heritage restriction -->
     <tr>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>g)</strong></td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>g)</strong></td>
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         Heritage restriction, if any
       </td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         ${safeGet(pdfData, 'pdfDetails.heritageEasement') || 'Nil.'}
       </td>
     </tr>
     
     <!-- Row: h) Comment on transferability -->
     <tr>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>h)</strong></td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>h)</strong></td>
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
         Comment on transferability of the property ownership
       </td>
-      <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             ${safeGet(pdfData, 'pdfDetails.builderPlan') || 'Please refer Latest Adv. Title Report.'}
           </td>
         </tr>
         
         <!-- Row 10: i) Comment on existing mortgages -->
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>i)</strong></td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>i)</strong></td>
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             Comment on existing mortgages/ charges / encumbrances on the property, if any
           </td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             ${safeGet(pdfData, 'pdfDetails.commentOnExistingMortgages') || 'As subject property is already mortgaged with Bank.'}
           </td>
         </tr>
         
         <!-- Row 11: j) Comment on guarantee -->
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;"><strong>j)</strong></td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;"><strong>j)</strong></td>
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;">
             Comment on whether the owners of the property have issued any guarantee (personal or corporate) as the case may be
           </td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;">
             ${safeGet(pdfData, 'pdfDetails.commentOnGuarantee') || 'Please refer Latest Adv. Title Report.'}
           </td>
         </tr>
         
         <!-- Row 12: k) Building plan sanction -->
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;"><strong>k)</strong></td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;"><strong>k)</strong></td>
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;">
             Building plan sanction:<br/>Authority approving the plan -<br/>Name of the office of the Authority -<br/>Any violation from the approved Building Plan -
           </td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;">
             ${safeGet(pdfData, 'pdfDetails.authorityApprovedPlan') || 'Plan is approved by Ahmedabad Urban Development Authority, Wide No. PRM/36/7/09/7603, Dated: 05/06/2010, Approved by AUDA<br/>BU Permission No. CMP/4189/5/2012/26, Dated: 08/02/2013, Approved by AUDA.'}
           </td>
         </tr>
         
         <!-- Row 13: l) Whether Property is Agricultural Land -->
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>l)</strong></td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>l)</strong></td>
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             Whether Property is Agricultural Land if yes, any conversion is contemplated
           </td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             ${safeGet(pdfData, 'pdfDetails.agricultureLandConversion') || 'NA – Commercial Shop cum Showroom'}
           </td>
         </tr>
         
         <!-- Row 14: m) Whether property is SARFAESI compliant -->
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>m)</strong></td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>m)</strong></td>
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             Whether the property is SARFAESI compliant
           </td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             ${safeGet(pdfData, 'pdfDetails.sarfaesiCompliant') || 'Yes'}
           </td>
         </tr>
         
         <!-- Row 15: n) a. All legal documents -->
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;"><strong>n)</strong></td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;"><strong>n)</strong></td>
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;">
             a. All legal documents, receipts related to electricity, Water tax, Municipal tax and other building taxes to be verified and copies as applicable to be enclosed with the report.
           </td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt; vertical-align: top;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt; vertical-align: top;">
             ${safeGet(pdfData, 'pdfDetails.legalDocumentsEnclosed') || 'N. A.<br/>As we provided with Allotment Deed, Approved Plan, BU Permission, Tax Bill of Property. and it is Re-Valuation of said property, all original documents should with bank.'}
           </td>
         </tr>
         
         <!-- Row 16: n) b. Observation on Dispute -->
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"></td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"></td>
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             b. Observation on Dispute or Dues if any in payment of bills/taxes to be reported.
           </td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             ${safeGet(pdfData, 'pdfDetails.observationOnDisputeOrDues') || 'N. A.'}
           </td>
         </tr>
         
         <!-- Row 17: o) Whether entire piece of land -->
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;"><strong>o)</strong></td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>o)</strong></td>
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             Whether entire piece of land on which the unit is set up/ property is situated has been mortgaged or to be mortgaged.
           </td>
-          <td style="border: 1.5px solid #000000; padding: 4px 5px; font-size: 11pt;">
+          <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
             ${safeGet(pdfData, 'pdfDetails.whetherEntirePieceLandMortgaged') || 'Please refer Latest Adv. Title Report.'}
           </td>
         </tr>
          <!-- p and q continuation from previous page -->
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>p)</strong></td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>p)</strong></td>
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             Qualification in TIR/mitigation suggested if any.
           </td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">${safeGet(pdfData, 'pdfDetails.observationOnDisputeOrDues') || 'Please refer Latest Adv. Title Report.'}</td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">${safeGet(pdfData, 'pdfDetails.observationOnDisputeOrDues') || 'Please refer Latest Adv. Title Report.'}</td>
         </tr>
         <tr>
-          <td style="border: 1.5px solid #000000; padding: 8px;"><strong>q)</strong></td>
-          <td style="border: 1.5px solid #000000; padding: 8px;">
+          <td style="border: 1px solid #000000; padding: 8px;"><strong>q)</strong></td>
+          <td style="border: 1px solid #000000; padding: 8px;">
             Any other aspect
           </td>
-          <td style="border: 1.5px solid #000000; padding: 8px;">${safeGet(pdfData, 'pdfDetails.anyOtherAspect') || 'No'}</td>
+          <td style="border: 1px solid #000000; padding: 8px;">${safeGet(pdfData, 'pdfDetails.anyOtherAspect') || 'No'}</td>
         </tr>
     </table>
 
@@ -2170,7 +2210,7 @@ export function generateValuationReportHTML(data = {}) {
    
    
     <div style="margin: 0; width: 100%;">
-    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1.5px solid #000000; font-size: 12pt; table-layout: fixed; margin-bottom: 0; margin-top: 10px;">
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #000000; font-size: 12pt; table-layout: fixed; margin-bottom: 0; margin-top: 10px;">
       <colgroup>
         <col style="width: 5%;"/>
         <col style="width: 45%;"/>
@@ -2180,16 +2220,16 @@ export function generateValuationReportHTML(data = {}) {
 
         <!-- Section 5: Economic Aspects - with proper spacing -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 12px 15px; font-weight: bold; background: #ffffff; margin: 0 10px;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 12px 15px; font-weight: bold; background: #ffffff; margin: 0 10px;">
             <strong>5. Economic Aspects of the Property</strong>
           </td>
         </tr>
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>a)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>a)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             Economic aspects of the property in terms of
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"></td>
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 8px;"></td>
         </tr>
         ${getEconomicAspectsData(pdfData).map((item, idx) => {
             const romanMatch = item.item.match(/^([ivxl]+)\./);
@@ -2197,52 +2237,52 @@ export function generateValuationReportHTML(data = {}) {
             const text = item.item.replace(/^[ivxl]+\.\s*/, '');
             return `
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             <strong>${roman}</strong>
           </td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${text}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
         </tr>`;
         }).join('')}
         
         <!-- Section 6: Socio-cultural Aspects -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
             <strong>6. Socio-cultural Aspects of the Property</strong>
           </td>
         </tr>
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>a)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>a)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${getSocioCulturalAspectsData(pdfData)[0].item}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${getSocioCulturalAspectsData(pdfData)[0].value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${getSocioCulturalAspectsData(pdfData)[0].value}</td>
         </tr>
         ${getSocioCulturalAspectsData(pdfData).slice(1).map((item, idx) => `
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             <strong>${String.fromCharCode(97 + idx + 1)})</strong>
           </td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${item.item.replace(/^[a-z]\)\s*/, '')}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
         </tr>`).join('')}
         
         <!-- Section 7: Functional and Utilitarian Aspects -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
             <strong>7. Functional and Utilitarian Aspects of the Property</strong>
           </td>
         </tr>
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>a)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>a)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             Description of the functionality and utility of the Property in terms of:
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"></td>
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 8px;"></td>
         </tr>
         ${getFunctionalAspectsData(pdfData).map((item, idx) => {
             const isOtherAspect = item.item.startsWith('b)');
@@ -2252,80 +2292,80 @@ export function generateValuationReportHTML(data = {}) {
             const label = isOtherAspect ? 'b)' : roman;
             return `
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             <strong>${label}</strong>
           </td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${text}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
         </tr>`;
         }).join('')}
 
         <!-- Section 8: Infrastructure Availability -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
             <strong>8. Infrastructure Availability</strong>
           </td>
         </tr>
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>a)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>a)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             Description of aqua infrastructure availability in terms of
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"></td>
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 8px;"></td>
         </tr>
         ${getInfrastructureAvailabilityData(pdfData).aquaInfra.map(item => `
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>${item.item.charAt(0)}.</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>${item.item.charAt(0)}.</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${item.item.substring(2)}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
         </tr>`).join('')}
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>b)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>b)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             Description of other physical infrastructure facilities viz.
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"></td>
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 8px;"></td>
         </tr>
         ${getInfrastructureAvailabilityData(pdfData).physicalInfra.map(item => `
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>${item.item.charAt(0)}.</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>${item.item.charAt(0)}.</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${item.item.substring(2)}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
         </tr>`).join('')}
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>c)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>c)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             Social infrastructure in terms of
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"></td>
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 8px;"></td>
         </tr>
         ${getInfrastructureAvailabilityData(pdfData).socialInfra.map(item => `
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>${item.item.charAt(0)}.</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>${item.item.charAt(0)}.</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${item.item.substring(2)}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
         </tr>`).join('')}
 
         <!-- Section 9: Marketability of the Property -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
             <strong>9. Marketability of the Property</strong>
           </td>
         </tr>
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"><strong>a)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;"><strong>a)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             Marketability of the property in terms of
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;"></td>
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 8px;"></td>
         </tr>
         ${getMarketabilityData(pdfData).map((item, idx) => {
             const isMainItem = !item.item.includes('Any other aspect');
@@ -2334,19 +2374,19 @@ export function generateValuationReportHTML(data = {}) {
             const text = numberMatch ? item.item.replace(/^[ivxl]+\.\s*/, '').replace(/^[a-z]\)\s*/, '') : item.item.replace(/^b\)\s*/, '');
             return `
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${isMainItem ? '<strong>' + number + '</strong>' : '<strong>b)</strong>'}
           </td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${text}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
         </tr>`;
         }).join('')}
 
         <!-- Section 10: Engineering and Technology Aspects -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
             <strong>10. Engineering and Technology Aspects of the Property</strong>
           </td>
         </tr>
@@ -2356,19 +2396,19 @@ export function generateValuationReportHTML(data = {}) {
             const text = letterMatch ? item.item.replace(/^[a-z]\)\s*/, '') : item.item.substring(1).replace(/^\)\s*/, '');
             return `
          <tr>
-           <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+           <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
              <strong>${letter}</strong>
            </td>
-           <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+           <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
              ${text}
            </td>
-           <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+           <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
          </tr>`;
         }).join('')}
 
         <!-- Section 11: Environmental Factors -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
             <strong>11. Environmental Factors</strong>
           </td>
         </tr>
@@ -2378,19 +2418,19 @@ export function generateValuationReportHTML(data = {}) {
             const text = letterMatch ? item.item.replace(/^[a-z]\)\s*/, '') : item.item.substring(1).replace(/^\)\s*/, '');
             return `
          <tr>
-           <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+           <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
              <strong>${letter}</strong>
            </td>
-           <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+           <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
              ${text}
            </td>
-           <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+           <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
          </tr>`;
         }).join('')}
 
         <!-- Section 12: Architectural and aesthetic quality -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 8px; font-weight: bold; background: #ffffff;">
             <strong>12. Architectural and aesthetic quality of the Property</strong>
           </td>
         </tr>
@@ -2400,13 +2440,13 @@ export function generateValuationReportHTML(data = {}) {
             const text = letterMatch ? item.item.replace(/^[a-z]\)\s*/, '') : item.item.substring(1).replace(/^\)\s*/, '');
             return `
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             <strong>${letter}</strong>
           </td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 8px;">
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 8px;">
             ${text}
           </td>
-          <td style="width: 50%; border: 1.5px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
+          <td style="width: 50%; border: 1px solid #000000; padding: 8px; background-color: #ffffffff;">${item.value}</td>
         </tr>`;
         }).join('')}
       </tbody>
@@ -2418,16 +2458,16 @@ export function generateValuationReportHTML(data = {}) {
       </div>
       <div style="margin: 0; width: 100%;">
       <h2 style="font-size: 14pt; padding-bottom: 3px; margin-top: 0;">13. Valuation</h2>
-      <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1.5px solid #000000; font-size: 12pt; margin-bottom: 0; margin-top: 10px;">
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #000000; font-size: 12pt; margin-bottom: 0; margin-top: 10px;">
       <tbody>
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 6px; font-weight: normal;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 6px; font-weight: normal;">
             <strong>a)</strong>
           </td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 6px; font-weight: normal;">
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 6px; font-weight: normal;">
             Methodology of valuation Procedures adopted for arriving at the valuation. Valuer may consider various approaches and state explicitly the reason for adopting particular approach and assumptions made, basis adopted with supporting data, comparable sales, and reconciliation of various factors on which final value judgment is arrived at.
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 6px; font-size: 9.5pt; line-height: 1.4;">
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 6px; font-size: 9.5pt; line-height: 1.4;">
             <strong>The Cost Approach:</strong> The cost approach to valuation makes a simple assumption that a potential user of a property will not (and should not) pay more for a property than it would cost to build an equivalent property from scratch. That is, the value of the property is the cost of land plus the cost of construction, less depreciation.<br/><br/>
             <strong>The Comparable Sales Approach/ Market Approach:</strong> For residential homes, condos, townhouses, and small rental apartment buildings, the comparable sales approach often provides a great estimate of market value. If you want the probable price of a specific property will likely sell it, find out the selling prices, deal terms, and features of recently sold similar properties near the target property. The more closely comparable properties resemble your target property and the closer in proximity, the better and more accurate your estimate will be using this approach.<br/><br/>
             <strong>The Income Approach:</strong> Lastly, we have the income approach, which is an appraisal technique that is also often called the Gross Rent Multiplier (GRM). To calculate the GRM, you need to know the monthly rents and sales prices of similar properties that have recently sold. For this reason, the method only works for income-producing properties.<br/><br/>
@@ -2439,21 +2479,21 @@ export function generateValuationReportHTML(data = {}) {
         </tr>
         <!-- Row b) Prevailing Market Rate -->
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 6px;"><strong>b)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 6px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 6px;"><strong>b)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 6px;">
             Prevailing Market Rate/Price trend of the Property in the locality/city from property search sites magickbricks.com, 99acres.com, akaan.com etc. if available
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 6px; font-size: 9.5pt; line-height: 1.5;">
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 6px; font-size: 9.5pt; line-height: 1.5;">
             The perfect rate cannot available on any websites, and also in Reg. Sale instance, as Reg. Sale instance is reflecting only Jantri Rate Value, is considered for Stamp Duty only. The actual Sale – Purchase Rate is depending on demand / supply of such type of property, what offers are available on known websites, some of that is have no proper details, negotiable offers, and some also fake. So, we gathered all type of Data of prevailing Rate in such area, applying positive and negative factors, and come to conclusion of probable Rate.
           </td>
         </tr>
         <!-- Row c) Guideline Rate -->
         <tr>
-          <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 6px;"><strong>c)</strong></td>
-          <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 6px;">
+          <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 6px;"><strong>c)</strong></td>
+          <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 6px;">
             Guideline Rate obtained from Registrar's office/State Govt. Gazette/ Income Tax Notification
           </td>
-          <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 6px; font-size: 9.5pt; line-height: 1.5;">
+          <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 6px; font-size: 9.5pt; line-height: 1.5;">
             <strong>As per the Town planning and Valuation department of Govt. of Gujarat, Jantri Rate in that area for Commercial Shop is <span style="color: #ff6600;">Rs. 50,000/- rupees per sq.mt</span>,</strong> as per New Guideline for Revision of Jantry / GLR, 2 times rate of Land of ASR-2011, will be applicable, Dt. 13/04/2023, the GLR Valuation for subject property is as under<br/>
             <strong>Then, Jantry value = Area x Rate<br/>
             = 420.83 sq.mt x 1,00,000.00/-<br/>
@@ -2462,17 +2502,17 @@ export function generateValuationReportHTML(data = {}) {
         </tr>
         <!-- Row d) Summary of Valuation -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000000; padding: 6px; font-weight: bold; background: #ffffff;">
+          <td colspan="3" style="border: 1px solid #000000; padding: 6px; font-weight: bold; background: #ffffff;">
             <strong>d)</strong> Summary of Valuation
           </td>
         </tr>
         <!-- Guideline Value Row -->
          <tr>
-           <td style="width: 5%; vertical-align: top; border: 1.5px solid #000000; padding: 6px; font-weight: bold;"></td>
-           <td style="width: 45%; vertical-align: top; border: 1.5px solid #000000; padding: 6px; font-weight: bold;">
+           <td style="width: 5%; vertical-align: top; border: 1px solid #000000; padding: 6px; font-weight: bold;"></td>
+           <td style="width: 45%; vertical-align: top; border: 1px solid #000000; padding: 6px; font-weight: bold;">
              Guideline Value
            </td>
-           <td style="width: 50%; vertical-align: top; border: 1.5px solid #000000; padding: 6px; font-weight: bold; font-size: 12pt;">
+           <td style="width: 50%; vertical-align: top; border: 1px solid #000000; padding: 6px; font-weight: bold; font-size: 12pt;">
              ${safeGet(pdfData, 'pdfDetails.guidelineValue') || 'NA'}
            </td>
          </tr>
@@ -2486,7 +2526,7 @@ export function generateValuationReportHTML(data = {}) {
       
       </div>
   <div style="margin: 0;  width: 100%;">
-   <table style="width: 100%; border-collapse: separate; border-spacing: 0;; border: 1.5px solid #000; font-size: 12pt;">
+   <table style="width: 100%; border-collapse: separate; border-spacing: 0;; border: 1px solid #000; font-size: 12pt;">
      <colgroup>
        <col style="width: 8%;" />
        <col style="width: 18%;" />
@@ -2499,141 +2539,192 @@ export function generateValuationReportHTML(data = {}) {
      <tbody>
        <!-- PAGE TITLE -->
        <tr>
-         <td colspan="4" style="border: 1.5px solid #000;  text-align: center; font-weight: bold; font-size: 13pt;">
+         <td colspan="4" style="border: 1px solid #000;  text-align: center; font-weight: bold; font-size: 13pt;">
            MARKET VALUE OF THE PROPERTY
           </td>
         </tr>
         
         <!-- LAND VALUE SECTION HEADER -->
         <tr>
-          <td colspan="7" style="border: 1.5px solid #000; padding: 6px; font-weight: bold; background: #ffffff; font-size: 12pt;">
+          <td colspan="7" style="border: 1px solid #000; padding: 6px; font-weight: bold; background: #ffffff; font-size: 12pt;">
             <i>1. LAND VALUE:</i>
           </td>
         </tr>
         
         <!-- LAND VALUE COLUMN HEADERS -->
         <tr>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 10pt;">Sr. No.</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 10pt;">Land Area - SMT</td>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 10pt;">Land Rate – Including Land Development cost rate per sq.mtr</td>
-          <td colspan="2" style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 10pt;">Value of Land</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 12pt;">Sr. No.</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 12pt;">Land Area - SMT</td>
+          <td colspan="3" style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 12pt;">Land Rate – Including Land Development cost rate per sq.mtr</td>
+          <td colspan="2" style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 12pt;">Value of Land</td>
         </tr>
         
         <!-- LAND VALUE DATA ROW -->
         <tr>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">1.</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">NA</td>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">NA</td>
-          <td colspan="2" style="border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">NA</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">1.</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">NA</td>
+          <td colspan="3" style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">NA</td>
+          <td colspan="2" style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">NA</td>
         </tr>
         
         <!-- TOTAL LAND VALUE ROW -->
         <tr>
-          <td colspan="6" style="border: 1.5px solid #000; padding: 6px; text-align: right; font-weight: bold; font-size: 10pt;">Total Land Value</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">NA</td>
+          <td colspan="6" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold; font-size: 12pt;">Total Land Value</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">NA</td>
         </tr>
 
         <!-- BUILDING VALUE SECTION HEADER -->
         <tr>
-          <td colspan="7" style="border: 1.5px solid #000; padding: 6px; font-weight: bold; background: #ffffff; font-size: 12pt;">
+          <td colspan="7" style="border: 1px solid #000; padding: 6px; font-weight: bold; background: #ffffff; font-size: 12pt;">
             <i>2. BUILDING VALUE</i>
           </td>
         </tr>
         
         <!-- BUILDING VALUE COLUMN HEADERS -->
         <tr>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 8%; font-size: 9pt;">Sr. No.</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 18%; font-size: 9pt;">Particulars of item</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 14%; font-size: 9pt;">Plinth area (In Sq.ft.)</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 12%; font-size: 9pt;">Roof Height Apprx.</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 10%; font-size: 9pt;">Age of the Building</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 20%; font-size: 9pt;">Estimated Replacement Depreciated Rate of Construction per sq.mtr</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 18%; font-size: 9pt;">Value of Construction</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 8%; font-size: 12pt;">Sr. No.</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 18%; font-size: 12pt;">Particulars of item</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 14%; font-size: 12pt;">Plinth area (In Sq.ft.)</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 12%; font-size: 12pt;">Roof Height Apprx.</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 10%; font-size: 12pt;">Age of the Building</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 20%; font-size: 12pt;">Estimated Replacement Depreciated Rate of Construction per sq.mtr</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; width: 18%; font-size: 12pt;">Value of Construction</td>
         </tr>
         
         <!-- BUILDING VALUE DATA ROW -->
         <tr>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-size: 10pt;">1.</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 10pt;">As per Allotment Deed - SBUA</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 10pt;">000.00</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 10pt;">12 Ft</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 10pt;">12 Years</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 10pt;">₹ 00,000/- per sq.ft SBUA rate Considering Furnished Unit</td>
-          <td style="border: 1.5px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 10pt;">₹ 00,00,00,000.00</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-size: 12pt;">1.</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">As per Allotment Deed - SBUA</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">000.00</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">12 Ft</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">12 Years</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">₹ 00,000/- per sq.ft SBUA rate Considering Furnished Unit</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">₹ 00,00,00,000.00</td>
         </tr>
         
         <!-- TOTAL BUILDING VALUE ROW -->
         <tr>
-          <td colspan="6" style="border: 1.5px solid #000; padding: 6px; text-align: right; font-weight: bold; font-size: 10pt;">Total Building Value</td>
-          <td colspan="1" style="border: 1.5px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 10pt;">${safeGet(pdfData, 'pdfDetails.totalBuildingValue') || 'NA'}</td>
+          <td colspan="6" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold; font-size: 12pt;">Total Building Value</td>
+          <td colspan="1" style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.totalBuildingValue') || 'NA'}</td>
         </tr>
 
         <!-- VALUATION SUMMARY ROWS -->
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 6px; font-weight: bold; font-size: 10pt;">Market Value of Property</td>
-          <td colspan="4" style="background-color: #ffffff; border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">${safeGet(pdfData, 'pdfDetails.totalMarketValueOfTheProperty') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.totalMarketValueOfTheProperty'), safeGet(pdfData, 'pdfDetails.marketValueWords')) : 'NA'}</td>
+          <td colspan="3" style="border: 1px solid #000; padding: 6px; font-weight: bold; font-size: 12pt;">Market Value of Property</td>
+          <td colspan="4" style="background-color: #ffffff; border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.totalMarketValueOfTheProperty') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.totalMarketValueOfTheProperty'), safeGet(pdfData, 'pdfDetails.marketValueWords')) : 'NA'}</td>
         </tr>
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 6px; font-weight: bold; font-size: 10pt;">Realizable value Rs. (90% of Fair market value)</td>
-          <td colspan="4" style="background-color: #ffffff; border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">${safeGet(pdfData, 'pdfDetails.realizableValue') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.realizableValue'), safeGet(pdfData, 'pdfDetails.realizableValueWords')) : 'NA'}</td>
+          <td colspan="3" style="border: 1px solid #000; padding: 6px; font-weight: bold; font-size: 12pt;">Realizable value Rs. (90% of Fair market value)</td>
+          <td colspan="4" style="background-color: #ffffff; border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.realizableValue') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.realizableValue'), safeGet(pdfData, 'pdfDetails.realizableValueWords')) : 'NA'}</td>
         </tr>
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 6px; font-weight: bold; font-size: 10pt;">Distress Value Rs. (80% of Fair market value)</td>
-          <td colspan="4" style="background-color: #ffffff; border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">${safeGet(pdfData, 'pdfDetails.distressValue') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.distressValue'), safeGet(pdfData, 'pdfDetails.distressValueWords')) : 'NA'}</td>
+          <td colspan="3" style="border: 1px solid #000; padding: 6px; font-weight: bold; font-size: 12pt;">Distress Value Rs. (80% of Fair market value)</td>
+          <td colspan="4" style="background-color: #ffffff; border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.distressValue') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.distressValue'), safeGet(pdfData, 'pdfDetails.distressValueWords')) : 'NA'}</td>
         </tr>
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 6px; font-weight: bold; font-size: 10pt;">Insurable Value of the Property</td>
-          <td colspan="4" style="background-color: #ffffff; border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">${safeGet(pdfData, 'pdfDetails.insurableValue') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.insurableValue'), safeGet(pdfData, 'pdfDetails.insurableValueWords')) : 'NA'}</td>
+          <td colspan="3" style="border: 1px solid #000; padding: 6px; font-weight: bold; font-size: 12pt;">Insurable Value of the Property</td>
+          <td colspan="4" style="background-color: #ffffff; border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.insurableValue') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.insurableValue'), safeGet(pdfData, 'pdfDetails.insurableValueWords')) : 'NA'}</td>
         </tr>
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 6px; font-weight: bold; font-size: 10pt;">Jantri Value of the Property</td>
-          <td colspan="4" style="background-color: #ffffff; border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 10pt;">${safeGet(pdfData, 'pdfDetails.jantriValue') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.jantriValue'), safeGet(pdfData, 'pdfDetails.jantriValueWords')) : 'NA'}</td>
+          <td colspan="3" style="border: 1px solid #000; padding: 6px; font-weight: bold; font-size: 12pt;">Jantri Value of the Property</td>
+          <td colspan="4" style="background-color: #ffffff; border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.jantriValue') ? formatCurrencyWithWordsAuto(safeGet(pdfData, 'pdfDetails.jantriValue'), safeGet(pdfData, 'pdfDetails.jantriValueWords')) : 'NA'}</td>
         </tr>
         <!-- VARIATION CLAUSE -->
+         <table style="width: 100%; border-collapse: collapse;">
+         <colgroup>
+           <col style="width: 5%;">
+           <col style="width: 45%;">
+           <col style="width: 50%;">
+         </colgroup>
+         <tr>
+         <!-- VARIATION CLAUSE Guideline  -->
+
+           <td style="border: 1px solid #000; padding: 8px; vertical-align: top;">
+             <strong></strong>
+           </td>
+           <td style="border: 1px solid #000; padding: 8px; vertical-align: top;">
+             e) &nbsp; i. In case of variation of 20% or more in the valuation proposed by the valuer and the Guideline value provided in the State Govt. notification or Income Tax Gazette Justification on variation has to be given.
+           </td>
+           <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt; line-height: 1.3;">
+             a.  Guideline value (Jantri rate) of land/property is the value of the land/property as determined by the government, based on it own metrics of facilities and infrastructure growth in that locality. The stamp duty and registration charges for registering a property deal, is based upon this guideline value. The guideline values are revised periodically to have them in sync with the market value. Jantri rates are not relevant in current scenario, as they were last updated in April 2011. Actual market rates have more than doubled since then, depending upon area, locality, demand and supply and other various factors.
+           </td>
+         </tr>
         <tr>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 8px; vertical-align: top;">
-            <strong>c) &nbsp; i. In case of variation of 20% or more in the valuation proposed by the valuer and the Guideline value provided in the State Govt. notification or Income Tax Gazette Justification on variation has to be given.</strong>
-          </td>
-          <td colspan="4" style="background-color: #ffffff; border: 1.5px solid #000; padding: 8px; vertical-align: top; font-size: 8.5pt; line-height: 1.3;">
-            <strong>a. &nbsp;Guideline value (Jantri rate) of land/property is the value of the land/property as determined by the government, based on it own metrics of facilities and infrastructure growth in that locality. The stamp duty and registration charges for registering a property deal, is based upon this guideline value. The guideline values are revised periodically to have them in sync with the market value. Jantri rates are not relevant in current scenario, as they were last updated in April 2011. Actual market rates have more than doubled since then, depending upon area, locality, demand and supply and other various factors.</strong><br/>
-            
-            <strong>b. &nbsp;Being this the situation, it has been observed that sale deeds are executed at lower price of Jantri rates to save registration charges / stamp duty. So these instances does not reflect actual transaction amount / market rate. Moreover now days, in actual market, transactions are done on super built-up area, whereas guideline value (Jantri rate) is based on carpet area. Both the areas have difference of about 40-50% This also makes difference between two values.</strong><br/>
-            
-            <strong>c. &nbsp;In present system certain value zones are established at macro levels, but within the same value zone the land prices of all the plots cannot be same. There are certain negative / positive factors, which are attached to any parcel of land, like width of the road on which a plot abuts, frontage to depth ratio, adjoining slum or hutments, title of the property, certain religious & sentimental factors, proximity to high tension electricity supply lines, crematorium, socio-economic pattern, stage of infrastructure, development of area, whereas guideline rate are prescribes as uniform rates for particular FP/Zone.</strong><br/>
-            
-            <strong>d. &nbsp;Property/land/flat on the main road in any area is priced higher and should be valued higher than in interiors, whereas guideline rate considered them all with equal perspective.</strong><br/>
-            
-            <strong>e. &nbsp;In real estate market, it has been observed that many type of values prevalent in market like forced Sale value, sentimental value, monopoly value etc. so it cannot be generalized, while guideline value (Jantri rate) considered them all with one value only.</strong><br/>
-            
-            <strong>f. &nbsp;Moreover two projects of two different builder having different reputation & quality work in same zone may fetch different values. Again guideline value (Jantri rate) considered them all as one.</strong><br/>
-            
-            <strong>g. &nbsp;Government policies also change the trends/values in real estate market, for example demonetization, GST etc. the real estate market reacts significantly for these policies for uptrend or downtrend. So this also affects the market rate heavily. While guideline rates remain same.</strong>
-          <strong>h. It may not be possible to have a method to fix guideline (Jantri rate) values without anomalies as each site has different characteristics. But it is always desired to revise guideline value (Jantrirate) at regular intervals (e.g. Six months) or so, as it is the trend observed in other states e.g. Maharashtra (Mumbai) & other states.<br/></strong>
-            </td>
-        </tr>
-        <!-- CONTINUATION - LAST TRANSACTIONS -->
-        <tr>
-          <td colspan="3" style="border: 1.5px solid #000; padding: 8px; vertical-align: top;">
-            <strong>ii. Details of last two transactions in the locality/area to be provided, if available.</strong>
-          </td>
-          <td colspan="4" style="background-color: #ffffff; border: 1.5px solid #000; padding: 8px; vertical-align: top; font-size: 10pt;">
-            <strong>i. Recently in year 2023, Govt. has released Revised GR for Guideline rate calculation, Tharav No. 122023/20/H/1, Dt. 13/04/2023, as per that, various revision are mentioned in Land Rate for Residential land, Composite Rate for Office use and Shop Use, and Apartment use, Agriculture Land Use, etc. The GR is attached herewith</strong>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt; line-height: 1.3;">
+             b.  Being this the situation, it has been observed that sale deeds are executed at lower price of Jantri rates to save registration charges / stamp duty. So these instances does not reflect actual transaction amount / market rate. Moreover now days, in actual market, transactions are done on super built-up area, whereas guideline value (Jantri rate) is based on carpet area. Both the areas have difference of about 40-50% This also makes difference between two values.
           </td>
         </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt; line-height: 1.3;">
+             c.  In present system certain value zones are established at macro levels, but within the same value zone the land prices of all the plots cannot be same. There are certain negative / positive factors, which are attached to any parcel of land, like width of the road on which a plot abuts, frontage to depth ratio, adjoining slum or hutments, title of the property, certain religious & sentimental factors, proximity to high tension electricity supply lines, crematorium, socio-economic pattern, stage of infrastructure, development of area, whereas guideline rate are prescribes as uniform rates for particular FP/Zone.
+          </td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt; line-height: 1.3;">
+             d.  Property/land/flat on the main road in any area is priced higher and should be valued higher than in interiors, whereas guideline rate considered them all with equal perspective.
+          </td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt; line-height: 1.3;">
+            e.  In real estate market, it has been observed that many type of values prevalent in market like forced Sale value, sentimental value, monopoly value etc. so it cannot be generalized, while guideline value (Jantri rate) considered them all with one value only
+          </td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt; line-height: 1.3;">
+             f.  Moreover two projects of two different builder having different reputation & quality work in same zone may fetch different values. Again guideline value (Jantri rate) considered them all as one.
+          </td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt; line-height: 1.3;">
+             g.  Government policies also change the trends/values in real estate market, for example demonetization, GST etc. the real estate market reacts significantly for these policies for uptrend or downtrend. So this also affects the market rate heavily. While guideline rates remain same.
+          </td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+          <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt; line-height: 1.3;">
+             h.  It may not be possible to have a method to fix guideline (Jantri rate) values without anomalies as each site has different characteristics. But it is always desired to revise guideline value (Jantrirate) at regular intervals (e.g. Six months) or so, as it is the trend observed in other states e.g. Maharashtra (Mumbai) & other states.
+          </td>
+        </tr>
+      
+      <!-- CONTINUATION - LAST TRANSACTIONS -->
+      <tr>
+      <td style="border: 1px solid #000; padding: 8px; vertical-align: top;"></td>
+      <td style="border: 1px solid #000; padding: 8px; vertical-align: top;">
+      ii. Details of last two transactions in the locality/area to be provided, if available.
+      </td>
+      <td style="background-color: #ffffff; border: 1px solid #000; padding: 8px; vertical-align: top; font-size: 12pt;">
+       i.Recently in year 2023, Govt. has released Revised GR for Guideline rate calculation, Tharav No. 122023/20/H/1, Dt. 13/04/2023, as per that, various revision are mentioned in Land Rate for Residential land, Composite Rate for Office use and Shop Use, and Apartment use, Agriculture Land Use, etc. The GR is attached herewith
+      </td>
+      </tr>
+       
         <!-- REMARKS SECTION -->
         <tr>
-          <td style="border: 1.5px solid #000; padding: 8px; width: 5%; vertical-align: top;"></td>
-          <td colspan="6" style="border: 1.5px solid #000; padding: 8px; font-weight: bold; background: #ffffff;">
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; vertical-align: top;"></td>
+          <td colspan="6" style="border: 1px solid #000; padding: 8px; font-weight: bold; background: #ffffff;">
             <strong>REMARKS:</strong>
           </td>
         </tr>
         <tr>
-          <td style="border: 1.5px solid #000; padding: 8px; width: 5%; vertical-align: top;"></td>
-          <td colspan="6" style="border: 1.5px solid #000; padding: 6px; background-color: #ffffff;">
+          <td style="border: 1px solid #000; padding: 8px; width: 5%; vertical-align: top;"></td>
+          <td colspan="6" style="border: 1px solid #000; padding: 6px; background-color: #ffffff;">
             <strong>We have considered Super Built-up Area As per Copy of Indenture of Allotment-cum-Sale for Valuation.</strong><br/>
             <strong>Property is Mortgaged in Bank, All Original documents already submitted to bank.</strong>
           </td>
         </tr>
+         </table>
         </tbody>
         </table>
         </div>
@@ -2802,7 +2893,7 @@ export function generateValuationReportHTML(data = {}) {
     </table>
 
     <!-- SOP Section -->
-    <div style="margin-top: 15px;width: 60% padding: 8px; border: 1px solid #000;">
+    <div style="margin-top: 15px; width: 60%; padding: 8px; border: 1px solid #000;">
       <p style="margin: 4px 0; font-weight: bold; font-size: 12pt;">STANDARD OPERATING PROCEDURE (SOP)</p>
       <p style="margin: 4px 0; font-size: 12pt;">1 &nbsp;&nbsp;BANK GUIDELINES FOR VALUER</p>
       <p style="margin: 4px 0; font-size: 12pt;">2 &nbsp;&nbsp;<span>www.donfinworld.io</span></p>
@@ -2812,8 +2903,8 @@ export function generateValuationReportHTML(data = {}) {
   
 
     <!-- PAGE 18: PREAMBLE AND STANDARD OPERATING PROCEDURE -->
-    <div style="margin: 0; padding: 5px 10px; font-size: 10pt; line-height: 1.4; width: 100%;">
-    <p style="margin: 8px 0; font-weight: bold;">❖ PREAMBLE</p>
+    <div style="margin: 0; font-size: 12pt; line-height: 1.4; width: 100%; page-break-before: always;">
+    <p style="margin: 5px 0; font-weight: bold; page-break-after: avoid;">❖ PREAMBLE</p>
     
     <p style="margin: 8px 0; text-align: justify;">
       Bank valuers in India rely on Standard Operating Procedures (SOPs) for several good reasons. SOPs help ensure consistency in property valuations by providing a standardised approach. This results in uniformity in the valuation process across different regions and properties, reducing discrepancies and ensuring fair and objective valuations. Moreover, SOPs establish guidelines and best practices that bank valuers must follow to maintain high-quality and accurate valuations. This guarantees that the bank receives reliable valuations, reducing the risk of financial loss due to overvaluation or undervaluation.
@@ -2830,111 +2921,113 @@ export function generateValuationReportHTML(data = {}) {
     <p style="margin: 8px 0; text-align: justify;">
       In summary, SOPs are crucial for bank valuers in India as they promote consistency, maintain quality, ensure regulatory compliance, mitigate risks, uphold professionalism, and support training and development. By following these procedures, bank valuers can provide accurate and reliable property valuations, contributing to a robust banking system.
     </p>
+    
 
-    <p style="margin: 12px 0; font-weight: bold;">❖ Standard Operating Procedure (SOP)</p>
-    
-    <p style="margin: 6px 0;"><strong>1. Receive a valuation request from the bank.</strong></p>
-    <p style="margin: 6px 0;"><strong>2. Review the request thoroughly to understand the scope, purpose, and specific requirements of the valuation.</strong></p>
-    <p style="margin: 6px 0;"><strong>3. Conduct a preliminary assessment of the property or asset to determine its feasibility for valuation.</strong></p>
-    <p style="margin: 6px 0;"><strong>4. Gather relevant data and information about the property or asset, including legal documents, title deeds, surveys, plans, and other necessary documents provided by the bank.</strong></p>
-    <p style="margin: 6px 0;"><strong>5. Conduct an on-site inspection of the property or asset, taking photographs, measurements and noting essential details.</strong></p>
-    <p style="margin: 6px 0;"><strong>6. Collect market data and research comparable properties or assets in the vicinity to establish a benchmark for valuation.</strong></p>
-    <p style="margin: 6px 0;"><strong>7. Analyze the collected data and use appropriate valuation methods, such as the sales comparison approach, income approach, or cost approach, depending on the property or asset's nature.</strong></p>
-    <p style="margin: 6px 0;"><strong>8. Prepare a comprehensive and detailed valuation report that includes all relevant information, assumptions made, methodologies used, and supporting evidence.</strong></p>
-    
-    <!-- PAGE 19: OBSERVATIONS, ASSUMPTIONS AND LIMITING CONDITIONS -->
-    <p style="margin: 6px 0;"><strong>9. Review the report meticulously for accuracy, completeness, and compliance with applicable valuation standards and guidelines.</strong></p>
-    <p style="margin: 6px 0;"><strong>10. Submit the valuation report to the bank within the agreed-upon timeframe.</strong></p>
-    <p style="margin: 6px 0;"><strong>11. Attend a meeting or provide additional clarification to the bank regarding the valuation report, if needed.</strong></p>
-    <p style="margin: 6px 0;"><strong>12. Address any queries or requests for revision from the bank and make necessary amendments to the valuation report as per their feedback.</strong></p>
-    <p style="margin: 6px 0;"><strong>13. Obtain final approval or acceptance of the valuation report from the bank.</strong></p>
-    <p style="margin: 6px 0;"><strong>14. Maintain records of all valuation reports, documents, and communication-related to the valuation process for future reference and compliance purposes.</strong></p>
-    <p style="margin: 6px 0;"><strong>15. Follow up with the bank regarding any outstanding payments or administrative formalities.</strong></p>
-    
-    <p style="margin: 12px 0; text-align: justify;">
-      While the process may differ based on the bank's specific requirements and the property or asset being evaluated, this flowchart is a solid foundation for all Banking Valuers in India to confidently and efficiently conduct valuations.
-    </p>
+    <!-- PAGE BREAK BEFORE SOP -->
+    <div style="margin: 0; font-size: 12pt; line-height: 1.4; width: 100%; page-break-before: always; padding: 0 20px;">
+      <p style="margin: 12px 0 10px 0; font-weight: bold; font-size: 13pt; page-break-inside: avoid;">❖ Standard Operating Procedure (SOP)</p>
+      
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>1.</strong> Receive a valuation request from the bank.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>2.</strong> Review the request thoroughly to understand the scope, purpose, and specific requirements of the valuation.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>3.</strong> Conduct a preliminary assessment of the property or asset to determine its feasibility for valuation.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>4.</strong> Gather relevant data and information about the property or asset, including legal documents, title deeds, surveys, plans, and other necessary documents provided by the bank.</p></br></br>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>5.</strong> Conduct an on-site inspection of the property or asset, taking photographs, measurements and noting essential details.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>6.</strong> Collect market data and research comparable properties or assets in the vicinity to establish a benchmark for valuation.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>7.</strong> Analyze the collected data and use appropriate valuation methods, such as the sales comparison approach, income approach, or cost approach, depending on the property or asset's nature.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>8.</strong> Prepare a comprehensive and detailed valuation report that includes all relevant information, assumptions made, methodologies used, and supporting evidence.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>9.</strong> Review the report meticulously for accuracy, completeness, and compliance with applicable valuation standards and guidelines.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>10.</strong> Submit the valuation report to the bank within the agreed-upon timeframe.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>11.</strong> Attend a meeting or provide additional clarification to the bank regarding the valuation report, if needed.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>12.</strong> Address any queries or requests for revision from the bank and make necessary amendments to the valuation report as per their feedback.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>13.</strong> Obtain final approval or acceptance of the valuation report from the bank.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>14.</strong> Maintain records of all valuation reports, documents, and communication-related to the valuation process for future reference and compliance purposes.</p>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>15.</strong> Follow up with the bank regarding any outstanding payments or administrative formalities.</p>
 
-    <p style="margin: 8px 0; font-weight: bold;">Observations, Assumptions and Limiting Conditions</p>
+      <p style="margin: 12px 0; text-align: justify; page-break-inside: avoid;">
+        While the process may differ based on the bank's specific requirements and the property or asset being evaluated, this flowchart is a solid foundation for all Banking Valuers in India to confidently and efficiently conduct valuations.
+      </p>
+    </div>
+
+    <p style="margin: 8px 0; font-weight: bold; page-break-after: avoid;">Observations, Assumptions and Limiting Conditions</p>
     
     <ul style="margin: 8px 0; padding-left: 20px;">
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         The Indian Real Estate market is currently facing a transparency issue. It is highly fragmented and lacks authentic and reliable data on market transactions. The actual transaction value often differs from the value documented in official transactions. To accurately represent market trends, we conducted a market survey among sellers, brokers, developers, and other market participants. This survey is crucial to determine fair valuation in this subject area. Based on our verbal survey, we have gained insights into the real estate market in the subject area.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         To conduct a proper valuation, we have made the assumption that the property in question possesses a title that is clear and marketable and that it is free from any legal or physical encumbrances, disputes, claims, or other statutory liabilities. Additionally, we have assumed that the property has received the necessary planning approvals and clearances from the local authorities and that it adheres to the local development control regulations.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Please note that this valuation exercise does not cover legal title and ownership matters. Additionally, we have not obtained any legal advice on the subject property's title and ownership during this valuation. Therefore, we advise the client/bank to seek an appropriate legal opinion before making any decision based on this report.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         We want to ensure that our valuation is fair and accurate. However, it's important to note that any legal, title, or ownership issues could have a significant impact on the value. If we become aware of any such issues at a later date, we may need to adjust our conclusions accordingly.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Throughout this exercise, we have utilized information from various sources, including hardcopy, softcopy, email documents, and verbal communication provided by the client. We have proceeded under the assumption that the information provided is entirely reliable, accurate, and complete. However, if it is discovered that the data we were given is not dependable, precise, or comprehensive, we reserve the right to revise our conclusions at a later time.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Please note that the estimated market value of this property does not include transaction costs such as stamp duty, registration charges, and brokerage fees related to its sale or purchase.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         When conducting a subject valuation exercise, it is important to consider the market dynamics at the time of the evaluation. However, it is essential to note that any unforeseeable developments in the future may impact the valuation. Therefore, it is crucial to remain vigilant and adaptable in the face of changing circumstances.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Kindly note that the physical measurements and area given are only approximations. The exact area of the property can only be determined based on the information obtained during inspection. Furthermore, the remaining economic lifespan is an estimate determined by our professional judgement.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Please note that the valuation stated in this report is only applicable for the specific purposes mentioned herein. It is not intended for any other use and cannot be considered valid for any other purpose. The report should not be shared with any third party without our written permission. We cannot assume any responsibility for any third party who may receive or have access to this report, even if consent has been given.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Having this report or a copy of it does not grant the privilege of publishing it. None of the contents in this report should be shared with third parties through advertising, public relations, news or any other communication medium without the written acceptance and authorization of VALUERS.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         To assess the condition and estimate the remaining economic lifespan of the item, we rely on visual observations and a thorough review of maintenance, performance, and service records. It's important to note that we have not conducted any structural design or stability studies, nor have we performed any physical tests to determine the item's structural integrity and strength.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         The report was not accompanied by any soil analysis, geological or technical studies, and there were no investigations conducted on subsurface mineral rights, water, oil, gas, or other usage conditions.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         The asset was inspected, evaluated, and assessed by individuals who have expertise in valuing such assets. However, it's important to note that we do not make any assertions or assume responsibility for its compliance with health, safety, environmental, or other regulatory requirements that may not have been immediately apparent during our team's inspection.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         During the inspection, if the units were not named, we relied on identification by the owner or their representative and documents like the sale deed, light bill, plan, tax bill, the title for ownership, and boundaries of units. Without any accountability for the title of the units.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Kindly be informed that the valuation report may require modifications in case unanticipated circumstances arise, which were not considered in the presumptions and restrictions specified in the report.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Additional observations, assumptions, and any relevant limiting conditions are also disclosed in the corresponding sections of this report and its annexes.
       </li>
     </ul>
 
-    <p style="margin: 12px 0; font-weight: bold;">❖ Our standard terms and conditions of professional engagement govern this report. They are outlined below:</p>
+    <p style="margin: 12px 0; font-weight: bold; page-break-after: avoid;">❖ Our standard terms and conditions of professional engagement govern this report. They are outlined below:</p>
 
     <ol style="margin: 8px 0; padding-left: 20px;">
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
        1. Valuers will be liable for any issues or concerns related to the Valuation and/or other Services provided. This includes situations where the cause of action is in contract, tort (including negligence), statute, or any other form, however, the total amount of liability will not exceed the professional fees paid to VALUERS for this service.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
       2.  VALUERS and its partners, officers, and executives cannot be held liable for any damages, including consequential, incidental, indirect, punitive, exemplary, or special damages. This includes damages resulting from bad debts, non-performing assets, financial loss, malfunctions, delays, loss of data, interruptions of service, or loss of business and anticipated profits.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
        3. The Valuation Services, along with the Deliverables submitted by VALUERS, are intended solely for the benefit of the parties involved. VALUERS assumes no liability or responsibility towards any third party who utilizes or gains access to the Valuation or benefits from the Services.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
        4. VALUERS and / or its Partners, Officers and Executives accept no responsibility for detecting fraud or misrepresentation, whether by management or employees of the Client or third parties. Accordingly, VALUERS will not be liable in any way for, or in connection with, fraud or misrepresentations, whether on the part of the Client, its contractors or agents, or any other third party.
       </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
 5. If you wish to bring a legal proceeding related to the Services or Agreement, it must be initiated within six (6) 
 months from the date you became aware of or should have known about the facts leading to the alleged 
 liability. Additionally, legal proceedings must be initiated no later than one (1) year from the date of the 
 Deliverable that caused the alleged liability.     </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
 6. If you, as the client, have any concerns or complaints about the services provided, please do not hesitate to 
 discuss them with the officials of VALUERS. Any service-related issues concerning this Agreement (or any 
 variations or additions to it) must be brought to the attention of VALUERS in writing within one month from 
 the date when you became aware of or should have reasonably been aware of the relevant facts. Such issues 
 must be raised no later than six months from the completion date of the services.     </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
 7. If there is any disagreement regarding the Valuation or other Services that are provided, both parties must first 
 try to resolve the issue through conciliation with their senior representatives. If a resolution cannot be reached 
 within forty-five (45) days, the dispute will be settled through Arbitration in India, following the guidelines of 
@@ -2942,13 +3035,13 @@ the Arbitration and Conciliation Act 1996. The venue of the arbitration will be 
 India. The arbitrator(s)' authority will be subject to the terms of the standard terms of service, which includes 
 the limitation of liability provision. All information regarding the arbitration, including the arbitral award, will 
 be kept confidential.      </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
 8. By utilizing this report, the user is presumed to have thoroughly read, comprehended, and accepted VALUERS' 
 standard business terms and conditions, as well as the assumptions and limitations outlined in this document.      </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
       9. We have valued the right property as per the details submitted to me.  
      </li>
-      <li style="margin: 6px 0; text-align: justify;">
+      <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
 10. Please note that payment for the valuation report is expected to be made within the bank's given time limit 
 from the date of the report. Simply possessing the report will not fulfill its intended purpose. 
       </li>
@@ -2970,12 +3063,10 @@ from the date of the report. Simply possessing the report will not fulfill its i
      <p style="margin: 2px 0; font-size: 12pt; line-height: 1.6;">Mobile: 09825798600</p>
      <p style="margin: 6px 0 0 0; font-size: 12pt; line-height: 1.6;"><a href="mailto:rajeshganatra2003@gmail.com" style="color: blue; text-decoration: underline;">E-Mail: rajeshganatra2003@gmail.com</a></p>
     </div>
-    </div>
-    <!-- END: annexure-123-section -->
-
-    <!-- CONTINUOUS DATA TABLE -->
-<!-- PAGE 22: DECLARATION-CUM-UNDERTAKING (ANNEXURE-IV) -->
-  <div style="font-size: 12pt; line-height: 1.4; margin-top: 10px;  padding: 5px 10px; margin-left: 0; margin-right: 0; width: 100%;" class="annexure-iv-section">
+  </div>
+    <!-- PAGE 22: DECLARATION-CUM-UNDERTAKING (ANNEXURE-IV) -->
+<div style=" background: white;padding: 12mm; width: 100%; box-sizing: border-box; page-break-before: always;" class="annexure-iv-section print-container">
+  <div style="font-size: 12pt; line-height: 1.4; margin-top: 10px; margin-left: 0; margin-right: 0; width: 100%;">
     <div style="text-align: center; margin-bottom: 25px;">
       <p style="margin: 0; font-weight: bold; font-size: 12pt;">ANNEXURE – IV</p>
       <p style="margin: 8px 0 0 0; font-weight: bold; font-size: 12pt;">DECLARATION- CUM- UNDERTAKING</p>
@@ -2983,194 +3074,349 @@ from the date of the report. Simply possessing the report will not fulfill its i
 
     <p style="margin: 10px 0; font-weight: bold;">I, ${safeGet(pdfData, 'engineerName') || 'Rajesh Ganatra'}, son of ${safeGet(pdfData, 'fatherName') || 'Kishorbhai Ganatra'}, do hereby solemnly affirm and state that:</p>
 
-    <ol style="margin: 10px 0; padding-left: 20px; list-style-type: lower-alpha;">
-      <li style="margin: 6px 0;">I am a citizen of India</li>
-      <li style="margin: 6px 0;">I will not undertake valuation of any assets in which I have a direct or indirect interest or become so interested at any time during a period of three years prior to my appointment as valuer or three years after the valuation of assets was conducted by me</li>
-      <li style="margin: 6px 0;">The information furnished in my valuation report dated <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</span> is true and correct to the best of my knowledge and belief and I have made an impartial and true valuation of the property</li>
-      <li style="margin: 6px 0;">We have personally inspected the property on <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'inspectionDate')) || '26/11/2025'}</span> The work is not sub-contracted to any other valuer and carried out by myself.</li>
-      <li style="margin: 6px 0;">Valuation report is submitted in the format as prescribed by the Bank.</li>
-      <li style="margin: 6px 0;">I have been duly empanelled/ delisted by any other bank and in case any such de-panelment by other banks during my empanelment with you, I will inform you within 3 days of such de-panelment.</li>
-      <li style="margin: 6px 0;">I have not been removed/dismissed from service/employment earlier</li>
-      <li style="margin: 6px 0;">I have not been convicted of any offence and sentenced to a term of imprisonment</li>
-      <li style="margin: 6px 0;">I have not been found guilty of misconduct in professional capacity</li>
-      <li style="margin: 6px 0;">I have not been declared to be unsound mind</li>
-      <li style="margin: 6px 0;">I am not an un-discharged bankrupt, or has not applied to be adjudicated as a bankrupt;</li>
-      <li style="margin: 6px 0;">I am not an un-discharged insolvent</li>
-      <li style="margin: 6px 0;">I have not been levied a penalty under section 271J of Income-tax Act, 1961 (43 of 1961) and time limit for filing appeal before Commissioner of Income- tax (Appeals) or Income-tax Appellate Tribunal, as the case may be his expired, or such penalty has been confirmed by Income-tax Appellate Tribunal, and five years have not elapsed after levy of such penalty</li>
-      <li style="margin: 6px 0;">I have not been convicted of an offence connected with any proceeding under the Income Tax Act 1961, Wealth Tax Act 1957 or Gift Tax Act 1958 and</li>
-      <li style="margin: 6px 0;">My PAN Card number/Service Tax number as applicable is <span style="text-decoration: underline;">AELPG1208B</span></li>
-      <li style="margin: 6px 0;">I undertake to keep you informed of any events or happenings which would make me ineligible for empanelment as a valuer</li>
-      <li style="margin: 6px 0;">I have not concealed or suppressed any material information, facts and records and I have made a complete and full disclosure</li>
-      <li style="margin: 6px 0;">I have read the Handbook on Policy, Standards and procedure for Real Estate Valuation, 2011 of the IBA and this report is in conformity to the "Standards" enshrined for valuation in the Part-B of the above handbook to the best of my ability</li>
-      <li style="margin: 6px 0;">I am registered under Section 34 AB of the Wealth Tax Act, 1957. (Strike off, if not applicable)</li>
-      <li style="margin: 6px 0;">I am valuer registered with Insolvency & Bankruptcy Board of India (IBBI) (Strike off, if not applicable)</li>
-      <li style="margin: 6px 0;">My CIBIL Score and credit worthiness is as per Bank's guidelines.</li>
-      <li style="margin: 6px 0;">I am the proprietor / partner / authorized official of the firm / company, who is competent to sign this valuation report.</li>
-      <li style="margin: 6px 0;">I will undertake the valuation work on receipt of Letter of Engagement generated from the system (i.e. LLMS/LOS) only.</li>
-      <li style="margin: 6px 0;">Further, I hereby provide the following information.</li>
-    </ol>
-
-    
+ <ol style="margin: 10px 0; padding-left: 20px; list-style-type: none; counter-reset: alphacounter;">
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">A.</span>I am a citizen of India
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">B.</span>I will not undertake valuation of any assets in which I have a direct or indirect interest or become so interested at any time during a period of three years prior to my appointment as valuer or three years after the valuation of assets was conducted by me
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">C.</span>The information furnished in my valuation report dated <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</span> is true and correct to the best of my knowledge and belief and I have made an impartial and true valuation of the property
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">D.</span>We have personally inspected the property on <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'inspectionDate')) || '26/11/2025'}</span>. The work is not sub-contracted to any other valuer and carried out by myself.
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">E.</span>Valuation report is submitted in the format as prescribed by the Bank.
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">F.</span>
+  I have not been depanelled/ delisted by any other bank and in case any such deplanement by other banks 
+  during my empanelment with you, I will inform you within 3 days of such depanelment. 
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">F.</span>I have not been removed/dismissed from service/employment earlier
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">H.</span>I have not been convicted of any offence and sentenced to a term of imprisonment
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">I.</span>I have not been found guilty of misconduct in professional capacity
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">J.</span>I have not been declared to be unsound mind
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">K.</span>I am not an un-discharged bankrupt, or have not applied to be adjudicated as a bankrupt
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">L.</span>I am not an un-discharged insolvent
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">M.</span>I have not been levied a penalty under section 271J of Income-tax Act, 1961 (43 of 1961) and time limit for filing appeal before Commissioner of Income-tax (Appeals) or Income-tax Appellate Tribunal, as the case may be, has expired, or such penalty has been confirmed by Income-tax Appellate Tribunal, and five years have not elapsed after levy of such penalty
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">N.</span>I have not been convicted of an offence connected with any proceeding under the Income Tax Act 1961, Wealth Tax Act 1957 or Gift Tax Act 1958
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">O.</span>My PAN Card number/Service Tax number as applicable is <span style="text-decoration: underline;">AELPG1208B</span>
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">P.</span>I undertake to keep you informed of any events or happenings which would make me ineligible for empanelment as a valuer
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">Q.</span>I have not concealed or suppressed any material information, facts and records and I have made a complete and full disclosure
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">R.</span>I have read the Handbook on Policy, Standards and Procedure for Real Estate Valuation, 2011 of the IBA and this report is in conformity to the "Standards" enshrined for valuation in the Part-B of the above handbook to the best of my ability
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">S.</span>I am registered under Section 34 AB of the Wealth Tax Act, 1957. (Strike off, if not applicable)
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">T.</span>I am valuer registered with Insolvency & Bankruptcy Board of India (IBBI) (Strike off, if not applicable)
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">U.</span>My CIBIL Score and credit worthiness is as per Bank's guidelines
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">V.</span>I am the proprietor/partner/authorized official of the firm/company, who is competent to sign this valuation report
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">W.</span>I will undertake the valuation work on receipt of Letter of Engagement generated from the system (i.e. LLMS/LOS) only
+  </li>
+  <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">X.</span>Further, I hereby provide the following information
+  </li>
+</ol>
   </div>
 </div>
 
 <!-- PAGE 23: VALUATION DETAILS TABLE -->
-<div class="page" style="margin: 0; padding: 12mm; background: white; width: 100%;" class="print-container">
+<div style="margin: 0; padding: 12mm; background: white; width: 100%; box-sizing: border-box; page-break-before: always;" class="print-container">
   <div style="font-size: 12pt; line-height: 1.4;">
-    <table style="width: 100%; border-collapse: separate; border-spacing: 0;; margin: 0; border: 1px solid #000;">
+    <table style="width: 100%; border-collapse: collapse; margin: 0; border: 1px solid #000;">
       <tr>
-        <td style="border: 1px solid #000; padding: 6px; text-align: center; width: 8%; font-weight: bold;">Sl. No.</td>
-        <td style="border: 1px solid #000; padding: 6px; width: 42%; font-weight: bold;">Particulars</td>
+        <td style="border: 1px solid #000; padding: 6px; text-align: center; width: 5%; font-weight: bold;">Sr.No.</td>
+        <td style="border: 1px solid #000; padding: 6px; width: 45%; font-weight: bold;">Particulars</td>
         <td style="border: 1px solid #000; padding: 6px; width: 50%; font-weight: bold;">Valuer comment</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">1</td>
-        <td style="border: 1px solid #000; padding: 6px;">background information of the asset being valued;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Background information of the asset being valued</td>
         <td style="border: 1px solid #000; padding: 6px;">Referred provided documents</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">2</td>
-        <td style="border: 1px solid #000; padding: 6px;">purpose of valuation and appointing authority</td>
+        <td style="border: 1px solid #000; padding: 6px;">Purpose of valuation and appointing authority</td>
         <td style="border: 1px solid #000; padding: 6px;"><strong>Continue Financial Assistance Purpose</strong></td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">3</td>
-        <td style="border: 1px solid #000; padding: 6px;">identity of the valuer and any other experts involved in the valuation;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Identity of the valuer and any other experts involved in the valuation</td>
         <td style="border: 1px solid #000; padding: 6px;">Self-assessment</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">4</td>
-        <td style="border: 1px solid #000; padding: 6px;">disclosure of valuer interest or conflict, if any;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Disclosure of valuer interest or conflict, if any</td>
         <td style="border: 1px solid #000; padding: 6px;">N.A.</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">5</td>
-        <td style="border: 1px solid #000; padding: 6px;">date of appointment, valuation date and date of report;</td>
+        <td style="border: 1px solid #000; padding: 6px;">Date of appointment, valuation date and date of report</td>
         <td style="border: 1px solid #000; padding: 6px;"><strong>Date of report: 28/11/2025<br/>Date of Visit: 26/11/2025</strong></td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">6</td>
-        <td style="border: 1px solid #000; padding: 6px;">inspections and/or investigations undertaken;</td>
-        <td style="border: 1px solid #000; padding: 6px;">Yes.</td>
+        <td style="border: 1px solid #000; padding: 6px;">Inspections and/or investigations undertaken</td>
+        <td style="border: 1px solid #000; padding: 6px;">Yes</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">7</td>
-        <td style="border: 1px solid #000; padding: 6px;">nature and sources of the information used or relied upon;</td>
-        <td style="border: 1px solid #000; padding: 6px;">Local inquiries, brokers, known websites, i.e., magicbricks, 99acres, propertywall, proprtiger, housing, etc., if available</td>
+        <td style="border: 1px solid #000; padding: 6px;">Nature and sources of the information used or relied upon</td>
+        <td style="border: 1px solid #000; padding: 6px;">Local inquiries, brokers, known websites (magicbricks, 99acres, propertywall, proprtiger, housing), if available</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">8</td>
-        <td style="border: 1px solid #000; padding: 6px;">procedures adopted in carrying out the valuation and valuation standards followed.</td>
-        <td style="border: 1px solid #000; padding: 6px;">Land & Building Method, with Market Approach for Land and Cost Approach for Building.</td>
+        <td style="border: 1px solid #000; padding: 6px;">Procedures adopted in carrying out the valuation and valuation standards followed</td>
+        <td style="border: 1px solid #000; padding: 6px;">Land & Building Method, with Market Approach for Land and Cost Approach for Building</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">9</td>
-        <td style="border: 1px solid #000; padding: 6px;">restrictions on use of the report, if any;</td>
-        <td style="border: 1px solid #000; padding: 6px;">As per purpose mentioned in report.</td>
+        <td style="border: 1px solid #000; padding: 6px;">Restrictions on use of the report, if any</td>
+        <td style="border: 1px solid #000; padding: 6px;">As per purpose mentioned in report</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">10</td>
-        <td style="border: 1px solid #000; padding: 6px;">major factors that were taken into account during the valuation;</td>
-        <td style="border: 1px solid #000; padding: 6px;">Location of the property, with developing of surroundings, for going-purpose valuation</td>
+        <td style="border: 1px solid #000; padding: 6px;">Major factors that were taken into account during the valuation</td>
+        <td style="border: 1px solid #000; padding: 6px;">Location of the property, with developing surroundings, for going-concern valuation</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">11</td>
-        <td style="border: 1px solid #000; padding: 6px;">Caveats, limitations and disclaimers to the extent they explain or elucidate the limitations faced by valuer, which shall not be for the purpose of limiting his responsibility for the valuation report.</td>
-        <td style="border: 1px solid #000; padding: 6px;">Future market events and Government Policies.</td>
+        <td style="border: 1px solid #000; padding: 6px;">Caveats, limitations and disclaimers to the extent they explain or elucidate the limitations faced by valuer, which shall not be for the purpose of limiting responsibility for the valuation report</td>
+        <td style="border: 1px solid #000; padding: 6px;">Future market events and Government Policies</td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">12</td>
-        <td style="border: 1px solid #000; padding: 6px;">Caveats, limitations and disclaimers to the extent they explain or elucidate the limitations faced by valuer, which shall not be for the purpose of limiting his responsibility for the valuation report.</td>
-        <td style="border: 1px solid #000; padding: 6px;">We are not responsible for Title of the subjected property and valuations affected by the same</td>
+        <td style="border: 1px solid #000; padding: 6px;">Other relevant caveats, limitations and disclaimers</td>
+        <td style="border: 1px solid #000; padding: 6px;">Not responsible for Title of the property and valuations affected by the same</td>
       </tr>
-    </table>
-
-    <div style="margin-top: 40px; padding: 0 20px;">
-      <p style="margin: 0;"><strong>Place: Ahmedabad</strong></p>
-      <p style="margin: 5px 0;"><strong>Date: ${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</strong></p>
-      <div style="margin-top: 30px; text-align: right;">
-        <p style="margin: 0; font-weight: bold;">Rajesh Ganatra</p>
-      </div>
-    </div>
+       <tr>
+      <td style="border: none; padding: 6px;">
+        <p style="margin: 0; text-align: left;"><strong>Place: Ahmedabad</strong></p>
+        <p style="margin: 5px 0;text-align: left;"><strong>Date: ${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</strong></p>
+      </td>
+      <td style="border: none; padding: 6px;">
+        <div style="margin-top: 30px; text-align: right;">
+          <p style="margin: 0; font-weight: bold;">Rajesh Ganatra</p>
+        </div>
+      </td>
+    </tr>
+  </table>
+  <table style="width: 100%; border-collapse: collapse;">
+   
+  </table>
   </div>
-  </div>
+</div>
 
 <!-- PAGE 24-25: MODEL CODE OF CONDUCT FOR VALUERS -->
-<div class="page" style="margin: 0; padding: 12mm; background: white; width: 100%; box-sizing: border-box;" class="print-container">
-  <div style="font-size: 12pt; line-height: 1.5; ">
+<div class="page print-container" style="margin: 0; padding: 12mm; background: white; width: 100%; box-sizing: border-box; page-break-before: always;">
+  <div style="font-size: 12pt; line-height: 1.5;">
     <div style="text-align: center; margin-bottom: 20px;">
-          <p style="margin: 0; font-weight: bold; font-size: 12pt;">(Annexure-V) </p>
-      <p style="margin: 0; font-weight: bold; font-size: 12pt;">MODEL CODE OF CONDUCT FOR VALUERS</p>
+      <p style="margin: 0; font-weight: bold; font-size: 12pt;">(Annexure-V)</p>
+      <p style="margin: 8px 0 0 0; font-weight: bold; font-size: 12pt;">MODEL CODE OF CONDUCT FOR VALUERS</p>
     </div>
 
     <p style="margin: 10px 0 8px 0; font-weight: bold;">Integrity and Fairness</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;  ">
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall, in the conduct of his/its business, follow high standards of integrity and fairness in all his/its dealings with his/its clients and other valuers.</li>
-      <li style="margin: 4px 0; text-align: justify;">A valuer shall maintain integrity by being honest, straightforward, and forthright in all professional relationships.</li>
-      <li style="margin: 4px 0; text-align: justify;">A valuer shall endeavour to ensure that he/it provides true and adequate information and shall not misrepresent any facts or situations.</li>
-      <li style="margin: 4px 0; text-align: justify;">A valuer shall refrain from being involved in any action that would bring disrepute to the profession.</li>
-      <li style="margin: 4px 0; text-align: justify;">A valuer shall keep public interest foremost while delivering his services.</li>
-    </ol>
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">1.</span>
+        <span>A valuer shall, in the conduct of his/its business, follow high standards of integrity and fairness in all his/its dealings with his/its clients and other valuers.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">2.</span>
+        <span>A valuer shall maintain integrity by being honest, straightforward, and forthright in all professional relationships.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">3.</span>
+        <span>A valuer shall endeavour to ensure that he/it provides true and adequate information and shall not misrepresent any facts or situations.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">4.</span>
+        <span>A valuer shall refrain from being involved in any action that would bring disrepute to the profession.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">5.</span>
+        <span>A valuer shall keep public interest foremost while delivering his services.</span>
+      </div>
+    </div>
 
     <p style="margin: 10px 0 8px 0; font-weight: bold;">Professional Competence and Due Care</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;  ">
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall render at all times high standards of service, exercise due diligence, ensure proper care and exercise independent professional judgment.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall carry out professional services in accordance with the relevant technical and professional standards that may be specified from time to time</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall continuously maintain professional knowledge and skill to provide competent professional service based on up-to-date developments in practice, prevailing regulations/guidelines and techniques.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">In the preparation of a valuation report, the valuer shall not disclaim liability for his/its expertise or deny his/its duty of care, except to the extent that the assumptions are based on statements of fact provided by the company or its auditors or consultants or information unavailable in public domain and not generated by the valuer.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall not carry out any instruction of the client insofar as they are incompatible with the requirements of integrity, objectivity and independence.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall clearly state to his client the services that he would be competent to provide and the services for which he would be relying on other valuers or professionals or for which the client can have a separate arrangement with other valuers.</li>
-    </ol>
-
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">6.</span>
+        <span>A valuer shall render at all times high standards of service, exercise due diligence, ensure proper care and exercise independent professional judgment.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">7.</span>
+        <span>A valuer shall carry out professional services in accordance with the relevant technical and professional standards that may be specified from time to time.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">8.</span>
+        <span>A valuer shall continuously maintain professional knowledge and skill to provide competent professional service based on up-to-date developments in practice, prevailing regulations/guidelines and techniques.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">9.</span>
+        <span>In the preparation of a valuation report, the valuer shall not disclaim liability for his/its expertise or deny his/its duty of care, except to the extent that the assumptions are based on statements of fact provided by the company or its auditors or consultants or information unavailable in public domain and not generated by the valuer.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">10.</span>
+        <span>A valuer shall not carry out any instruction of the client insofar as they are incompatible with the requirements of integrity, objectivity and independence.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">11.</span>
+        <span>A valuer shall clearly state to his client the services that he would be competent to provide and the services for which he would be relying on other valuers or professionals or for which the client can have a separate arrangement with other valuers.</span>
+      </div>
+    </div>
+</br>
     <p style="margin: 10px 0 8px 0; font-weight: bold;">Independence and Disclosure of Interest</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="8">
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall act with objectivity in his/its professional dealings by ensuring that his/its decisions are made without the presence of any bias, conflict of interest, coercion, or undue influence of any party, whether directly connected to the valuation assignment or not.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall not take up an assignment if he/it or any of his/its relatives or associates is not independent in terms of association to the company.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall maintain complete independence in his/its professional relationships and shall conduct the valuation independent of external influences.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall wherever necessary disclose to the clients, possible sources of conflicts of duties and interests, while providing unbiased services.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall not deal in securities of any subject company after any time when he/it first becomes aware of the possibility of his/its association with the valuation, and in accordance with the Securities and Exchange Board of India (Prohibition of Insider Trading) Regulations, 2015 or till the time the valuation report becomes public, whichever is earlier.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall not indulge in "mandate snatching" or offering "convenience valuations" in order to cater to a company or client's needs.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">As an independent valuer, the valuer shall not charge success fee.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">In any fairness opinion or independent expert opinion submitted by a valuer, if there has been a prior engagement in an unconnected transaction, the valuer shall declare the association with the company during the last five years.</li>
-    </ol>
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">12.</span>
+        <span>A valuer shall act with objectivity in his/its professional dealings by ensuring that his/its decisions are made without the presence of any bias, conflict of interest, coercion, or undue influence of any party, whether directly connected to the valuation assignment or not.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">13.</span>
+        <span>A valuer shall not take up an assignment if he/it or any of his/its relatives or associates is not independent in terms of association to the company.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">14.</span>
+        <span>A valuer shall maintain complete independence in his/its professional relationships and shall conduct the valuation independent of external influences.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">15.</span>
+        <span>A valuer shall wherever necessary disclose to the clients, possible sources of conflicts of duties and interests, while providing unbiased services.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">16.</span>
+        <span>A valuer shall not deal in securities of any subject company after any time when he/it first becomes aware of the possibility of his/its association with the valuation, and in accordance with the Securities and Exchange Board of India (Prohibition of Insider Trading) Regulations, 2015 or till the time the valuation report becomes public, whichever is earlier.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">17.</span>
+        <span>A valuer shall not indulge in "mandate snatching" or offering "convenience valuations" in order to cater to a company or client's needs.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">18.</span>
+        <span>As an independent valuer, the valuer shall not charge success fee.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">19.</span>
+        <span>In any fairness opinion or independent expert opinion submitted by a valuer, if there has been a prior engagement in an unconnected transaction, the valuer shall declare the association with the company during the last five years.</span>
+      </div>
+    </div>
 
     <p style="margin: 10px 0 8px 0; font-weight: bold;">Confidentiality</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="20">
-      <li style="margin: 4px 0; text-align: justify;  "> 20 .A valuer shall not use or divulge to other clients or any other party any confidential information about the subject company, which has come to his/its knowledge without proper and specific authority or unless there is a legal or professional right or duty to disclose.</li>
-    </ol>
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">20.</span>
+        <span>A valuer shall not use or divulge to other clients or any other party any confidential information about the subject company, which has come to his/its knowledge without proper and specific authority or unless there is a legal or professional right or duty to disclose.</span>
+      </div>
+    </div>
 
     <p style="margin: 10px 0 8px 0; font-weight: bold;">Information Management</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="21">
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall ensure that he/ it maintains written contemporaneous records for any decision taken, the reasons for taking the decision, and the information and evidence in support of such decision. This shall be maintained so as to sufficiently enable a reasonable person to take a view on the appropriateness of his/its decisions and actions.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall appear, co-operate and be available for inspections and investigations carried out by the authority, any person authorised by the authority, the registered valuers organisation with which he/it is registered or any other statutory regulatory body.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer shall provide all information and records as may be required by the authority, the Tribunal, Appellate Tribunal, the registered valuers organisation with which he/it is registered, or any other statutory regulatory body.</li>
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer while respecting the confidentiality of information acquired during the course of performing professional services, shall maintain proper working papers for a period of three years or such longer period as required in its contract for a specific valuation, for production before a regulatory authority or for a peer review. In the event of a pending case before the Tribunal or Appellate Tribunal, the record shall be maintained till the disposal of the case.</li>
-    </ol>
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">21.</span>
+        <span>A valuer shall ensure that he/it maintains written contemporaneous records for any decision taken, the reasons for taking the decision, and the information and evidence in support of such decision. This shall be maintained so as to sufficiently enable a reasonable person to take a view on the appropriateness of his/its decisions and actions.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">22.</span>
+        <span>A valuer shall appear, co-operate and be available for inspections and investigations carried out by the authority, any person authorised by the authority, the registered valuers organisation with which he/it is registered or any other statutory regulatory body.</span>
+      </div>
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">23.</span>
+        <span>A valuer shall provide all information and records as may be required by the authority, the Tribunal, Appellate Tribunal, the registered valuers organisation with which he/it is registered, or any other statutory regulatory body.</span>
+      </div>
+   
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">24.</span>
+        <span>A valuer while respecting the confidentiality of information acquired during the course of performing professional services, shall maintain proper working papers for a period of three years or such longer period as required in its contract for a specific valuation, for production before a regulatory authority or for a peer review. In the event of a pending case before the Tribunal or Appellate Tribunal, the record shall be maintained till the disposal of the case.</span>
+      </div>
+    </div>
 
     <p style="margin: 10px 0 8px 0; font-weight: bold;">Gifts and hospitality.</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="25">
-      <li style="margin: 4px 0; text-align: justify;  ">A valuer or his/its relative shall not accept gifts or hospitality which undermines or affects his independence as a valuer.</li>
-    </ol>
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 4px 0; text-align: justify; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">25.</span>
+        <span>A valuer or his/its relative shall not accept gifts or hospitality which undermines or affects his independence as a valuer.</span>
+      </div>
+    </div>
 
     <p style="margin: 10px 0 3px 0; font-size: 12pt;">Explanation: For the purposes of this code the term 'relative' shall have the same meaning as defined in clause (77) of Section 2 of the Companies Act, 2013 (18 of 2013).</p>
 
-    <ol style="margin: 10px 0 10px 20px; padding: 0;" start="26">
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;">A valuer shall not offer gifts or hospitality or a financial or any other advantage to a public servant or any other person with a view to obtain or retain work for himself/ itself, or to obtain or retain an advantage in the conduct of profession for himself/ itself.</li>
-    </ol>
+    <div style="margin: 10px 0 10px 0; padding: 0;">
+      <div style="margin: 6px 0; text-align: justify; font-size: 12pt; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">26.</span>
+        <span>A valuer shall not offer gifts or hospitality or a financial or any other advantage to a public servant or any other person with a view to obtain or retain work for himself/ itself, or to obtain or retain an advantage in the conduct of profession for himself/ itself.</span>
+      </div>
+    </div>
 
     <p style="margin: 12px 0 8px 0; font-weight: bold; font-size: 12pt;">Remuneration and Costs.</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="27">
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall provide services for remuneration which is charged in a transparent manner, is a reasonable reflection of the work necessarily and properly undertaken, and is not inconsistent with the applicable rules.</li>
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall not accept any fees or charges other than those which are disclosed in a written contract with the person to whom he would be rendering service. <strong>Occupation, employability and restrictions.</strong></li>
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall refrain from accepting too many assignments, if he/it is unlikely to be able to devote adequate time to each of his/ its assignments.</li>
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall not conduct business which in the opinion of the authority or the registered valuer organisation discredits the profession.</li>
-    </ol>
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 6px 0; text-align: justify; font-size: 12pt; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">27.</span>
+        <span>A valuer shall provide services for remuneration which is charged in a transparent manner, is a reasonable reflection of the work necessarily and properly undertaken, and is not inconsistent with the applicable rules.</span>
+      </div>
+      <div style="margin: 6px 0; text-align: justify; font-size: 12pt; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">28.</span>
+        <span>A valuer shall not accept any fees or charges other than those which are disclosed in a written contract with the person to whom he would be rendering service.</span>
+      </div>
+    </div>
+
+    <p style="margin: 12px 0 8px 0; font-weight: bold; font-size: 12pt;">Occupation, employability and restrictions.</p>
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 6px 0; text-align: justify; font-size: 12pt; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">29.</span>
+        <span>A valuer shall refrain from accepting too many assignments, if he/it is unlikely to be able to devote adequate time to each of his/its assignments.</span>
+      </div>
+      <div style="margin: 6px 0; text-align: justify; font-size: 12pt; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">30.</span>
+        <span>A valuer shall not conduct business which in the opinion of the authority or the registered valuer organisation discredits the profession.</span>
+      </div>
+    </div>
 
     <p style="margin: 12px 0 8px 0; font-weight: bold; font-size: 12pt;">Miscellaneous</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="31">
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall refrain from undertaking to review the work of another valuer of the same client except under written orders from the bank or housing finance institutions and with knowledge of the concerned valuer.</li>
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall follow this code as amended or revised from time to time</li>
-    </ol>
+    <div style="margin: 5px 0 10px 0; padding: 0;">
+      <div style="margin: 6px 0; text-align: justify; font-size: 12pt; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">31.</span>
+        <span>A valuer shall refrain from undertaking to review the work of another valuer of the same client except under written orders from the bank or housing finance institutions and with knowledge of the concerned valuer.</span>
+      </div>
+      <div style="margin: 6px 0; text-align: justify; font-size: 12pt; display: flex;">
+        <span style="font-weight: bold; min-width: 24px;">32.</span>
+        <span>A valuer shall follow this code as amended or revised from time to time.</span>
+      </div>
+    </div>
 
     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #000;">
       <p style="margin: 10px 0; font-size: 12pt;"><strong>Signature of the valuer:</strong> _________________</p>
@@ -3179,100 +3425,109 @@ from the date of the report. Simply possessing the report will not fulfill its i
       <p style="margin: 4px 0; font-size: 12pt;">5<sup>th</sup> floor, Shalvik Complex, behind Ganesh Plaza,</p>
       <p style="margin: 4px 0; font-size: 12pt;">Opp. Sanmukh Complex, off. C G Road,</p>
       <p style="margin: 4px 0 20px 0; font-size: 12pt;">Navrangpura, Ahmedabad – 380009</p>
-      <p style="margin: 4px 0; font-size: 12pt; background-color: #ffff00; padding: 4px; display: inline-block;"><strong>Date: 28/11/2025</strong></p></br>
-      <p style="margin: 10px 0; font-size: 12pt; background-color: #ffff00; padding: 4px; display: inline-block;"><strong>Place: Ahmedabad</strong></p>
+      <p style="margin: 4px 0; font-size: 12pt; padding: 4px; display: inline-block;"><strong>Date: 28/11/2025</strong></p><br/>
+      <p style="margin: 10px 0; font-size: 12pt; padding: 4px; display: inline-block;"><strong>Place: Ahmedabad</strong></p>
     </div>
-  </div>
-</div>
+    </div>
+    
 
+    <!-- PAGE 11: IMAGES SECTION -->
 
-<!-- PAGE 13: IMAGES SECTION -->
-  ${pdfData.areaImages && typeof pdfData.areaImages === 'object' && Object.keys(pdfData.areaImages).length > 0 ? `
-    ${(() => {
-                let allImages = [];
-                let globalIdx = 0;
-                Object.entries(pdfData.areaImages).forEach(([areaName, areaImageList]) => {
-                    if (Array.isArray(areaImageList)) {
-                        areaImageList.forEach((img, idx) => {
-                            const imgSrc = typeof img === 'string' ? img : (img?.url || img?.preview || img?.data || img?.src || '');
-                            if (imgSrc) {
-                                allImages.push({
-                                    src: imgSrc,
-                                    label: areaName + ' - Image ' + (idx + 1),
-                                    globalIdx: globalIdx++
-                                });
-                            }
-                        });
-                    }
-                });
+    <!-- PROPERTY IMAGES -->
+    ${Array.isArray(pdfData.propertyImages) && pdfData.propertyImages.length > 0 ? `
+    <div class="page images-section property-images-page" style="page-break-before: always; break-before: page;">
+       <div style="padding: 20px; font-size: 12pt;">
+           <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold;">PROPERTY IMAGES</h2>
+           <div class="image-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+               ${pdfData.propertyImages.map((img, idx) => {
+            const imgSrc = typeof img === 'string' ? img : img?.url;
+            return imgSrc ? `
+                   <div style="page-break-inside: avoid; border: 1px solid #ccc; padding: 10px;">
+                       <img class="pdf-image" src="${imgSrc}" alt="Property Image ${idx + 1}" style="width: 100%; height: auto; max-height: 300px; object-fit: contain; display: block; margin: 5px auto;" loading="eager">
+                       <p style="margin-top: 8px; font-size: 12pt; text-align: center;">Property Image ${idx + 1}</p>
+                   </div>
+                   ` : '';
+        }).join('')}
+           </div>
+       </div>
+    </div>
+    ` : ''}
 
-                let pages = [];
-                for (let i = 0; i < allImages.length; i += 6) {
-                    pages.push(allImages.slice(i, i + 6));
-                }
-
-                return pages.map((pageImages, pageIdx) => `
-        <div class="page images-section area-images-page" style=" page-break-after: always;   padding: 5px 10px; margin: 0; width: 100%; box-sizing: border-box;">
-             <div style="padding: 5px; font-size: 12pt;">
-                 ${pageIdx === 0 ? '<h2 style="text-align: center; margin: 0 0 8px 0; font-weight: bold;">PROPERTY AREA IMAGES</h2>' : ''}
-                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px;   margin: 0; padding: 0;">
-                     ${pageImages.map(item => `
-                     <div style="  border: 1px solid #ddd; padding: 1px; text-align: center; background: #fff; margin: 0;">
-                         <img class="pdf-image" src="${item.src}" alt="${item.label}" style="width: 100%; height: auto; max-height: 275px; object-fit: contain; display: block; margin: 0; padding: 0;">
-                         <p style="margin: 2px 0 0 0; font-size: 6.5pt; color: #333; font-weight: bold; padding: 0;">${item.label}</p>
-                      </div>`).join('')}
-                 </div>
-             </div>
-        </div>`).join('');
-            })()}
-     ` : ''}
-
-   <!-- LOCATION IMAGES: Each image gets its own page -->
-   ${Array.isArray(pdfData.locationImages) && pdfData.locationImages.length > 0 ? `
+    <!-- LOCATION IMAGES: Each image gets its own page with latitude/longitude -->
+    ${Array.isArray(pdfData.locationImages) && pdfData.locationImages.length > 0 ? `
      ${pdfData.locationImages.map((img, idx) => {
                 const imgSrc = typeof img === 'string' ? img : img?.url;
                 return imgSrc ? `
-         <div class="page" location-images-page style="width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px 10px; box-sizing: border-box; margin: 0;  ">
-           <h2 style="text-align: center; margin-bottom: 30px; font-weight: bold; font-size: 18pt;">LOCATION IMAGE ${idx + 1}</h2>
-           <img class="pdf-image" src="${imgSrc}" alt="Location Image ${idx + 1}" style="width: 90%; height: auto; max-height: 600px; object-fit: contain; margin: 0 auto;">
+         <div class="page location-images-page" style="width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; box-sizing: border-box; page-break-before: always; break-before: page;">
+           <h2 style="text-align: center; margin-bottom: 15px; font-weight: bold; font-size: 16pt;">LOCATION IMAGE ${idx + 1}</h2>
+           ${pdfData.latitudeLongitude && pdfData.latitudeLongitude !== 'NA' ? `
+           <p style="text-align: center; margin-bottom: 20px; font-size: 12pt; color: #333;"><strong>Latitude, Longitude & Coordinates:</strong> ${pdfData.latitudeLongitude}</p>
+           ` : ''}
+           <img class="pdf-image" src="${imgSrc}" alt="Location Image ${idx + 1}" style="width: 90%; height: auto; max-height: 600px; object-fit: contain; margin: 0 auto;" loading="eager">
          </div>
        ` : '';
             }).join('')}
-   ` : ''}
+    ` : ''}
 
-   <!-- SUPPORTING DOCUMENTS: Each document gets its own page -->
-     ${Array.isArray(pdfData.documentPreviews) && pdfData.documentPreviews.length > 0 ? `
-     <div class="supporting-docs-section">
-    ${pdfData.documentPreviews.map((img, idx) => {
-                const imgSrc = typeof img === 'string' ? img : img?.url;
+    <!-- AREA IMAGES -->
+    ${pdfData.areaImages && typeof pdfData.areaImages === 'object' && Object.keys(pdfData.areaImages).length > 0 ? `
+    <div class="page images-section area-images-page" style="page-break-before: always; break-before: page;">
+       <div style="padding: 20px; font-size: 12pt;">
+           <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold;">PROPERTY AREA IMAGES</h2>
+           ${Object.entries(pdfData.areaImages).map(([areaName, areaImageList]) => {
+            return Array.isArray(areaImageList) && areaImageList.length > 0 ? `
+               <div style="margin-bottom: 25px; page-break-inside: avoid; break-inside: avoid;">
+                   <h3 style="font-size: 13pt; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 5px; page-break-after: avoid;">${areaName}</h3>
+                   <div class="area-image-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; page-break-inside: avoid; break-inside: avoid;">
+                       ${areaImageList.map((img, idx) => {
+                const imgSrc = typeof img === 'string' ? img : (img?.url || img?.preview || img?.data || img?.src || '');
                 return imgSrc ? `
-        <div class="page images-section supporting-docs-page" style="  width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 10px; box-sizing: border-box; margin: 0;">
-            ${idx === 0 ? '<h2 style="text-align: center; margin-bottom: 30px; font-weight: bold; width: 100%; font-size: 18pt;">SUPPORTING DOCUMENTS</h2>' : ''}
-            <div class="image-container" style="border: 1px solid #ddd; padding: 5px; background: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 90%; max-width: 800px; height: auto;">
-                <img class="pdf-image" src="${imgSrc}" alt="Supporting Document ${idx + 1}" style="width: 100%; height: auto; max-height: 550px; object-fit: contain; margin: 0 auto;">
-                <p style="margin: 10px 0 0 0; font-size: 10pt; color: #666; text-align: center;">Document ${idx + 1}</p>
-            </div>
-        </div>
-        ` : '';
+                       <div style="page-break-inside: avoid; break-inside: avoid; border: 1px solid #ccc; padding: 6px; text-align: center;">
+                           <img class="pdf-image" src="${imgSrc}" alt="${areaName} Image ${idx + 1}" style="width: 100%; height: auto; max-height: 240px; object-fit: contain; display: block; margin: 3px auto;" loading="eager">
+                           <p style="margin-top: 4px; font-size: 12pt; color: #666;">${areaName} - Image ${idx + 1}</p>
+                       </div>
+                           ` : '';
             }).join('')}
-     </div>
-     ` : ''}
+                   </div>
+               </div>
+               ` : '';
+        }).join('')}
+       </div>
+    </div>
+    ` : ''}
 
-     </div>
-     <!-- END: CONTINUOUS WRAPPER -->
+    <!-- SUPPORTING DOCUMENTS -->
+    ${Array.isArray(pdfData.documentPreviews) && pdfData.documentPreviews.length > 0 ? `
+    <div class="page images-section supporting-docs-page" style="page-break-before: always; break-before: page;">
+       <div style="padding: 20px; font-size: 12pt;">
+           <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold;">SUPPORTING DOCUMENTS</h2>
+           ${pdfData.documentPreviews.map((img, idx) => {
+            const imgSrc = typeof img === 'string' ? img : img?.url;
+            return imgSrc ? `
+               <div class="image-container" style="page-break-inside: avoid; text-align: center; margin-bottom: 30px;">
+                   <img class="pdf-image" src="${imgSrc}" alt="Supporting Document ${idx + 1}" style="width: 100%; max-width: 500px; height: auto; max-height: 350px; object-fit: contain; display: block; margin: 5px auto;" loading="eager">
+                   <p style="margin-top: 10px; font-size: 12pt; font-weight: bold;">Supporting Document ${idx + 1}</p>
+               </div>
+               ` : '';
+        }).join('')}
+       </div>
+    </div>
+    ` : ''}
+    </div>
+    </div>
      </body>
      </html>
                                     `;
 }
 
 export async function generateRecordPDF(record) {
-  try {
-    console.log('📄 Generating PDF for record:', record?.uniqueId || record?.clientName || 'new');
-    return await generateRecordPDFOffline(record);
-  } catch (error) {
-    console.error('❌ PDF generation error:', error);
-    throw error;
-  }
+    try {
+        console.log('📄 Generating PDF for record:', record?.uniqueId || record?.clientName || 'new');
+        return await generateRecordPDFOffline(record);
+    } catch (error) {
+        console.error('❌ PDF generation error:', error);
+        throw error;
+    }
 }
 
 /**
@@ -3280,188 +3535,199 @@ export async function generateRecordPDF(record) {
  * Uses client-side generation with blob URL preview
  */
 export async function previewValuationPDF(record) {
-  try {
-    console.log('👁️ Generating PDF preview for:', record?.uniqueId || record?.clientName || 'new');
+    try {
+        console.log('👁️ Generating PDF preview for:', record?.uniqueId || record?.clientName || 'new');
 
-    // Dynamically import jsPDF and html2canvas
-    const { jsPDF } = await import('jspdf');
-    const html2canvas = (await import('html2canvas')).default;
+        // Dynamically import jsPDF and html2canvas
+        const { jsPDF } = await import('jspdf');
+        const html2canvas = (await import('html2canvas')).default;
 
-    // Generate HTML from the record data
-    const htmlContent = generateValuationReportHTML(record);
+        // Generate HTML from the record data
+        const htmlContent = generateValuationReportHTML(record);
 
-    // Create a temporary container
-    const container = document.createElement('div');
-    container.innerHTML = htmlContent;
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.width = '210mm';
-    container.style.backgroundColor = '#ffffff';
-    container.style.fontSize = '12pt';
-    container.style.fontFamily = "'Arial', sans-serif";
-    // Add fixed page height style for preview with expandable rows
-    const style = document.createElement('style');
-    style.textContent = `.page { height: 297mm !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; } table { flex: 1 !important; } tbody { height: 100% !important; }`;
-    document.head.appendChild(style);
-    document.body.appendChild(container);
+        // Create a temporary container
+        const container = document.createElement('div');
+        container.innerHTML = htmlContent;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '-9999px';
+        container.style.width = '210mm';
+        container.style.backgroundColor = '#ffffff';
+        container.style.fontSize = '12pt';
+        container.style.fontFamily = "'Arial', sans-serif";
+        // Add fixed page height style for preview with expandable rows
+        const style = document.createElement('style');
+        style.textContent = `.page { height: 297mm !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; } table { flex: 1 !important; } tbody { height: 100% !important; }`;
+        document.head.appendChild(style);
+        document.body.appendChild(container);
 
-    // Convert HTML to canvas
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      allowTaint: true,
-      windowHeight: container.scrollHeight,
-      windowWidth: 793
-    });
+        // Convert HTML to canvas
+        const canvas = await html2canvas(container, {
+            scale: 1.6,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            allowTaint: true,
+            windowHeight: container.scrollHeight,
+            windowWidth: 793
+        });
 
-    // Remove temporary container
-    document.body.removeChild(container);
+        // Remove temporary container
+        document.body.removeChild(container);
 
-    // Create PDF from canvas
-    const imgData = canvas.toDataURL('image/png');
-    const imgWidth = 210;
-    const pageHeight = 297;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        // Create PDF from canvas
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    const pdf = new jsPDF('p', 'mm', 'A4');
-    let heightLeft = imgHeight;
-    let position = 0;
+        const pdf = new jsPDF('p', 'mm', 'A4');
+        let heightLeft = imgHeight;
+        let position = 0;
 
-    // Add pages to PDF
-    while (heightLeft >= 0) {
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      position -= pageHeight;
-      if (heightLeft > 0) {
-        pdf.addPage();
-      }
+        // Add pages to PDF
+        while (heightLeft >= 0) {
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            position -= pageHeight;
+            if (heightLeft > 0) {
+                pdf.addPage();
+            }
+        }
+
+        // Create blob URL and open in new tab
+        const blob = pdf.output('blob');
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+
+        console.log('✅ PDF preview opened');
+        return url;
+    } catch (error) {
+        console.error('❌ PDF preview error:', error);
+        throw error;
     }
-
-    // Create blob URL and open in new tab
-    const blob = pdf.output('blob');
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, '_blank');
-
-    console.log('✅ PDF preview opened');
-    return url;
-  } catch (error) {
-    console.error('❌ PDF preview error:', error);
-    throw error;
-  }
 }
 
 /**
  * Compress image and convert to base64
  */
 const compressImage = async (blob) => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const img = new Image();
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const img = new Image();
 
-    img.onload = () => {
-      // Scale down image: max 1200px width
-      const maxWidth = 1200;
-      let width = img.width;
-      let height = img.height;
+        img.onload = () => {
+            // Scale down image: max 800px width (reduced from 1200)
+            const maxWidth = 800;
+            let width = img.width;
+            let height = img.height;
 
-      if (width > maxWidth) {
-        const ratio = maxWidth / width;
-        width = maxWidth;
-        height = height * ratio;
-      }
+            if (width > maxWidth) {
+                const ratio = maxWidth / width;
+                width = maxWidth;
+                height = height * ratio;
+            }
 
-      canvas.width = width;
-      canvas.height = height;
+            canvas.width = width;
+            canvas.height = height;
 
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert to JPEG with 70% quality for compression
-      canvas.toBlob(
-        (compressedBlob) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(compressedBlob);
-        },
-        'image/jpeg',
-        0.7
-      );
-    };
+            // Convert to JPEG with 65% quality for faster PDF (reduced from 70%)
+            canvas.toBlob(
+                (compressedBlob) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(compressedBlob);
+                },
+                'image/jpeg',
+                0.65
+            );
+        };
 
-    img.onerror = () => resolve('');
+        img.onerror = () => resolve('');
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(blob);
-  });
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(blob);
+    });
 };
 
 /**
  * Convert image URL to base64 data URI with compression
  */
 const urlToBase64 = async (url) => {
-  if (!url) return '';
+    if (!url) return '';
 
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
 
-    // Compress image to reduce size
-    const compressed = await compressImage(blob);
-    return compressed;
-  } catch (error) {
-    console.warn('Failed to convert image to base64:', url, error);
-    return '';
-  }
+        // Compress image to reduce size
+        const compressed = await compressImage(blob);
+        return compressed;
+    } catch (error) {
+        console.warn('Failed to convert image to base64:', url, error);
+        return '';
+    }
 };
 
 /**
  * Convert all image URLs in record to base64
  */
 const convertImagesToBase64 = async (record) => {
-  if (!record) return record;
+    if (!record) return record;
 
-  const recordCopy = { ...record };
+    const recordCopy = { ...record };
 
-  // Convert property images
-  if (Array.isArray(recordCopy.propertyImages)) {
-    recordCopy.propertyImages = await Promise.all(
-      recordCopy.propertyImages.map(async (img) => {
-        if (!img) return img;
-        const url = typeof img === 'string' ? img : img?.url;
-        if (!url) return img;
+    // Convert images in parallel with concurrency limit (max 3 at a time)
+    const convertWithLimit = async (images) => {
+        if (!Array.isArray(images)) return images;
+        
+        const results = [];
+        const converting = [];
+        const MAX_CONCURRENT = 3;
+        
+        for (let i = 0; i < images.length; i++) {
+            const img = images[i];
+            const promise = (async () => {
+                if (!img) return img;
+                const url = typeof img === 'string' ? img : img?.url;
+                if (!url) return img;
 
-        const base64 = await urlToBase64(url);
-        if (typeof img === 'string') {
-          return base64 || img;
+                const base64 = await urlToBase64(url);
+                if (typeof img === 'string') {
+                    return base64 || img;
+                }
+                return { ...img, url: base64 || url };
+            })();
+            
+            results.push(promise);
+            converting.push(promise);
+            
+            // Keep max 3 concurrent conversions
+            if (converting.length >= MAX_CONCURRENT) {
+                await Promise.race(converting);
+                converting.splice(0, 1);
+            }
         }
-        return { ...img, url: base64 || url };
-      })
-    );
-  }
+        
+        return Promise.all(results);
+    };
 
-  // Convert location images
-  if (Array.isArray(recordCopy.locationImages)) {
-    recordCopy.locationImages = await Promise.all(
-      recordCopy.locationImages.map(async (img) => {
-        if (!img) return img;
-        const url = typeof img === 'string' ? img : img?.url;
-        if (!url) return img;
+    // Convert property images
+    if (Array.isArray(recordCopy.propertyImages)) {
+        recordCopy.propertyImages = await convertWithLimit(recordCopy.propertyImages);
+    }
 
-        const base64 = await urlToBase64(url);
-        if (typeof img === 'string') {
-          return base64 || img;
-        }
-        return { ...img, url: base64 || url };
-      })
-    );
-  }
+    // Convert location images
+    if (Array.isArray(recordCopy.locationImages)) {
+        recordCopy.locationImages = await convertWithLimit(recordCopy.locationImages);
+    }
 
-  return recordCopy;
+    return recordCopy;
 };
 
 /**
@@ -3469,761 +3735,771 @@ const convertImagesToBase64 = async (record) => {
  * Works on Vercel without server-side dependencies
  */
 export async function generateRecordPDFOffline(record) {
-  try {
-    console.log('📠 Generating PDF (client-side mode)');
-    console.log('📊 Input Record Structure:', {
-      recordKeys: Object.keys(record || {}),
-      rootFields: {
-        uniqueId: record?.uniqueId,
-        bankName: record?.bankName,
-        clientName: record?.clientName,
-        city: record?.city,
-        engineerName: record?.engineerName
-      },
-      pdfDetailsKeys: Object.keys(record?.pdfDetails || {}).slice(0, 20),
-      totalPdfDetailsFields: Object.keys(record?.pdfDetails || {}).length,
-      criticalFields: {
-        postalAddress: record?.pdfDetails?.postalAddress,
-        areaClassification: record?.pdfDetails?.areaClassification,
-        residentialArea: record?.pdfDetails?.residentialArea,
-        commercialArea: record?.pdfDetails?.commercialArea,
-        inspectionDate: record?.pdfDetails?.inspectionDate,
-        agreementForSale: record?.pdfDetails?.agreementForSale
-      },
-      documentsProduced: record?.documentsProduced,
-      agreementForSale_root: record?.agreementForSale,
-      agreementForSale_pdfDetails: record?.pdfDetails?.agreementForSale,
-      // CRITICAL: Log images at start
-      propertyImages_count: Array.isArray(record?.propertyImages) ? record.propertyImages.length : 0,
-      locationImages_count: Array.isArray(record?.locationImages) ? record.locationImages.length : 0,
-      documentPreviews_count: Array.isArray(record?.documentPreviews) ? record.documentPreviews.length : 0,
-      propertyImages_sample: record?.propertyImages?.slice(0, 1),
-      locationImages_sample: record?.locationImages?.slice(0, 1),
-      documentPreviews_sample: record?.documentPreviews?.slice(0, 1)
-    });
-
-    // Convert images to base64 for PDF embedding
-    console.log('🖼️ Converting images to base64...');
-    const recordWithBase64Images = await convertImagesToBase64(record);
-
-    // Dynamically import jsPDF and html2canvas to avoid SSR issues
-    const { jsPDF } = await import('jspdf');
-    const html2canvas = (await import('html2canvas')).default;
-
-    // Generate HTML from the record data with base64 images
-    const htmlContent = generateValuationReportHTML(recordWithBase64Images);
-
-    // Create a temporary container
-    const container = document.createElement('div');
-    container.innerHTML = htmlContent;
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.width = '210mm';
-    container.style.height = 'auto';
-    container.style.backgroundColor = '#ffffff';
-    container.style.fontSize = '12pt';
-    container.style.fontFamily = "'Arial', sans-serif";
-    document.body.appendChild(container);
-
-    // CRITICAL: Wait for images to load, then remove failed ones
-    const allImages = container.querySelectorAll('img.pdf-image');
-    const imagesToRemove = new Set();
-
-    // First pass: check for images with invalid src attribute
-    allImages.forEach(img => {
-      const src = img.src || img.getAttribute('data-src');
-      const alt = img.getAttribute('alt') || 'unknown';
-
-      // If image has no src or invalid src, mark container for removal
-      if (!src || !src.trim() || src === 'undefined' || src === 'null') {
-        console.log(`⏭️ Invalid image src: ${alt}`);
-        let parentContainer = img.closest('.image-container');
-        if (parentContainer) {
-          imagesToRemove.add(parentContainer);
-          console.log(`⏭️ Marking for removal (invalid src): ${alt}`);
-        }
-      }
-    });
-
-    // Second pass: add error listeners to detect failed load attempts
-    await Promise.all(Array.from(allImages).map(img => {
-      return new Promise((resolve) => {
-        const alt = img.getAttribute('alt') || 'unknown';
-        const timeoutId = setTimeout(() => {
-          // If image hasn't loaded after 5 seconds, mark for removal
-          if (!img.complete || img.naturalHeight === 0) {
-            console.log(`⏭️ Image timeout/failed to load: ${alt}`);
-            let parentContainer = img.closest('.image-container');
-            if (parentContainer) {
-              imagesToRemove.add(parentContainer);
-              console.log(`⏭️ Marking for removal (timeout): ${alt}`);
-            }
-          }
-          resolve();
-        }, 5000);
-
-        img.onload = () => {
-          clearTimeout(timeoutId);
-          console.log(`✅ Image loaded successfully: ${alt}`);
-          resolve();
-        };
-
-        img.onerror = () => {
-          clearTimeout(timeoutId);
-          console.log(`❌ Image failed to load: ${alt}`);
-          let parentContainer = img.closest('.image-container');
-          if (parentContainer) {
-            imagesToRemove.add(parentContainer);
-            console.log(`⏭️ Marking for removal (onerror): ${alt}`);
-          }
-          resolve();
-        };
-
-        // If already loaded, resolve immediately
-        if (img.complete) {
-          clearTimeout(timeoutId);
-          if (img.naturalHeight === 0) {
-            console.log(`⏭️ Image failed (no height): ${alt}`);
-            let parentContainer = img.closest('.image-container');
-            if (parentContainer) {
-              imagesToRemove.add(parentContainer);
-              console.log(`⏭️ Marking for removal (no height): ${alt}`);
-            }
-          } else {
-            console.log(`✅ Image already loaded: ${alt}`);
-          }
-          resolve();
-        }
-      });
-    }));
-
-    // Remove only failed/invalid image containers
-    console.log(`🗑️ Removing ${imagesToRemove.size} failed/invalid image containers`);
-    imagesToRemove.forEach(el => {
-      const alt = el.querySelector('img')?.getAttribute('alt') || 'unknown';
-      console.log(`✂️ Removed container: ${alt}`);
-      el.remove();
-    });
-
-    console.log('✅ Image validation complete - now extracting images BEFORE rendering...');
-
-    // CRITICAL: Render continuous-wrapper and .page elements separately for proper page breaks
-    const continuousWrapper = container.querySelector('.continuous-wrapper');
-    const pageElements = Array.from(container.querySelectorAll(':scope > .page'));
-    console.log(`📄 Total .page elements found: ${pageElements.length}`);
-
-    // Render continuous wrapper first
-    let mainCanvas = null;
-    if (continuousWrapper) {
-      mainCanvas = await html2canvas(continuousWrapper, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true,
-        imageTimeout: 10000,
-        windowHeight: continuousWrapper.scrollHeight,
-        windowWidth: 793,
-        onclone: (clonedDocument) => {
-          const clonedImages = clonedDocument.querySelectorAll('img');
-          clonedImages.forEach(img => {
-            img.crossOrigin = 'anonymous';
-            img.loading = 'eager';
-            img.style.display = 'block';
-            img.style.visibility = 'visible';
-          });
-        }
-      });
-      console.log('✅ Continuous wrapper canvas conversion complete');
-    }
-
-    // Render each .page separately for proper page breaks
-    const pageCanvases = [];
-    for (let i = 0; i < pageElements.length; i++) {
-      const pageEl = pageElements[i];
-      console.log(`📄 Rendering .page element ${i + 1}/${pageElements.length}`);
-
-      // Temporarily remove padding to render from top
-      const originalPadding = pageEl.style.padding;
-      pageEl.style.padding = '0';
-      pageEl.style.margin = '0';
-
-      const pageCanvas = await html2canvas(pageEl, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true,
-        imageTimeout: 10000,
-        windowHeight: pageEl.scrollHeight,
-        windowWidth: 793,
-        x: 0,
-        y: 0,
-        onclone: (clonedDocument) => {
-          const clonedPageEl = clonedDocument.querySelector('.page') || clonedDocument;
-          clonedPageEl.style.padding = '0';
-          clonedPageEl.style.margin = '0';
-
-          const clonedImages = clonedDocument.querySelectorAll('img');
-          clonedImages.forEach(img => {
-            img.crossOrigin = 'anonymous';
-            img.loading = 'eager';
-            img.style.display = 'block';
-            img.style.visibility = 'visible';
-          });
-        }
-      });
-
-      // Restore original padding
-      pageEl.style.padding = originalPadding;
-
-      pageCanvases.push(pageCanvas);
-      console.log(`✅ .page ${i + 1} canvas conversion complete`);
-    }
-
-    console.log(`✅ Page rendering complete - ${pageCanvases.length} .page elements rendered separately`);
-
-    // Extract images BEFORE removing container
-    // This prevents empty/blank image containers from appearing in the PDF
-    console.log('⏳ Extracting images and removing containers from HTML...');
-    const images = Array.from(container.querySelectorAll('img.pdf-image'));
-    const imageData = [];
-
-    // Extract valid images and REMOVE ALL their containers
-    for (const img of images) {
-      const src = img.src || img.getAttribute('data-src');
-      const label = img.getAttribute('alt') || 'Image';
-
-      // Only extract images with valid src
-      if (src && (src.startsWith('data:') || src.startsWith('blob:') || src.startsWith('http'))) {
-        imageData.push({
-          src,
-          label,
-          type: label.includes('Location') ? 'location' :
-            label.includes('Supporting') ? 'supporting' : 'property'
+    try {
+        console.log('📠 Generating PDF (client-side mode)');
+        console.log('📊 Input Record Structure:', {
+            recordKeys: Object.keys(record || {}),
+            rootFields: {
+                uniqueId: record?.uniqueId,
+                bankName: record?.bankName,
+                clientName: record?.clientName,
+                city: record?.city,
+                engineerName: record?.engineerName
+            },
+            pdfDetailsKeys: Object.keys(record?.pdfDetails || {}).slice(0, 20),
+            totalPdfDetailsFields: Object.keys(record?.pdfDetails || {}).length,
+            criticalFields: {
+                postalAddress: record?.pdfDetails?.postalAddress,
+                areaClassification: record?.pdfDetails?.areaClassification,
+                residentialArea: record?.pdfDetails?.residentialArea,
+                commercialArea: record?.pdfDetails?.commercialArea,
+                inspectionDate: record?.pdfDetails?.inspectionDate,
+                agreementForSale: record?.pdfDetails?.agreementForSale
+            },
+            documentsProduced: record?.documentsProduced,
+            agreementForSale_root: record?.agreementForSale,
+            agreementForSale_pdfDetails: record?.pdfDetails?.agreementForSale,
+            // CRITICAL: Log images at start
+            propertyImages_count: Array.isArray(record?.propertyImages) ? record.propertyImages.length : 0,
+            locationImages_count: Array.isArray(record?.locationImages) ? record.locationImages.length : 0,
+            documentPreviews_count: Array.isArray(record?.documentPreviews) ? record.documentPreviews.length : 0,
+            propertyImages_sample: record?.propertyImages?.slice(0, 1),
+            locationImages_sample: record?.locationImages?.slice(0, 1),
+            documentPreviews_sample: record?.documentPreviews?.slice(0, 1)
         });
-        console.log(`📸 Extracted image: ${label}`);
-      } else {
-        console.log(`⏭️ Invalid image src, will not add to PDF: ${label}`);
-      }
 
-      // CRITICAL FIX: REMOVE the ENTIRE image container from HTML
-      // (not just hiding the image) to prevent empty boxes from rendering in PDF
-      const parentContainer = img.closest('.image-container');
-      if (parentContainer) {
-        console.log(`🗑️ Removing image container from HTML: ${label}`);
-        parentContainer.remove();
-      }
-    }
+        // Convert images to base64 for PDF embedding (with timeout limit)
+         console.log('🖼️ Converting images to base64...');
+         // Set 30 second timeout for entire image conversion to avoid hanging
+         const imageConversionPromise = convertImagesToBase64(record);
+         const recordWithBase64Images = await Promise.race([
+             imageConversionPromise,
+             new Promise((_, reject) => setTimeout(() => reject(new Error('Image conversion timeout')), 30000))
+         ]).catch((err) => {
+             console.warn('⚠️ Image conversion timeout or error:', err.message);
+             return record; // Fall back to original if conversion fails
+         });
 
-    console.log('✅ Extracted', imageData.length, 'images; removed', images.length, 'containers from HTML');
+        // Dynamically import jsPDF and html2canvas to avoid SSR issues
+        const { jsPDF } = await import('jspdf');
+        const html2canvas = (await import('html2canvas')).default;
 
-    // Remove temporary container now that we've extracted images
-    document.body.removeChild(container);
-    console.log('✅ Container removed from DOM');
+        // Generate HTML from the record data with base64 images
+        const htmlContent = generateValuationReportHTML(recordWithBase64Images);
 
-    // Create PDF from main canvas with header/footer margins
-    // Use JPEG for better compression instead of PNG
-    const imgData = mainCanvas.toDataURL('image/jpeg', 0.85);
-    const imgWidth = 210;
-    const pageHeight = 297;
-    const headerHeight = 20;  // 10mm header space
-    const footerHeight = 20;  // 10mm footer space
-    const usableHeight = pageHeight - headerHeight - footerHeight;
-    const imgHeight = (mainCanvas.height * imgWidth) / mainCanvas.width;
+        // Create a temporary container
+        const container = document.createElement('div');
+        container.innerHTML = htmlContent;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '-9999px';
+        container.style.width = '210mm';
+        container.style.height = 'auto';
+        container.style.backgroundColor = '#ffffff';
+        container.style.fontSize = '12pt';
+        container.style.fontFamily = "'Arial', sans-serif";
+        document.body.appendChild(container);
 
-    // Function to find safe break point (avoid splitting rows)
-    const findSafeBreakPoint = (canvasHeight, startPixel, maxHeightPixels, isFirstPage = false, isLastPage = false) => {
-      try {
-        // Ensure we're within bounds
-        const safeStartPixel = Math.max(0, Math.floor(startPixel));
-        const safeHeight = Math.min(maxHeightPixels, canvasHeight - safeStartPixel);
+        // CRITICAL: Wait for images to load, then remove failed ones
+        const allImages = container.querySelectorAll('img.pdf-image');
+        const imagesToRemove = new Set();
 
-        if (safeHeight <= 0) {
-          return maxHeightPixels;
+        // First pass: check for images with invalid src attribute
+        allImages.forEach(img => {
+            const src = img.src || img.getAttribute('data-src');
+            const alt = img.getAttribute('alt') || 'unknown';
+
+            // If image has no src or invalid src, mark container for removal
+            if (!src || !src.trim() || src === 'undefined' || src === 'null') {
+                console.log(`⏭️ Invalid image src: ${alt}`);
+                let parentContainer = img.closest('.image-container');
+                if (parentContainer) {
+                    imagesToRemove.add(parentContainer);
+                    console.log(`⏭️ Marking for removal (invalid src): ${alt}`);
+                }
+            }
+        });
+
+        // Second pass: add error listeners to detect failed load attempts
+         await Promise.all(Array.from(allImages).map(img => {
+             return new Promise((resolve) => {
+                 const alt = img.getAttribute('alt') || 'unknown';
+                 const timeoutId = setTimeout(() => {
+                     // If image hasn't loaded after 3 seconds, mark for removal
+                     if (!img.complete || img.naturalHeight === 0) {
+                         console.log(`⏭️ Image timeout/failed to load: ${alt}`);
+                         let parentContainer = img.closest('.image-container');
+                         if (parentContainer) {
+                             imagesToRemove.add(parentContainer);
+                             console.log(`⏭️ Marking for removal (timeout): ${alt}`);
+                         }
+                     }
+                     resolve();
+                 }, 3000);
+
+                img.onload = () => {
+                    clearTimeout(timeoutId);
+                    console.log(`✅ Image loaded successfully: ${alt}`);
+                    resolve();
+                };
+
+                img.onerror = () => {
+                    clearTimeout(timeoutId);
+                    console.log(`❌ Image failed to load: ${alt}`);
+                    let parentContainer = img.closest('.image-container');
+                    if (parentContainer) {
+                        imagesToRemove.add(parentContainer);
+                        console.log(`⏭️ Marking for removal (onerror): ${alt}`);
+                    }
+                    resolve();
+                };
+
+                // If already loaded, resolve immediately
+                if (img.complete) {
+                    clearTimeout(timeoutId);
+                    if (img.naturalHeight === 0) {
+                        console.log(`⏭️ Image failed (no height): ${alt}`);
+                        let parentContainer = img.closest('.image-container');
+                        if (parentContainer) {
+                            imagesToRemove.add(parentContainer);
+                            console.log(`⏭️ Marking for removal (no height): ${alt}`);
+                        }
+                    } else {
+                        console.log(`✅ Image already loaded: ${alt}`);
+                    }
+                    resolve();
+                }
+            });
+        }));
+
+        // Remove only failed/invalid image containers
+        console.log(`🗑️ Removing ${imagesToRemove.size} failed/invalid image containers`);
+        imagesToRemove.forEach(el => {
+            const alt = el.querySelector('img')?.getAttribute('alt') || 'unknown';
+            console.log(`✂️ Removed container: ${alt}`);
+            el.remove();
+        });
+
+        console.log('✅ Image validation complete - now extracting images BEFORE rendering...');
+
+        // CRITICAL: Render continuous-wrapper and .page elements separately for proper page breaks
+        const continuousWrapper = container.querySelector('.continuous-wrapper');
+        const pageElements = Array.from(container.querySelectorAll(':scope > .page'));
+        console.log(`📄 Total .page elements found: ${pageElements.length}`);
+
+        // Render continuous wrapper first
+        let mainCanvas = null;
+        if (continuousWrapper) {
+            mainCanvas = await html2canvas(continuousWrapper, {
+                scale: 1.2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                allowTaint: true,
+                imageTimeout: 5000,
+                windowHeight: continuousWrapper.scrollHeight,
+                windowWidth: 793,
+                removeContainer: true,
+                onclone: (clonedDocument) => {
+                    const clonedImages = clonedDocument.querySelectorAll('img');
+                    clonedImages.forEach(img => {
+                        img.crossOrigin = 'anonymous';
+                        img.loading = 'eager';
+                        img.style.display = 'block';
+                        img.style.visibility = 'visible';
+                    });
+                }
+            });
+            console.log('✅ Continuous wrapper canvas conversion complete');
         }
 
-        // Get image data to detect row boundaries
-        const ctx = mainCanvas.getContext('2d');
-        const width = Math.floor(mainCanvas.width);
-        const height = Math.floor(safeHeight);
+        // Render each .page separately for proper page breaks
+        const pageCanvases = [];
+        for (let i = 0; i < pageElements.length; i++) {
+            const pageEl = pageElements[i];
+            console.log(`📄 Rendering .page element ${i + 1}/${pageElements.length}`);
 
-        const imageData = ctx.getImageData(0, safeStartPixel, width, height);
-        const data = imageData.data;
+            // Temporarily remove padding to render from top
+            const originalPadding = pageEl.style.padding;
+            pageEl.style.padding = '0';
+            pageEl.style.margin = '0';
 
-        // Look for horizontal lines (table borders) by scanning for rows of dark pixels
-        let lastBlackRowIndex = 0;
-        let borderThickness = 0;
+            const pageCanvas = await html2canvas(pageEl, {
+                scale: 1.2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                allowTaint: true,
+                imageTimeout: 5000,
+                windowHeight: pageEl.scrollHeight,
+                windowWidth: 793,
+                x: 0,
+                y: 0,
+                removeContainer: true,
+                onclone: (clonedDocument) => {
+                    const clonedPageEl = clonedDocument.querySelector('.page') || clonedDocument;
+                    clonedPageEl.style.padding = '0';
+                    clonedPageEl.style.margin = '0';
 
-        const pixelsPerRow = width * 4; // RGBA = 4 bytes per pixel
-        const rowCount = height;
-        let inBorder = false;
-        const borderRows = [];
+                    const clonedImages = clonedDocument.querySelectorAll('img');
+                    clonedImages.forEach(img => {
+                        img.crossOrigin = 'anonymous';
+                        img.loading = 'eager';
+                        img.style.display = 'block';
+                        img.style.visibility = 'visible';
+                    });
+                }
+            });
 
-        for (let row = 0; row < rowCount; row++) {
-          let blackCount = 0;
-          const rowStart = row * pixelsPerRow;
+            // Restore original padding
+            pageEl.style.padding = originalPadding;
 
-          // Count dark pixels in this row
-          for (let col = 0; col < width; col++) {
-            const idx = rowStart + col * 4;
-            const r = data[idx];
-            const g = data[idx + 1];
-            const b = data[idx + 2];
+            pageCanvases.push(pageCanvas);
+            console.log(`✅ .page ${i + 1} canvas conversion complete`);
+        }
 
-            // Check if pixel is dark (table border)
-            if (r < 150 && g < 150 && b < 150) {
-              blackCount++;
-            }
-          }
+        console.log(`✅ Page rendering complete - ${pageCanvases.length} .page elements rendered separately`);
 
-          // If >60% of row is dark, it's a border line
-          if (blackCount > width * 0.6) {
-            if (!inBorder) {
-              inBorder = true;
-              borderThickness = 1;
-              borderRows.push(row);
+        // Extract images BEFORE removing container
+        // This prevents empty/blank image containers from appearing in the PDF
+        console.log('⏳ Extracting images and removing containers from HTML...');
+        const images = Array.from(container.querySelectorAll('img.pdf-image'));
+        const imageData = [];
+
+        // Extract valid images and REMOVE ALL their containers
+        for (const img of images) {
+            const src = img.src || img.getAttribute('data-src');
+            const label = img.getAttribute('alt') || 'Image';
+
+            // Only extract images with valid src
+            if (src && (src.startsWith('data:') || src.startsWith('blob:') || src.startsWith('http'))) {
+                imageData.push({
+                    src,
+                    label,
+                    type: label.includes('Location') ? 'location' :
+                        label.includes('Supporting') ? 'supporting' : 'property'
+                });
+                console.log(`📸 Extracted image: ${label}`);
             } else {
-              borderThickness++;
+                console.log(`⏭️ Invalid image src, will not add to PDF: ${label}`);
             }
-            lastBlackRowIndex = row;
-          } else {
-            inBorder = false;
-          }
-        }
 
-
-
-        // Return the last safe break point (after the border)
-        if (lastBlackRowIndex > 0 && lastBlackRowIndex < rowCount - 5) {
-          return lastBlackRowIndex;
-        }
-      } catch (err) {
-        console.warn('Error finding safe break point:', err?.message);
-      }
-
-      // Fallback to original height if detection fails
-      return maxHeightPixels;
-    };
-
-    // Detect Y position of c-valuation-section for forced page break
-    const cValuationElement = continuousWrapper?.querySelector('.c-valuation-section');
-    let cValuationYPixels = null;
-    if (cValuationElement) {
-      const rect = cValuationElement.getBoundingClientRect();
-      const wrapperRect = continuousWrapper.getBoundingClientRect();
-      const relativeY = rect.top - wrapperRect.top;
-      cValuationYPixels = relativeY * 1.5; // Apply same scale as canvas
-      console.log(`🔍 C. VALUATION DETAILS section found at Y: ${cValuationYPixels}px (canvas coordinates)`);
-    }
-
-    const pdf = new jsPDF('p', 'mm', 'A4');
-    let pageNumber = 1;
-    let heightLeft = imgHeight;
-    let yPosition = 0;
-    let sourceY = 0;  // Track position in the source canvas
-    let cValuationPageBreakHandled = false;  // Track if we've handled the page break
-    let pageAdded = false;  // Track if first page is added to prevent empty page
-    let currentPageYPosition = headerHeight;  // Track current Y position on page to avoid empty pages
-
-    while (heightLeft > 5) {  // Only continue if there's meaningful content left (>5mm to avoid blank pages)
-      // Check if we need to force a page break for C. VALUATION DETAILS section
-      if (!cValuationPageBreakHandled && cValuationYPixels !== null) {
-        const sourceYPixels = (sourceY / imgHeight) * mainCanvas.height;
-        const nextSourceYPixels = sourceYPixels + (Math.min(usableHeight, heightLeft) / imgHeight) * mainCanvas.height;
-
-        // If C. VALUATION section will be on this page, force it to next page instead
-        if (sourceYPixels < cValuationYPixels && nextSourceYPixels > cValuationYPixels && pageNumber > 1) {
-          console.log(`⚠️ C. VALUATION DETAILS would split, forcing to new page`);
-          pdf.addPage();
-          pageNumber++;
-          cValuationPageBreakHandled = true;
-          // Skip remaining content and restart from C. VALUATION section
-          sourceY = (cValuationYPixels / mainCanvas.height) * imgHeight;
-          heightLeft = imgHeight - sourceY;
-          continue;
-        } else if (sourceYPixels >= cValuationYPixels && sourceYPixels < cValuationYPixels + 100) {
-          // We're at the C. VALUATION section, mark it handled
-          cValuationPageBreakHandled = true;
-          console.log(`✅ C. VALUATION DETAILS is on new page as expected`);
-        }
-      }
-
-      // Calculate how much of the image fits on this page
-      let imageHeightForThisPage = Math.min(usableHeight, heightLeft);
-
-      // Calculate the crop region from the canvas
-      const canvasHeight = mainCanvas.height;
-      const canvasWidth = mainCanvas.width;
-      const sourceYPixels = (sourceY / imgHeight) * canvasHeight;
-      const maxHeightPixels = (imageHeightForThisPage / imgHeight) * canvasHeight;
-
-      // Check if this is first or last page
-      const isFirstPage = pageNumber === 1;
-      const isLastPage = heightLeft - imageHeightForThisPage <= 0;
-
-      // Apply bold borders BEFORE finding safe break point
-      const ctx = mainCanvas.getContext('2d');
-      const width = Math.floor(mainCanvas.width);
-      const height = Math.floor(maxHeightPixels);
-
-      // Guard against getImageData with 0 height
-      if (height <= 0) {
-        console.warn('⚠️ Height is 0 or negative, skipping image data operations');
-        heightLeft -= imageHeightForThisPage;
-        sourceY += imageHeightForThisPage;
-        pageNumber++;
-        if (heightLeft > 0) {
-          pdf.addPage();
-        }
-        continue;
-      }
-
-      const imageData = ctx.getImageData(0, Math.floor(sourceYPixels), width, height);
-      const data = imageData.data;
-      const pixelsPerRow = width * 4;
-
-      // Calculate table boundaries (table is approximately in center, ~645px wide at 1.5x scale = ~430px at normal view)
-      // But we need to find it dynamically from the actual border pixels
-      let tableLeftBound = 0;
-      let tableRightBound = width;
-
-      // Find table left boundary by looking for first vertical line of dark pixels
-      for (let col = 0; col < Math.min(200, width); col++) {
-        let darkCount = 0;
-        for (let row = 10; row < Math.min(50, height); row++) {
-          const idx = (row * pixelsPerRow) + (col * 4);
-          if (data[idx] < 150 && data[idx + 1] < 150 && data[idx + 2] < 150) {
-            darkCount++;
-          }
-        }
-        if (darkCount > 10) {
-          tableLeftBound = col;
-          break;
-        }
-      }
-
-      // Find table right boundary by looking for last vertical line of dark pixels
-      for (let col = width - 1; col > tableLeftBound + 100; col--) {
-        let darkCount = 0;
-        for (let row = 10; row < Math.min(50, height); row++) {
-          const idx = (row * pixelsPerRow) + (col * 4);
-          if (data[idx] < 150 && data[idx + 1] < 150 && data[idx + 2] < 150) {
-            darkCount++;
-          }
-        }
-        if (darkCount > 10) {
-          tableRightBound = col;
-          break;
-        }
-      }
-
-      // Find top border (first border row in this section)
-      if (!isFirstPage) {
-        for (let row = 0; row < Math.min(50, height); row++) {
-          let blackCount = 0;
-          const rowStart = row * pixelsPerRow;
-          // Only count dark pixels within table bounds
-          for (let col = tableLeftBound; col < tableRightBound; col++) {
-            const idx = rowStart + col * 4;
-            if (data[idx] < 150 && data[idx + 1] < 150 && data[idx + 2] < 150) {
-              blackCount++;
+            // CRITICAL FIX: REMOVE the ENTIRE image container from HTML
+            // (not just hiding the image) to prevent empty boxes from rendering in PDF
+            const parentContainer = img.closest('.image-container');
+            if (parentContainer) {
+                console.log(`🗑️ Removing image container from HTML: ${label}`);
+                parentContainer.remove();
             }
-          }
-          const tableWidth = tableRightBound - tableLeftBound;
-          if (blackCount > tableWidth * 0.6) {
-            // Make top border bold - only within table bounds
-            for (let offset = -2; offset <= 2; offset++) {
-              const boldRow = row + offset;
-              if (boldRow >= 0 && boldRow < height) {
-                const boldRowStart = boldRow * pixelsPerRow;
-                // Only darken pixels within table bounds
-                for (let col = tableLeftBound; col < tableRightBound; col++) {
-                  const idx = boldRowStart + col * 4;
-                  // Preserve original color, just increase opacity/saturation
-                  data[idx] = Math.min(255, data[idx] * 0.5);      // R - darken
-                  data[idx + 1] = Math.min(255, data[idx + 1] * 0.5);  // G - darken
-                  data[idx + 2] = Math.min(255, data[idx + 2] * 0.5);  // B - darken
-                  data[idx + 3] = 255; // A
+        }
+
+        console.log('✅ Extracted', imageData.length, 'images; removed', images.length, 'containers from HTML');
+
+        // Remove temporary container now that we've extracted images
+        document.body.removeChild(container);
+        console.log('✅ Container removed from DOM');
+
+        // Create PDF from main canvas with header/footer margins
+        // Use JPEG for better compression instead of PNG
+        const imgData = mainCanvas.toDataURL('image/jpeg', 0.85);
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const headerHeight = 20;  // 10mm header space
+        const footerHeight = 20;  // 10mm footer space
+        const usableHeight = pageHeight - headerHeight - footerHeight;
+        const imgHeight = (mainCanvas.height * imgWidth) / mainCanvas.width;
+
+        // Function to find safe break point (avoid splitting rows)
+        const findSafeBreakPoint = (canvasHeight, startPixel, maxHeightPixels, isFirstPage = false, isLastPage = false) => {
+            try {
+                // Ensure we're within bounds
+                const safeStartPixel = Math.max(0, Math.floor(startPixel));
+                const safeHeight = Math.min(maxHeightPixels, canvasHeight - safeStartPixel);
+
+                if (safeHeight <= 0) {
+                    return maxHeightPixels;
                 }
-              }
-            }
-            break;
-          }
-        }
-      }
 
-      // Find bottom border (last border row in this section)
-      if (!isLastPage) {
-        for (let row = height - 1; row >= Math.max(0, height - 50); row--) {
-          let blackCount = 0;
-          const rowStart = row * pixelsPerRow;
-          // Only count dark pixels within table bounds
-          for (let col = tableLeftBound; col < tableRightBound; col++) {
-            const idx = rowStart + col * 4;
-            if (data[idx] < 150 && data[idx + 1] < 150 && data[idx + 2] < 150) {
-              blackCount++;
-            }
-          }
-          const tableWidth = tableRightBound - tableLeftBound;
-          if (blackCount > tableWidth * 0.6) {
-            // Make bottom border bold - only within table bounds
-            for (let offset = -2; offset <= 2; offset++) {
-              const boldRow = row + offset;
-              if (boldRow >= 0 && boldRow < height) {
-                const boldRowStart = boldRow * pixelsPerRow;
-                // Only darken pixels within table bounds
-                for (let col = tableLeftBound; col < tableRightBound; col++) {
-                  const idx = boldRowStart + col * 4;
-                  // Preserve original color, just increase opacity/saturation
-                  data[idx] = Math.min(255, data[idx] * 0.5);      // R - darken
-                  data[idx + 1] = Math.min(255, data[idx + 1] * 0.5);  // G - darken
-                  data[idx + 2] = Math.min(255, data[idx + 2] * 0.5);  // B - darken
-                  data[idx + 3] = 255; // A
+                // Get image data to detect row boundaries
+                const ctx = mainCanvas.getContext('2d');
+                const width = Math.floor(mainCanvas.width);
+                const height = Math.floor(safeHeight);
+
+                const imageData = ctx.getImageData(0, safeStartPixel, width, height);
+                const data = imageData.data;
+
+                // Look for horizontal lines (table borders) by scanning for rows of dark pixels
+                let lastBlackRowIndex = 0;
+                let borderThickness = 0;
+
+                const pixelsPerRow = width * 4; // RGBA = 4 bytes per pixel
+                const rowCount = height;
+                let inBorder = false;
+                const borderRows = [];
+
+                for (let row = 0; row < rowCount; row++) {
+                    let blackCount = 0;
+                    const rowStart = row * pixelsPerRow;
+
+                    // Count dark pixels in this row
+                    for (let col = 0; col < width; col++) {
+                        const idx = rowStart + col * 4;
+                        const r = data[idx];
+                        const g = data[idx + 1];
+                        const b = data[idx + 2];
+
+                        // Check if pixel is dark (table border)
+                        if (r < 150 && g < 150 && b < 150) {
+                            blackCount++;
+                        }
+                    }
+
+                    // If >60% of row is dark, it's a border line
+                    if (blackCount > width * 0.6) {
+                        if (!inBorder) {
+                            inBorder = true;
+                            borderThickness = 1;
+                            borderRows.push(row);
+                        } else {
+                            borderThickness++;
+                        }
+                        lastBlackRowIndex = row;
+                    } else {
+                        inBorder = false;
+                    }
                 }
-              }
+
+
+
+                // Return the last safe break point (after the border)
+                if (lastBlackRowIndex > 0 && lastBlackRowIndex < rowCount - 5) {
+                    return lastBlackRowIndex;
+                }
+            } catch (err) {
+                console.warn('Error finding safe break point:', err?.message);
             }
-            break;
-          }
-        }
-      }
 
-      ctx.putImageData(imageData, 0, Math.floor(sourceYPixels));
+            // Fallback to original height if detection fails
+            return maxHeightPixels;
+        };
 
-      // Find safe break point to avoid splitting rows
-      const safeHeightPixels = findSafeBreakPoint(canvasHeight, sourceYPixels, maxHeightPixels, isFirstPage, isLastPage);
-      const sourceHeightPixels = Math.min(safeHeightPixels, maxHeightPixels);
-
-      // Recalculate the actual height used
-      imageHeightForThisPage = (sourceHeightPixels / canvasHeight) * imgHeight;
-
-      // Create a cropped canvas for this page
-      const croppedPageCanvas = document.createElement('canvas');
-      croppedPageCanvas.width = canvasWidth;
-      croppedPageCanvas.height = sourceHeightPixels;
-      const pageCtx = croppedPageCanvas.getContext('2d');
-      pageCtx.drawImage(
-        mainCanvas,
-        0, sourceYPixels,
-        canvasWidth, sourceHeightPixels,
-        0, 0,
-        canvasWidth, sourceHeightPixels
-      );
-
-      const pageImgData = croppedPageCanvas.toDataURL('image/jpeg', 0.85);
-
-      // Only add content if it has meaningful height (avoid blank pages)
-      if (imageHeightForThisPage > 2) {  // Only add if >2mm height
-        // Only add new page if not first page - first page already exists from jsPDF init
-        if (pageAdded) {
-          pdf.addPage();
-        } else {
-          pageAdded = true;
+        // Detect Y position of c-valuation-section for forced page break
+        const cValuationElement = continuousWrapper?.querySelector('.c-valuation-section');
+        let cValuationYPixels = null;
+        if (cValuationElement) {
+            const rect = cValuationElement.getBoundingClientRect();
+            const wrapperRect = continuousWrapper.getBoundingClientRect();
+            const relativeY = rect.top - wrapperRect.top;
+            cValuationYPixels = relativeY * 1.5; // Apply same scale as canvas
+            console.log(`🔍 C. VALUATION DETAILS section found at Y: ${cValuationYPixels}px (canvas coordinates)`);
         }
 
-        // Add image with top margin (header space)
-        pdf.addImage(pageImgData, 'JPEG', 0, headerHeight, imgWidth, imageHeightForThisPage);
+        const pdf = new jsPDF('p', 'mm', 'A4');
+        let pageNumber = 1;
+        let heightLeft = imgHeight;
+        let yPosition = 0;
+        let sourceY = 0;  // Track position in the source canvas
+        let cValuationPageBreakHandled = false;  // Track if we've handled the page break
+        let pageAdded = false;  // Track if first page is added to prevent empty page
+        let currentPageYPosition = headerHeight;  // Track current Y position on page to avoid empty pages
 
-        // Add page number in footer
-        pdf.setFontSize(9);
-        pdf.text(`Page ${pageNumber}`, 105, pageHeight - 5, { align: 'center' });
+        while (heightLeft > 5) {  // Only continue if there's meaningful content left (>5mm to avoid blank pages)
+            // Check if we need to force a page break for C. VALUATION DETAILS section
+            if (!cValuationPageBreakHandled && cValuationYPixels !== null) {
+                const sourceYPixels = (sourceY / imgHeight) * mainCanvas.height;
+                const nextSourceYPixels = sourceYPixels + (Math.min(usableHeight, heightLeft) / imgHeight) * mainCanvas.height;
 
-        // Update Y position tracking
-        currentPageYPosition = headerHeight + imageHeightForThisPage;
+                // If C. VALUATION section will be on this page, force it to next page instead
+                if (sourceYPixels < cValuationYPixels && nextSourceYPixels > cValuationYPixels && pageNumber > 1) {
+                    console.log(`⚠️ C. VALUATION DETAILS would split, forcing to new page`);
+                    pdf.addPage();
+                    pageNumber++;
+                    cValuationPageBreakHandled = true;
+                    // Skip remaining content and restart from C. VALUATION section
+                    sourceY = (cValuationYPixels / mainCanvas.height) * imgHeight;
+                    heightLeft = imgHeight - sourceY;
+                    continue;
+                } else if (sourceYPixels >= cValuationYPixels && sourceYPixels < cValuationYPixels + 100) {
+                    // We're at the C. VALUATION section, mark it handled
+                    cValuationPageBreakHandled = true;
+                    console.log(`✅ C. VALUATION DETAILS is on new page as expected`);
+                }
+            }
 
-        pageNumber++;
-      }
+            // Calculate how much of the image fits on this page
+            let imageHeightForThisPage = Math.min(usableHeight, heightLeft);
 
-      // Update counters
-      heightLeft -= imageHeightForThisPage;
-      sourceY += imageHeightForThisPage;
-    }
+            // Calculate the crop region from the canvas
+            const canvasHeight = mainCanvas.height;
+            const canvasWidth = mainCanvas.width;
+            const sourceYPixels = (sourceY / imgHeight) * canvasHeight;
+            const maxHeightPixels = (imageHeightForThisPage / imgHeight) * canvasHeight;
 
-    // Reset currentPageYPosition since we're starting new section for separate .page elements
-    currentPageYPosition = headerHeight;
+            // Check if this is first or last page
+            const isFirstPage = pageNumber === 1;
+            const isLastPage = heightLeft - imageHeightForThisPage <= 0;
 
-    // Add page canvases as separate pages in PDF
-    console.log(`📄 Adding ${pageCanvases.length} separate .page canvases to PDF...`);
-    for (let i = 0; i < pageCanvases.length; i++) {
-      const pageCanvas = pageCanvases[i];
-      const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.85);
-      const pageImgHeight = (pageCanvas.height * imgWidth) / pageCanvas.width;
+            // Apply bold borders BEFORE finding safe break point
+            const ctx = mainCanvas.getContext('2d');
+            const width = Math.floor(mainCanvas.width);
+            const height = Math.floor(maxHeightPixels);
 
-      // Only add new page if there's substantial content on current page (more than just header space)
-      // currentPageYPosition > headerHeight + 20 means there's at least 20mm of content
-      if (currentPageYPosition > headerHeight + 20) {
-        pdf.addPage();
-        pageNumber++;
+            // Guard against getImageData with 0 height
+            if (height <= 0) {
+                console.warn('⚠️ Height is 0 or negative, skipping image data operations');
+                heightLeft -= imageHeightForThisPage;
+                sourceY += imageHeightForThisPage;
+                pageNumber++;
+                if (heightLeft > 0) {
+                    pdf.addPage();
+                }
+                continue;
+            }
+
+            const imageData = ctx.getImageData(0, Math.floor(sourceYPixels), width, height);
+            const data = imageData.data;
+            const pixelsPerRow = width * 4;
+
+            // Calculate table boundaries (table is approximately in center, ~645px wide at 1.5x scale = ~430px at normal view)
+            // But we need to find it dynamically from the actual border pixels
+            let tableLeftBound = 0;
+            let tableRightBound = width;
+
+            // Find table left boundary by looking for first vertical line of dark pixels
+            for (let col = 0; col < Math.min(200, width); col++) {
+                let darkCount = 0;
+                for (let row = 10; row < Math.min(50, height); row++) {
+                    const idx = (row * pixelsPerRow) + (col * 4);
+                    if (data[idx] < 150 && data[idx + 1] < 150 && data[idx + 2] < 150) {
+                        darkCount++;
+                    }
+                }
+                if (darkCount > 10) {
+                    tableLeftBound = col;
+                    break;
+                }
+            }
+
+            // Find table right boundary by looking for last vertical line of dark pixels
+            for (let col = width - 1; col > tableLeftBound + 100; col--) {
+                let darkCount = 0;
+                for (let row = 10; row < Math.min(50, height); row++) {
+                    const idx = (row * pixelsPerRow) + (col * 4);
+                    if (data[idx] < 150 && data[idx + 1] < 150 && data[idx + 2] < 150) {
+                        darkCount++;
+                    }
+                }
+                if (darkCount > 10) {
+                    tableRightBound = col;
+                    break;
+                }
+            }
+
+            // Find top border (first border row in this section)
+            if (!isFirstPage) {
+                for (let row = 0; row < Math.min(50, height); row++) {
+                    let blackCount = 0;
+                    const rowStart = row * pixelsPerRow;
+                    // Only count dark pixels within table bounds
+                    for (let col = tableLeftBound; col < tableRightBound; col++) {
+                        const idx = rowStart + col * 4;
+                        if (data[idx] < 150 && data[idx + 1] < 150 && data[idx + 2] < 150) {
+                            blackCount++;
+                        }
+                    }
+                    const tableWidth = tableRightBound - tableLeftBound;
+                    if (blackCount > tableWidth * 0.6) {
+                        // Make top border bold - only within table bounds
+                        for (let offset = -2; offset <= 2; offset++) {
+                            const boldRow = row + offset;
+                            if (boldRow >= 0 && boldRow < height) {
+                                const boldRowStart = boldRow * pixelsPerRow;
+                                // Only darken pixels within table bounds
+                                for (let col = tableLeftBound; col < tableRightBound; col++) {
+                                    const idx = boldRowStart + col * 4;
+                                    // Preserve original color, just increase opacity/saturation
+                                    data[idx] = Math.min(255, data[idx] * 0.5);      // R - darken
+                                    data[idx + 1] = Math.min(255, data[idx + 1] * 0.5);  // G - darken
+                                    data[idx + 2] = Math.min(255, data[idx + 2] * 0.5);  // B - darken
+                                    data[idx + 3] = 255; // A
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Find bottom border (last border row in this section)
+            if (!isLastPage) {
+                for (let row = height - 1; row >= Math.max(0, height - 50); row--) {
+                    let blackCount = 0;
+                    const rowStart = row * pixelsPerRow;
+                    // Only count dark pixels within table bounds
+                    for (let col = tableLeftBound; col < tableRightBound; col++) {
+                        const idx = rowStart + col * 4;
+                        if (data[idx] < 150 && data[idx + 1] < 150 && data[idx + 2] < 150) {
+                            blackCount++;
+                        }
+                    }
+                    const tableWidth = tableRightBound - tableLeftBound;
+                    if (blackCount > tableWidth * 0.6) {
+                        // Make bottom border bold - only within table bounds
+                        for (let offset = -2; offset <= 2; offset++) {
+                            const boldRow = row + offset;
+                            if (boldRow >= 0 && boldRow < height) {
+                                const boldRowStart = boldRow * pixelsPerRow;
+                                // Only darken pixels within table bounds
+                                for (let col = tableLeftBound; col < tableRightBound; col++) {
+                                    const idx = boldRowStart + col * 4;
+                                    // Preserve original color, just increase opacity/saturation
+                                    data[idx] = Math.min(255, data[idx] * 0.5);      // R - darken
+                                    data[idx + 1] = Math.min(255, data[idx + 1] * 0.5);  // G - darken
+                                    data[idx + 2] = Math.min(255, data[idx + 2] * 0.5);  // B - darken
+                                    data[idx + 3] = 255; // A
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            ctx.putImageData(imageData, 0, Math.floor(sourceYPixels));
+
+            // Find safe break point to avoid splitting rows
+            const safeHeightPixels = findSafeBreakPoint(canvasHeight, sourceYPixels, maxHeightPixels, isFirstPage, isLastPage);
+            const sourceHeightPixels = Math.min(safeHeightPixels, maxHeightPixels);
+
+            // Recalculate the actual height used
+            imageHeightForThisPage = (sourceHeightPixels / canvasHeight) * imgHeight;
+
+            // Create a cropped canvas for this page
+            const croppedPageCanvas = document.createElement('canvas');
+            croppedPageCanvas.width = canvasWidth;
+            croppedPageCanvas.height = sourceHeightPixels;
+            const pageCtx = croppedPageCanvas.getContext('2d');
+            pageCtx.drawImage(
+                mainCanvas,
+                0, sourceYPixels,
+                canvasWidth, sourceHeightPixels,
+                0, 0,
+                canvasWidth, sourceHeightPixels
+            );
+
+            const pageImgData = croppedPageCanvas.toDataURL('image/jpeg', 0.85);
+
+            // Only add content if it has meaningful height (avoid blank pages)
+            if (imageHeightForThisPage > 2) {  // Only add if >2mm height
+                // Only add new page if not first page - first page already exists from jsPDF init
+                if (pageAdded) {
+                    pdf.addPage();
+                } else {
+                    pageAdded = true;
+                }
+
+                // Add image with top margin (header space)
+                pdf.addImage(pageImgData, 'JPEG', 0, headerHeight, imgWidth, imageHeightForThisPage);
+
+                // Add page number in footer
+                pdf.setFontSize(9);
+                pdf.text(`Page ${pageNumber}`, 105, pageHeight - 5, { align: 'center' });
+
+                // Update Y position tracking
+                currentPageYPosition = headerHeight + imageHeightForThisPage;
+
+                pageNumber++;
+            }
+
+            // Update counters
+            heightLeft -= imageHeightForThisPage;
+            sourceY += imageHeightForThisPage;
+        }
+
+        // Reset currentPageYPosition since we're starting new section for separate .page elements
         currentPageYPosition = headerHeight;
-        console.log(`📄 Added new page for .page element ${i + 1}`);
-      } else {
-        console.log(`📄 Skipping new page for .page element ${i + 1} - minimal content on current page`);
-        // If on current page with minimal content, just continue on same page
-        // currentPageYPosition already at headerHeight, ready for new content
-      }
 
-      // Add image with proper margins (12mm = ~45px at 96dpi)
-      const leftMargin = 12;
-      const topMargin = 12;
-      const availableWidth = imgWidth - (leftMargin * 2);
-      const adjustedImgHeight = (pageCanvas.height * availableWidth) / pageCanvas.width;
+        // Add page canvases as separate pages in PDF
+        console.log(`📄 Adding ${pageCanvases.length} separate .page canvases to PDF...`);
+        for (let i = 0; i < pageCanvases.length; i++) {
+            const pageCanvas = pageCanvases[i];
+            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.85);
+            const pageImgHeight = (pageCanvas.height * imgWidth) / pageCanvas.width;
 
-      pdf.addImage(pageImgData, 'JPEG', leftMargin, topMargin, availableWidth, adjustedImgHeight);
-      pdf.setFontSize(9);
-      pdf.text(`Page ${pageNumber}`, 105, pageHeight - 5, { align: 'center' });
-      
-      // Update Y position tracking
-      currentPageYPosition = topMargin + adjustedImgHeight;
+            // Only add new page if there's substantial content on current page (more than just header space)
+            // currentPageYPosition > headerHeight + 20 means there's at least 20mm of content
+            if (currentPageYPosition > headerHeight + 20) {
+                pdf.addPage();
+                pageNumber++;
+                currentPageYPosition = headerHeight;
+                console.log(`📄 Added new page for .page element ${i + 1}`);
+            } else {
+                console.log(`📄 Skipping new page for .page element ${i + 1} - minimal content on current page`);
+                // If on current page with minimal content, just continue on same page
+                // currentPageYPosition already at headerHeight, ready for new content
+            }
 
-      pageNumber++;
-      console.log(`✅ Added .page canvas ${i + 1} as page ${pageNumber - 1}`);
-    }
+            // Add image with proper margins (12mm = ~45px at 96dpi)
+            const leftMargin = 12;
+            const topMargin = 12;
+            const availableWidth = imgWidth - (leftMargin * 2);
+            const adjustedImgHeight = (pageCanvas.height * availableWidth) / pageCanvas.width;
 
-    // Add images as separate pages
-    console.log('📸 Adding', imageData.length, 'images to PDF...');
+            pdf.addImage(pageImgData, 'JPEG', leftMargin, topMargin, availableWidth, adjustedImgHeight);
+            pdf.setFontSize(9);
+            pdf.text(`Page ${pageNumber}`, 105, pageHeight - 5, { align: 'center' });
 
-    // Filter out images with invalid src before adding to PDF
-    const validImages = imageData.filter(img => {
-      if (!img.src || typeof img.src !== 'string' || !img.src.trim()) {
-        console.log(`⏭️ Skipping image with invalid src: ${img.label}`);
-        return false;
-      }
-      return true;
-    });
+            // Update Y position tracking
+            currentPageYPosition = topMargin + adjustedImgHeight;
 
-    if (validImages.length > 0) {
-      // Separate images by type
-      const propertyImgs = validImages.filter(img => img.type === 'property');
-      const locationImgs = validImages.filter(img => img.type === 'location');
-      const supportingImgs = validImages.filter(img => img.type === 'supporting');
+            pageNumber++;
+            console.log(`✅ Added .page canvas ${i + 1} as page ${pageNumber - 1}`);
+        }
 
-      // ===== ADD PROPERTY IMAGES: 6 per page (2 columns x 3 rows) =====
-      if (propertyImgs.length > 0) {
-        pdf.addPage();
-        let imgIndex = 0;
+        // Add images as separate pages
+        console.log('📸 Adding', imageData.length, 'images to PDF...');
 
-        while (imgIndex < propertyImgs.length) {
-          const startIdx = imgIndex;
-          let row = 0;
+        // Filter out images with invalid src before adding to PDF
+        const validImages = imageData.filter(img => {
+            if (!img.src || typeof img.src !== 'string' || !img.src.trim()) {
+                console.log(`⏭️ Skipping image with invalid src: ${img.label}`);
+                return false;
+            }
+            return true;
+        });
 
-          // Add up to 6 images (2 columns x 3 rows) per page
-          for (row = 0; row < 3 && imgIndex < propertyImgs.length; row++) {
-            const yPos = 15 + row * 92; // 3 rows with spacing
+        if (validImages.length > 0) {
+            // Separate images by type
+            const propertyImgs = validImages.filter(img => img.type === 'property');
+            const locationImgs = validImages.filter(img => img.type === 'location');
+            const supportingImgs = validImages.filter(img => img.type === 'supporting');
 
-            // Left column
-            if (imgIndex < propertyImgs.length) {
-              const img = propertyImgs[imgIndex];
-              try {
-                if (img.src.startsWith('data:') || img.src.startsWith('blob:') || img.src.startsWith('http://') || img.src.startsWith('https://')) {
-                  pdf.setFontSize(8);
-                  pdf.setFont(undefined, 'bold');
-                  pdf.text(img.label, 12, yPos);
-                  pdf.addImage(img.src, 'JPEG', 12, yPos + 4, 92, 82);
-                  console.log(`✅ Added property image (L): ${img.label}`);
+            // ===== ADD PROPERTY IMAGES: 6 per page (2 columns x 3 rows) =====
+            if (propertyImgs.length > 0) {
+                pdf.addPage();
+                let imgIndex = 0;
+
+                while (imgIndex < propertyImgs.length) {
+                    const startIdx = imgIndex;
+                    let row = 0;
+
+                    // Add up to 6 images (2 columns x 3 rows) per page
+                    for (row = 0; row < 3 && imgIndex < propertyImgs.length; row++) {
+                        const yPos = 15 + row * 92; // 3 rows with spacing
+
+                        // Left column
+                        if (imgIndex < propertyImgs.length) {
+                            const img = propertyImgs[imgIndex];
+                            try {
+                                if (img.src.startsWith('data:') || img.src.startsWith('blob:') || img.src.startsWith('http://') || img.src.startsWith('https://')) {
+                                    pdf.setFontSize(8);
+                                    pdf.setFont(undefined, 'bold');
+                                    pdf.text(img.label, 12, yPos);
+                                    pdf.addImage(img.src, 'JPEG', 12, yPos + 4, 92, 82);
+                                    console.log(`✅ Added property image (L): ${img.label}`);
+                                }
+                            } catch (err) {
+                                console.warn(`Failed to add property image ${img.label}:`, err?.message);
+                            }
+                            imgIndex++;
+                        }
+
+                        // Right column
+                        if (imgIndex < propertyImgs.length) {
+                            const img = propertyImgs[imgIndex];
+                            try {
+                                if (img.src.startsWith('data:') || img.src.startsWith('blob:') || img.src.startsWith('http://') || img.src.startsWith('https://')) {
+                                    pdf.setFontSize(8);
+                                    pdf.setFont(undefined, 'bold');
+                                    pdf.text(img.label, 108, yPos);
+                                    pdf.addImage(img.src, 'JPEG', 108, yPos + 4, 92, 82);
+                                    console.log(`✅ Added property image (R): ${img.label}`);
+                                }
+                            } catch (err) {
+                                console.warn(`Failed to add property image ${img.label}:`, err?.message);
+                            }
+                            imgIndex++;
+                        }
+                    }
+
+                    // Add new page if more images remain
+                    if (imgIndex < propertyImgs.length) {
+                        pdf.addPage();
+                    }
                 }
-              } catch (err) {
-                console.warn(`Failed to add property image ${img.label}:`, err?.message);
-              }
-              imgIndex++;
             }
 
-            // Right column
-            if (imgIndex < propertyImgs.length) {
-              const img = propertyImgs[imgIndex];
-              try {
-                if (img.src.startsWith('data:') || img.src.startsWith('blob:') || img.src.startsWith('http://') || img.src.startsWith('https://')) {
-                  pdf.setFontSize(8);
-                  pdf.setFont(undefined, 'bold');
-                  pdf.text(img.label, 108, yPos);
-                  pdf.addImage(img.src, 'JPEG', 108, yPos + 4, 92, 82);
-                  console.log(`✅ Added property image (R): ${img.label}`);
+            // ===== ADD LOCATION IMAGES: 1 per page =====
+            if (locationImgs.length > 0) {
+                for (let i = 0; i < locationImgs.length; i++) {
+                    const img = locationImgs[i];
+
+                    try {
+                        if (!img.src.startsWith('data:') && !img.src.startsWith('blob:') && !img.src.startsWith('http://') && !img.src.startsWith('https://')) {
+                            continue;
+                        }
+
+                        pdf.addPage();
+
+                        // Add image title
+                        pdf.setFontSize(11);
+                        pdf.setFont(undefined, 'bold');
+                        pdf.text(img.label, 15, 15);
+
+                        // Add image - 1 per page, larger size
+                        const imgWidth = 180;
+                        const imgHeight = 220;
+                        pdf.addImage(img.src, 'JPEG', 15, 25, imgWidth, imgHeight);
+
+                        console.log(`✅ Added location image: ${img.label}`);
+                    } catch (err) {
+                        console.warn(`Failed to add location image ${img.label}:`, err?.message);
+                    }
                 }
-              } catch (err) {
-                console.warn(`Failed to add property image ${img.label}:`, err?.message);
-              }
-              imgIndex++;
-            }
-          }
-
-          // Add new page if more images remain
-          if (imgIndex < propertyImgs.length) {
-            pdf.addPage();
-          }
-        }
-      }
-
-      // ===== ADD LOCATION IMAGES: 1 per page =====
-      if (locationImgs.length > 0) {
-        for (let i = 0; i < locationImgs.length; i++) {
-          const img = locationImgs[i];
-
-          try {
-            if (!img.src.startsWith('data:') && !img.src.startsWith('blob:') && !img.src.startsWith('http://') && !img.src.startsWith('https://')) {
-              continue;
             }
 
-            pdf.addPage();
+            // ===== ADD SUPPORTING DOCUMENTS: 1 per page =====
+            if (supportingImgs.length > 0) {
+                for (let i = 0; i < supportingImgs.length; i++) {
+                    const img = supportingImgs[i];
 
-            // Add image title
-            pdf.setFontSize(11);
-            pdf.setFont(undefined, 'bold');
-            pdf.text(img.label, 15, 15);
+                    try {
+                        if (!img.src.startsWith('data:') && !img.src.startsWith('blob:') && !img.src.startsWith('http://') && !img.src.startsWith('https://')) {
+                            continue;
+                        }
 
-            // Add image - 1 per page, larger size
-            const imgWidth = 180;
-            const imgHeight = 220;
-            pdf.addImage(img.src, 'JPEG', 15, 25, imgWidth, imgHeight);
+                        pdf.addPage();
 
-            console.log(`✅ Added location image: ${img.label}`);
-          } catch (err) {
-            console.warn(`Failed to add location image ${img.label}:`, err?.message);
-          }
-        }
-      }
+                        // Add image title
+                        pdf.setFontSize(11);
+                        pdf.setFont(undefined, 'bold');
+                        pdf.text(img.label, 15, 15);
 
-      // ===== ADD SUPPORTING DOCUMENTS: 1 per page =====
-      if (supportingImgs.length > 0) {
-        for (let i = 0; i < supportingImgs.length; i++) {
-          const img = supportingImgs[i];
+                        // Add image - 1 per page, larger size
+                        const imgWidth = 180;
+                        const imgHeight = 220;
+                        pdf.addImage(img.src, 'JPEG', 15, 25, imgWidth, imgHeight);
 
-          try {
-            if (!img.src.startsWith('data:') && !img.src.startsWith('blob:') && !img.src.startsWith('http://') && !img.src.startsWith('https://')) {
-              continue;
+                        console.log(`✅ Added supporting document: ${img.label}`);
+                    } catch (err) {
+                        console.warn(`Failed to add supporting document ${img.label}:`, err?.message);
+                    }
+                }
             }
-
-            pdf.addPage();
-
-            // Add image title
-            pdf.setFontSize(11);
-            pdf.setFont(undefined, 'bold');
-            pdf.text(img.label, 15, 15);
-
-            // Add image - 1 per page, larger size
-            const imgWidth = 180;
-            const imgHeight = 220;
-            pdf.addImage(img.src, 'JPEG', 15, 25, imgWidth, imgHeight);
-
-            console.log(`✅ Added supporting document: ${img.label}`);
-          } catch (err) {
-            console.warn(`Failed to add supporting document ${img.label}:`, err?.message);
-          }
+        } else {
+            console.log('⏭️ No valid images to add to PDF');
         }
-      }
-    } else {
-      console.log('⏭️ No valid images to add to PDF');
+
+        // Download PDF
+        const filename = `valuation_${record?.clientName || record?.uniqueId || Date.now()}.pdf`;
+        pdf.save(filename);
+
+        console.log('✅ PDF generated and downloaded:', filename);
+        return filename;
+    } catch (error) {
+        console.error('❌ Client-side PDF generation error:', error);
+        throw error;
     }
-
-    // Download PDF
-    const filename = `valuation_${record?.clientName || record?.uniqueId || Date.now()}.pdf`;
-    pdf.save(filename);
-
-    console.log('✅ PDF generated and downloaded:', filename);
-    return filename;
-  } catch (error) {
-    console.error('❌ Client-side PDF generation error:', error);
-    throw error;
-  }
 }
 
 export const generateRajeshBankPDF = generateRecordPDF;

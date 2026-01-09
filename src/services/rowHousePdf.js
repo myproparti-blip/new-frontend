@@ -203,8 +203,10 @@ const getImageSource = (imageUrl) => {
     // For regular URLs, ensure it's valid
     try {
         // Try to construct a URL - this validates the URL format
-        new URL(imageUrl);
-        return imageUrl;
+        const url = new URL(imageUrl);
+        // Add cache-busting query parameter to force fresh image load
+        url.searchParams.set('t', Date.now());
+        return url.toString();
     } catch (e) {
         console.warn('Invalid image URL:', imageUrl.substring(0, 100), e?.message);
         return '';
@@ -1666,7 +1668,7 @@ export function generateValuationReportHTML(data = {}) {
 
   <!-- CONTINUOUS DATA TABLE -->
   <div class="continuous-wrapper" >
-    <div style="padding: 0 12mm; padding-top: 2mm;">
+    <div style="padding: 0 12mm; padding-top: 1mm;">
       
       <!-- Property Details Table -->
       <div style="text-align: center; margin-bottom: 15px;">
@@ -1706,14 +1708,17 @@ export function generateValuationReportHTML(data = {}) {
 
       <!-- Bank Image Below Table -->
       <div class="image-container" style="text-align: center; margin-top: 10px; margin-bottom: 0px;">
-        ${safeGet(pdfData, 'bankImage') ? `<img src="${getImageSource(safeGet(pdfData, 'bankImage'))}" alt="Bank Logo" style="max-width: 90%; height: auto; max-width: 700px; display: block; margin: 0 auto; border: none; background: #f5f5f5; padding: 10px;" class="pdf-image" crossorigin="anonymous" />` : ''}
+        ${safeGet(pdfData, 'bankImage') ? `<img src="${getImageSource(safeGet(pdfData, 'bankImage'))}" alt="Bank Logo" style="max-width: 90%; height:300px; max-width: 700px; display: block; margin: 0 auto; border: none; background: #f5f5f5; padding: 10px;" class="pdf-image" crossorigin="anonymous" />` : ''}
       </div>
-      
     
+  <!-- PAGE BREAK BEFORE VALUED PROPERTY AT A GLANCE -->
+<div class="page-break"></div>
 
-    <!-- ================= TITLE (CENTERED) ================= -->
-    <div style="text-align:center; margin-top: 70px; box-sizing:border-box;">
-      <p style="font-size:16pt; font-weight:bold;  color:#4472C4;">
+<!-- VALUED PROPERTY AT A GLANCE WITH VALUATION CERTIFICATE SECTION -->
+<div class="valued-property-section" style=" margin-top: 12mm; margin-bottom:20px;">
+
+    <div class="no-break" style="text-align:center; margin-top: 10px; box-sizing:border-box;">
+      <p style="font-size:16pt;  margin-bottom: 10px; font-weight:bold;  color:#4472C4;">
         VALUED PROPERTY AT A GLANCE WITH VALUATION CERTIFICATE
       </p>
     </div>
@@ -1889,28 +1894,29 @@ export function generateValuationReportHTML(data = {}) {
       )}
         </td>
       </tr>
-
       </table>
-      </div>
-
-      <div style="margin-top: 10px; padding: 0 12mm;">
-        <div style="display: flex; justify-content: space-between; font-weight:bold; padding:8px;">
-          <div>
-            Date: ${formatDate(pdfData.reportDate || pdfData.valuationDate || safeGet(pdfData, 'valuationMadeDate', 'NA'))}
-          </div>
-          <div style="text-align:right;">
-            ${pdfData.valuersName || 'Valuer Name'}<br>
+      <tr>
+        <td colspan="3" style="border: none !important; padding: 15px 6px;">
+          <div style="">
+            <p style="margin: 0;text-align: left;"><strong>Place: Ahmedabad</strong></p>
+            <p style="margin: 5px 0;text-align: left;"><strong>Date: ${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</strong></p>
+            <div style="margin-top: 0px;text-align: right;">
+              ${pdfData.valuersName || 'Valuer Name'}<br>
             Govt. Registered Valuer
+            </div>
           </div>
-        </div>
-        <div style="border:none; padding:8px; font-weight:bold;">
-          Place: ${safeGet(pdfData, 'valuationPlace', 'NA')}
-        </div>
+        </td>
+      </tr>
       </div>
-  </div>
+      </div>
+      </div>
+      <!-- END: valued-property-section -->
+
+
+       <!-- ANNEXURE-XIV SECTION -->
 
       <!-- ANNEXURE-XIV: FORMAT OF VALUATION REPORT -->
-      <div style="padding: 0 12mm; margin-top: 0px; page-break-before: always;">
+      <div style="padding: 0 12mm; margin-top: 30px; page-break-before: always;">
       <div style="text-align: center; margin-bottom: 5px;">
       <p style="margin: 0; font-weight: bold; font-size: 12pt;">ANNEXURE-XIV</p>
       <p style="margin: 0; font-weight: bold; font-size: 12pt;">FORMAT OF VALUATION REPORT</p>
@@ -2698,7 +2704,7 @@ export function generateValuationReportHTML(data = {}) {
             
       <ol style="margin: 10px 0; padding-left: 20px; line-height: 1.6; font-size: 11pt; list-style: none;">
     <li style="margin-bottom: 8px;">1. Receive a valuation request from the bank.</li>
-    <li style="margin-bottom: 8px;">2. Review the request thoroughly to understand the scope, purpose, and specific requirements of the valuation.</li>
+    <li style="margin-bottom: 8px;">2. Review the request thoroughly to understand the scope, purpose, and specific requirements of the valuation.</li></br>
     <li style="margin-bottom: 8px;">3. Conduct a preliminary assessment of the property or asset to determine its feasibility for valuation.</li>
     <li style="margin-bottom: 8px;">4. Gather all relevant data and information about the property or asset, including legal documents, title deeds, surveys, plans, and other necessary documents provided by the bank.</li>
     <li style="margin-bottom: 8px;">5. Conduct an on-site inspection of the property or asset, taking photographs, measurements and noting essential details.</li>
@@ -2720,7 +2726,7 @@ export function generateValuationReportHTML(data = {}) {
             While the process may differ based on the bank's specific requirements and the property or asset being evaluated, this flowchart is a solid foundation for all Banking Valuers in India to confidently and efficiently conduct valuations.
             </p>
 
-            <p style="margin: 15px 0; font-weight: bold;"><u>Observations, Assumptions and Limiting Conditions</u></p>
+            <p style="margin-top: 30px ; font-weight: bold;"><u>Observations, Assumptions and Limiting Conditions</u></p>
 
           <ul style="margin: 10px 0; padding-left: 10px; line-height: 1.6; font-size: 11pt; list-style: none;">
     <li style="margin-bottom: 8px;">
@@ -2806,15 +2812,15 @@ export function generateValuationReportHTML(data = {}) {
       4. VALUERS and / or its Partners, Officers and Executives accept no responsibility for detecting fraud or misrepresentation, whether by management or employees of the Client or third parties. Accordingly, VALUERS will not be liable in any way for, or in connection with, fraud or misrepresentations, whether on the part of the Client, its contractors or agents, or any other third party.
     </li>
 
-    <li style="margin-bottom: 8px;">
+    <li style="margin-bottom: 5px;">
       5. If you wish to bring a legal proceeding related to the Services or Agreement, it must be initiated within six (6) months from the date you became aware of or should have known about the facts leading to the alleged liability. Additionally, legal proceedings must be initiated no later than one (1) year from the date of the Deliverable that caused the alleged liability.
     </li>
 
-    <li style="margin-bottom: 8px;">
+    <li style="margin-bottom: 5px;">
       6. If you, as the client, have any concerns or complaints about the services provided, please do not hesitate to discuss them with the officials of VALUERS. Any service-related issues concerning this Agreement (or any variations or additions to it) must be brought to the attention of VALUERS in writing within one month from the date when you became aware of or should reasonably been aware of the relevant facts. Such issues must be raised no later than six months from the completion date of the services.
     </li>
   </br>
-    <li style="margin-bottom: 8px;">
+    <li style="margin-bottom: 5px;">
       7. If there is any disagreement regarding the Valuation or other Services that are provided, both parties must first try to resolve the issue through conciliation with their senior representatives. If a resolution cannot be reached within forty-five (45) days, the dispute will be settled through Arbitration in India, following the guidelines of the Arbitration and Conciliation Act 1996. The venue of the arbitration will be located in Ahmedabad, Gujarat, India. The arbitrator(s)' authority will be subject to the terms of the standard terms of service, which includes the limitation of liability provision. All information regarding the arbitration, including the award, will be kept confidential.
     </li>
 
@@ -2844,7 +2850,7 @@ export function generateValuationReportHTML(data = {}) {
             <p style="margin: 8px 0 4px 0; font-size: 10pt;"> E-Mail: rajeshganatra2003@gmail.com</p>
           </div>
 
-              <div style="font-size: 12pt; line-height: 1.4; margin-top: 10px; margin-left: 0; margin-right: 0; width: 100%;" class="annexure-iv-section">
+              <div style="font-size: 12pt; line-height: 1.4; margin-top: 300px; margin-left: 0; margin-right: 0; width: 100%;" class="annexure-iv-section">
     <div style="text-align: center; margin-bottom: 25px;">
       <p style="margin: 0; font-weight: bold; font-size: 12pt;">ANNEXURE – IV</p>
       <p style="margin: 8px 0 0 0; font-weight: bold; font-size: 12pt;">DECLARATION- CUM- UNDERTAKING</p>
@@ -2886,7 +2892,7 @@ export function generateValuationReportHTML(data = {}) {
 <!-- PAGE 23: VALUATION DETAILS TABLE -->
 <div class="" style=" background: white; width: 100%;" class="">
   <div style="font-size: 12pt; line-height: 1.4;">
-    <table style="width: 100%; border-collapse: separate; border-spacing: 0;; margin: 0; border: 1px solid #000;">
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0;; margin: 0; border: 1px solid #000; page-break-inside: avoid;">
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center; width: 8%; font-weight: bold;">Sl. No.</td>
         <td style="border: 1px solid #000; padding: 6px; width: 42%; font-weight: bold;">Particulars</td>
@@ -2952,27 +2958,31 @@ export function generateValuationReportHTML(data = {}) {
         <td style="border: 1px solid #000; padding: 6px;">Caveats, limitations and disclaimers to the extent they explain or elucidate the limitations faced by valuer, which shall not be for the purpose of limiting his responsibility for the valuation report.</td>
         <td style="border: 1px solid #000; padding: 6px;">We are not responsible for Title of the subjected property and valuations affected by the same</td>
       </tr>
+      <tr>
+        <td colspan="3" style="border: none !important; padding: 15px 6px;">
+          <div style="">
+            <p style="margin: 0;text-align: left;"><strong>Place: Ahmedabad</strong></p>
+            <p style="margin: 5px 0;text-align: left;"><strong>Date: ${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</strong></p>
+            <div style="margin-top: 10px;">
+              <p style="margin: 0;text-align: right; font-weight: bold;">Rajesh Ganatra</p>
+            </div>
+          </div>
+        </td>
+      </tr>
     </table>
-
-    <div style="margin-top: 20px;">
-      <p style="margin: 0;"><strong>Place: Ahmedabad</strong></p>
-      <p style="margin: 5px 0;"><strong>Date: ${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</strong></p>
-      <div style="margin-top: 20px; text-align: right;">
-        <p style="margin: 0; font-weight: bold;">Rajesh Ganatra</p>
-      </div>
-    </div>
   </div>
   </div>
 
 <!-- PAGE 24-25: MODEL CODE OF CONDUCT FOR VALUERS -->
-<div class="" style="margin: 0; background: white; width: 100%; box-sizing: border-box;" class="print-container">
-  <div style="font-size: 12pt; line-height: 1.5; ">
+</br>
+<div class="" style="margin: 0; background: white; width: 100%; box-sizing: border-box;">
+  <div style="font-size: 12pt; line-height: 1.4; ">
     <div style="text-align: center; margin-bottom: 20px;">
           <p style="margin: 0; font-weight: bold; font-size: 12pt;">(Annexure-V) </p>
       <p style="margin: 0; font-weight: bold; font-size: 12pt;">MODEL CODE OF CONDUCT FOR VALUERS</p>
     </div>
 
-    <p style="margin: 10px 0 8px 0; font-weight: bold;">Integrity and Fairness</p>
+    <p style="margin: 7px 0 8px 0; font-weight: bold;">Integrity and Fairness</p>
     <ol style="margin: 5px 0 10px 20px; padding: 0;  ">
       <li style="margin: 4px 0; text-align: justify;  ">A valuer shall, in the conduct of his/its business, follow high standards of integrity and fairness in all his/its dealings with his/its clients and other valuers.</li>
       <li style="margin: 4px 0; text-align: justify;">A valuer shall maintain integrity by being honest, straightforward, and forthright in all professional relationships.</li>
@@ -2981,7 +2991,7 @@ export function generateValuationReportHTML(data = {}) {
       <li style="margin: 4px 0; text-align: justify;">A valuer shall keep public interest foremost while delivering his services.</li>
     </ol>
 
-    <p style="margin: 10px 0 8px 0; font-weight: bold;">Professional Competence and Due Care</p>
+    <p style="margin: 7px 0 8px 0; font-weight: bold;">Professional Competence and Due Care</p>
     <ol style="margin: 5px 0 10px 20px; padding: 0;  ">
       <li style="margin: 4px 0; text-align: justify;  ">A valuer shall render at all times high standards of service, exercise due diligence, ensure proper care and exercise independent professional judgment.</li>
       <li style="margin: 4px 0; text-align: justify;  ">A valuer shall carry out professional services in accordance with the relevant technical and professional standards that may be specified from time to time</li>
@@ -3020,40 +3030,42 @@ export function generateValuationReportHTML(data = {}) {
     <ol style="margin: 5px 0 10px 20px; padding: 0;" start="25">
       <li style="margin: 4px 0; text-align: justify;  ">A valuer or his/its relative shall not accept gifts or hospitality which undermines or affects his independence as a valuer.</li>
     </ol>
-
+<ol style="margin: 10px 0 10px 20px; padding: 0;" start="">
     <p style="margin: 10px 0 3px 0; font-size: 12pt;">Explanation: For the purposes of this code the term 'relative' shall have the same meaning as defined in clause (77) of Section 2 of the Companies Act, 2013 (18 of 2013).</p>
-
+</ol>
     <ol style="margin: 10px 0 10px 20px; padding: 0;" start="26">
       <li style="margin: 6px 0; text-align: justify; font-size: 12pt;">A valuer shall not offer gifts or hospitality or a financial or any other advantage to a public servant or any other person with a view to obtain or retain work for himself/ itself, or to obtain or retain an advantage in the conduct of profession for himself/ itself.</li>
     </ol>
 
-    <p style="margin: 12px 0 8px 0; font-weight: bold; font-size: 12pt;">Remuneration and Costs.</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="27">
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall provide services for remuneration which is charged in a transparent manner, is a reasonable reflection of the work necessarily and properly undertaken, and is not inconsistent with the applicable rules.</li>
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall not accept any fees or charges other than those which are disclosed in a written contract with the person to whom he would be rendering service. <strong>Occupation, employability and restrictions.</strong></li>
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall refrain from accepting too many assignments, if he/it is unlikely to be able to devote adequate time to each of his/ its assignments.</li>
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall not conduct business which in the opinion of the authority or the registered valuer organisation discredits the profession.</li>
+    <p style="margin: 8px 0 4px 0; font-weight: bold; font-size: 12pt;">Remuneration and Costs.</p>
+    <ol style="margin: 2px 0 4px 20px; padding: 0;" start="27">
+      <li style="margin: 2px 0; text-align: justify; font-size: 12pt;  ">A valuer shall provide services for remuneration which is charged in a transparent manner, is a reasonable reflection of the work necessarily and properly undertaken, and is not inconsistent with the applicable rules.</li>
+      <li style="margin: 2px 0; text-align: justify; font-size: 12pt;  ">A valuer shall not accept any fees or charges other than those which are disclosed in a written contract with the person to whom he would be rendering service. <strong>Occupation, employability and restrictions.</strong></li>
+      <li style="margin: 2px 0; text-align: justify; font-size: 12pt;  ">A valuer shall refrain from accepting too many assignments, if he/it is unlikely to be able to devote adequate time to each of his/ its assignments.</li>
+      <li style="margin: 2px 0; text-align: justify; font-size: 12pt;  ">A valuer shall not conduct business which in the opinion of the authority or the registered valuer organisation discredits the profession.</li>
     </ol>
 
-    <p style="margin: 12px 0 8px 0; font-weight: bold; font-size: 12pt;">Miscellaneous</p>
-    <ol style="margin: 5px 0 10px 20px; padding: 0;" start="31">
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall refrain from undertaking to review the work of another valuer of the same client except under written orders from the bank or housing finance institutions and with knowledge of the concerned valuer.</li>
-      <li style="margin: 6px 0; text-align: justify; font-size: 12pt;  ">A valuer shall follow this code as amended or revised from time to time</li>
+    <p style="margin: 8px 0 4px 0; font-weight: bold; font-size: 12pt;">Miscellaneous</p>
+    <ol style="margin: 2px 0 4px 20px; padding: 0;" start="31">
+      <li style="margin: 2px 0; text-align: justify; font-size: 12pt;  ">A valuer shall refrain from undertaking to review the work of another valuer of the same client except under written orders from the bank or housing finance institutions and with knowledge of the concerned valuer.</li>
+      <li style="margin: 2px 0; text-align: justify; font-size: 12pt;  ">A valuer shall follow this code as amended or revised from time to time</li>
     </ol>
+</br>
+</br>
 
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #000;">
+    <div style=" border-top: 1px solid #000;">
       <p style="margin: 10px 0; font-size: 12pt;"><strong>Signature of the valuer:</strong> _________________</p>
       <p style="margin: 10px 0; font-size: 12pt;"><strong>Name of the Valuer:</strong> Rajesh Ganatra</p>
       <p style="margin: 10px 0 0 0; font-size: 12pt;"><strong>Address of the valuer:</strong></p>
       <p style="margin: 4px 0; font-size: 12pt;">5<sup>th</sup> floor, Shalvik Complex, behind Ganesh Plaza,</p>
       <p style="margin: 4px 0; font-size: 12pt;">Opp. Sanmukh Complex, off. C G Road,</p>
       <p style="margin: 4px 0 20px 0; font-size: 12pt;">Navrangpura, Ahmedabad – 380009</p>
-      <p style="margin: 4px 0; font-size: 12pt; background-color: #ffff00; padding: 4px; display: inline-block;"><strong>Date: 28/11/2025</strong></p></br>
-      <p style="margin: 10px 0; font-size: 12pt; background-color: #ffff00; padding: 4px; display: inline-block;"><strong>Place: Ahmedabad</strong></p>
+      <p style="margin: 4px 0; font-size: 12pt; background-color: #ffffffff; padding: 4px; display: inline-block;"><strong>Date: 28/11/2025</strong></p></br>
+      <p style="margin: 10px 0; font-size: 12pt; background-color: #ffffffff; padding: 4px; display: inline-block;"><strong>Place: Ahmedabad</strong></p>
     </div>
   </div>
 </div>
-
+</div>
 
 <!-- PAGE 13: IMAGES SECTION -->
   ${pdfData.areaImages && typeof pdfData.areaImages === 'object' && Object.keys(pdfData.areaImages).length > 0 ? `
@@ -3061,12 +3073,13 @@ export function generateValuationReportHTML(data = {}) {
                 let allImages = [];
                 let globalIdx = 0;
                 Object.entries(pdfData.areaImages).forEach(([areaName, areaImageList]) => {
-                    if (Array.isArray(areaImageList)) {
+                    if (Array.isArray(areaImageList) && areaImageList.length > 0) {
                         areaImageList.forEach((img, idx) => {
                             const imgSrc = typeof img === 'string' ? img : (img?.url || img?.preview || img?.data || img?.src || '');
-                            if (imgSrc) {
+                            // Only add images with valid, non-empty URLs
+                            if (imgSrc && imgSrc.trim() && imgSrc !== 'undefined' && imgSrc !== 'null') {
                                 allImages.push({
-                                    src: imgSrc,
+                                    src: imgSrc.trim(),
                                     label: areaName + ' - Image ' + (idx + 1),
                                     globalIdx: globalIdx++
                                 });
@@ -3075,59 +3088,74 @@ export function generateValuationReportHTML(data = {}) {
                     }
                 });
 
+                // Skip entire section if no valid images
+                if (allImages.length === 0) {
+                    return '';
+                }
+
                 let pages = [];
                 for (let i = 0; i < allImages.length; i += 6) {
                     pages.push(allImages.slice(i, i + 6));
                 }
 
-                return pages.map((pageImages, pageIdx) => `
+                let pageHtml = '';
+                let isFirstPage = true;
+                pages.forEach((pageImages) => {
+                    // Filter out images with empty src
+                    const validImages = pageImages.filter(item => item && item.src && item.src.trim());
+                    if (validImages.length === 0) return; // Skip empty pages
+                    
+                    pageHtml += `
         <div class="page images-section area-images-page" style=" page-break-after: always;   padding: 5px 10px; margin: 0; width: 100%; box-sizing: border-box;">
              <div style="padding: 5px; font-size: 12pt;">
-                 ${pageIdx === 0 ? '<h2 style="text-align: center; margin: 0 0 8px 0; font-weight: bold;">PROPERTY AREA IMAGES</h2>' : ''}
+                 ${isFirstPage ? '<h2 style="text-align: center; margin: 0 0 8px 0; font-weight: bold;">PROPERTY AREA IMAGES</h2>' : ''}
                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px;   margin: 0; padding: 0;">
-                     ${pageImages.map(item => `
+                     ${validImages.map(item => `
                      <div style="  border: 1px solid #ddd; padding: 1px; text-align: center; background: #fff; margin: 0;">
                          <img class="pdf-image" src="${item.src}" alt="${item.label}" style="width: 100%; height: auto; max-height: 275px; object-fit: contain; display: block; margin: 0; padding: 0;">
                          <p style="margin: 2px 0 0 0; font-size: 6.5pt; color: #333; font-weight: bold; padding: 0;">${item.label}</p>
                       </div>`).join('')}
                  </div>
              </div>
-        </div>`).join('');
+        </div>`;
+                    isFirstPage = false;
+                });
+                return pageHtml;
             })()}
      ` : ''}
 
    <!-- LOCATION IMAGES: Each image gets its own page -->
-   ${Array.isArray(pdfData.locationImages) && pdfData.locationImages.length > 0 ? `
+   ${Array.isArray(pdfData.locationImages) && pdfData.locationImages.length > 0 && pdfData.locationImages.some(img => typeof img === 'string' ? img : img?.url) ? `
      ${pdfData.locationImages.map((img, idx) => {
                 const imgSrc = typeof img === 'string' ? img : img?.url;
                 return imgSrc ? `
-         <div class="page" location-images-page style="width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px 10px; box-sizing: border-box; margin: 0;  ">
-           <h2 style="text-align: center; margin-bottom: 30px; font-weight: bold; font-size: 18pt;">LOCATION IMAGE ${idx + 1}</h2>
-           <img class="pdf-image" src="${imgSrc}" alt="Location Image ${idx + 1}" style="width: 90%; height: auto; max-height: 600px; object-fit: contain; margin: 0 auto;">
+         <div class="page" location-images-page style="width: 100%; page-break-after: always; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12mm; box-sizing: border-box; margin: 0; background: white; min-height: auto;">
+           <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold; font-size: 14pt; color: #000;">LOCATION IMAGE ${idx + 1}</h2>
+           <img class="pdf-image" src="${imgSrc}" alt="Location Image ${idx + 1}" style="width: 100%; height: auto; max-height: 220mm; object-fit: contain; margin: 0 auto; padding: 0; border: none;">
          </div>
        ` : '';
             }).join('')}
    ` : ''}
 
    <!-- SUPPORTING DOCUMENTS: Each document gets its own page -->
-     ${Array.isArray(pdfData.documentPreviews) && pdfData.documentPreviews.length > 0 ? `
+     ${Array.isArray(pdfData.documentPreviews) && pdfData.documentPreviews.length > 0 && pdfData.documentPreviews.some(img => typeof img === 'string' ? img : img?.url) ? `
      <div class="supporting-docs-section">
     ${pdfData.documentPreviews.map((img, idx) => {
-                const imgSrc = typeof img === 'string' ? img : img?.url;
-                return imgSrc ? `
-        <div class="page images-section supporting-docs-page" style="  width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 10px; box-sizing: border-box; margin: 0;">
-            ${idx === 0 ? '<h2 style="text-align: center; margin-bottom: 30px; font-weight: bold; width: 100%; font-size: 18pt;">SUPPORTING DOCUMENTS</h2>' : ''}
-            <div class="image-container" style="border: 1px solid #ddd; padding: 5px; background: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 90%; max-width: 800px; height: auto;">
-                <img class="pdf-image" src="${imgSrc}" alt="Supporting Document ${idx + 1}" style="width: 100%; height: auto; max-height: 550px; object-fit: contain; margin: 0 auto;">
-                <p style="margin: 10px 0 0 0; font-size: 10pt; color: #666; text-align: center;">Document ${idx + 1}</p>
+        const imgSrc = typeof img === 'string' ? img : img?.url;
+        return imgSrc ? `
+        <div class="page images-section supporting-docs-page" style="width: 100%; page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12mm; box-sizing: border-box; margin: 0; background: white; min-height: auto;">
+            ${idx === 0 ? '<h2 style="text-align: center; margin-bottom: 20px; font-weight: bold; width: 100%; font-size: 14pt; color: #000;">SUPPORTING DOCUMENTS</h2>' : ''}
+            <div class="image-container" style="border: none; padding: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 100%; height: auto;">
+                <img class="pdf-image" src="${imgSrc}" alt="Supporting Document ${idx + 1}" style="width: 100%; height: auto; max-height: 220mm; object-fit: contain; margin: 0 auto; padding: 0; border: none;">
+                <p style="margin: 10px 0 0 0; font-size: 9pt; color: #000; text-align: center;">Document ${idx + 1}</p>
             </div>
         </div>
         ` : '';
-            }).join('')}
+    }).join('')}
      </div>
-     ` : ''}<br/>
+     ` : ''}
              </div>
-             </div>
+             
 
              
                </body>
@@ -3177,14 +3205,20 @@ export async function previewValuationPDF(record) {
     document.body.appendChild(container);
 
     // Convert HTML to canvas
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      allowTaint: true,
-      windowHeight: container.scrollHeight,
-      windowWidth: 793
-    });
+     const canvas = await html2canvas(container, {
+       scale: 2,
+       useCORS: true,
+       backgroundColor: '#ffffff',
+       allowTaint: true,
+       logging: false,
+       letterRendering: true,
+       windowHeight: container.scrollHeight,
+       windowWidth: 793,
+       imageTimeout: 0,
+       ignoreElements: (element) => {
+         return element.classList?.contains('hide-on-screen');
+       }
+     });
 
     // Remove temporary container
     document.body.removeChild(container);
@@ -3296,6 +3330,8 @@ const convertImagesToBase64 = async (record) => {
   if (!record) return record;
 
   const recordCopy = { ...record };
+
+  
 
   // Convert property images
   if (Array.isArray(recordCopy.propertyImages)) {
