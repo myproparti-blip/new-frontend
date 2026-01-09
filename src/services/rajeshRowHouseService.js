@@ -48,16 +48,22 @@ export const getAllRajeshRowHouse = async (filters = {}) => {
  * @param {String} username - Current user
  * @param {String} userRole - User role (user/manager/admin)
  * @param {String} clientId - Client identifier
+ * @param {Object} options - Additional options (e.g., cacheBuster)
  * @returns {Promise} Form data
  */
-export const getRajeshRowHouseById = async (id, username, userRole, clientId) => {
+export const getRajeshRowHouseById = async (id, username, userRole, clientId, options = {}) => {
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('Invalid form ID format');
     }
 
+    const params = { username, userRole, clientId };
+    if (options.cacheBuster) {
+      params.cacheBuster = options.cacheBuster;
+    }
+
     const response = await api.get(`${API_BASE_URL}/rajesh-RowHouse/${id}`, {
-      params: { username, userRole, clientId }
+      params
     });
 
     if (!response.data.success) {

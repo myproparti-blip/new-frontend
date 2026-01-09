@@ -32,7 +32,7 @@ import { invalidateCache } from "../services/axios";
 import { getCustomOptions } from "../services/customOptionsService";
 import ClientInfoPanel from "../components/ClientInfoPanel";
 import DocumentsPanel from "../components/DocumentsPanel";
-import { generateBomFlatPDF } from "../services/bomFlatPdf";
+import { generateRowHouse } from "../services/rowHousePdf";
 
 const RajeshRowHouseEditForm = ({ user, onLogin }) => {
     const { id } = useParams();
@@ -127,25 +127,38 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
 
         // PDF DETAILS (AUTO-EXTRACTED)
         pdfDetails: {
-            // CHECKLIST OF DOCUMENTS
-            checklist_Letterofintention: '',
-            checklist_SiteDeedsConverance: '',
-            checklist_ADU_LST: '',
-            checklist_AgreementtosaleBuildingPermission: '',
-            checklist_AppropriatedUsedPropertyTaxDetails: '',
-            checklist_MortgageDocumentations: '',
-            checklist_MarketAnalysisLandandVillageName: '',
-            checklist_PlotNumberGrievanceSheet: '',
-            checklist_AreasurveynumberAsignedtotheSite: '',
-            checklist_BullingpermissionPhotoIdentiifcationSizeofPropertyDemarcation: '',
-            checklist_FencingPropertyProprietaryProprietDemarcation: '',
-            checklist_GatewayPhotographPhotoIdentifcationAreaPropertyDemarcation: '',
-            checklist_MainhobbillSummeriesPropertyProprietaryPropriertor: '',
-            checklist_PropertyProprietaryProprietDemarcation: '',
-            checklist_LandRegisterPropertyPropertyDescription: '',
-            checklist_PropertyexperienceOtherProprietary: '',
-            checklist_SeparatelyenclosedPropertySeparatelyUsedAsPrivateProperty: '',
-            checklist_PropertyexperiencedOrieralturedpropiedltureOrieralted: '',
+            // CHECKLIST OF DOCUMENTS (referenced from main form checklist_ fields)
+            checklist_engagementLetterConfirmation: '',
+            checklist_ownershipDocumentsSaleDeed: '',
+            checklist_advTcrLsr: '',
+            checklist_allotmentLetter: '',
+            checklist_kabulatLekh: '',
+            checklist_mortgageDeed: '',
+            checklist_leaseDeed: '',
+            checklist_index2: '',
+            checklist_vf712InCaseOfLand: '',
+            checklist_naOrder: '',
+            checklist_approvedPlan: '',
+            checklist_commencementLetter: '',
+            checklist_buPermission: '',
+            checklist_eleMeterPhoto: '',
+            checklist_lightBill: '',
+            checklist_muniTaxBill: '',
+            checklist_numberingFlatPlotNoIdentification: '',
+            checklist_boundariesPropertyDemarcation: '',
+            checklist_mergedProperty: '',
+            checklist_premiseCanBeSeparatedEntrance: '',
+            checklist_landIsLocked: '',
+            checklist_propertyIsRentedToOtherParty: '',
+            checklist_ifRentedRentAgreementProvided: '',
+            checklist_siteVisitPhotos: '',
+            checklist_selfieWithOwnerIdentifier: '',
+            checklist_mobileNo: '',
+            checklist_dataSheet: '',
+            checklist_tentativeRate: '',
+            checklist_saleInstanceLocalInquiry: '',
+            checklist_brokerRecording: '',
+            checklist_pastValuationRate: '',
 
             // CHARACTERISTICS OF LOCALITY
             characteristicOfLocality: '',
@@ -640,6 +653,71 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
             statusOfTenure: '',
             noOfYearsOfOccupancySince: '',
             relationshipOfTenantOrOwner: '',
+
+            // STAGE OF CONSTRUCTION
+            stageOfConstruction: '',
+            ifUnderConstructionExtentOfCompletion: '',
+            violationsIfAnyObserved: '',
+            natureAndExtentOfViolations: '',
+
+            // AREA DETAILS (VALUATION TAB)
+            landAreaAsPerSaleDeed: '',
+            landAreaAsPerGRUDA: '',
+            builtUpAreaAsPerGRUDA: '',
+            cabuaSbuaInSqFt: '',
+
+            // GUIDELINE RATE DETAILS
+            guidelineRateObtainedFrom: '',
+            jantriRatePerSqMt: '',
+            revisedGuidelineRate: '',
+            jantriValueOfLand: '',
+
+            // LAND VALUATION
+            landAreaSFT: '',
+            landRatePerSqFt: '',
+            valueOfLand: '',
+            totalLandValue: '',
+
+            // BUILDING VALUATION
+            totalBUA: '',
+            plinthArea: '',
+            roofHeight: '',
+            ageOfBuilding: '',
+            estimatedReplacementRate: '',
+            valueOfConstruction: '',
+            buildingValuePlinthArea: '',
+            buildingValueRoofHeight: '',
+            buildingValueAge: '',
+            totalBuildingValue: '',
+
+            // MARKET VALUE SUMMARY
+            marketValueOfProperty: '',
+            realizableValue: '',
+            distressValue: '',
+            insurableValue: '',
+
+            // BOOK VALUE
+            bookValueOfProperty: '',
+            bookValueAsPerSaleDeed: '',
+            saleDeedRegistrationNumber: '',
+            saleDeedDate: '',
+
+            // ASSUMPTIONS & REMARKS
+            qualificationsInTIR: '',
+            propertyIsSARFAESICompliant: '',
+            propertyBelongsToSocialInfrastructure: '',
+            entireLandMortgaged: '',
+            anyOtherAspectOnMarketability: '',
+
+            // ENCLOSURES
+            layoutPlanSketch: '',
+            buildingPlan: '',
+            floorPlan: '',
+            photographsOfProperty: '',
+            certifiedCopyOfApprovedPlan: '',
+            googleMapLocation: '',
+            priceTrendFromPropertySites: '',
+            anyOtherRelevantDocuments: '',
         },
 
         // PDF DETAILS (MATCHES pdfDetailsSchema EXACTLY FROM rajeshRowHouseModel.js)
@@ -822,7 +900,8 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
             let dataToDownload;
 
             try {
-                dataToDownload = await getRajeshRowHouseById(id, username, role, clientId);
+                // Add cache buster to force fresh fetch from server
+                dataToDownload = await getRajeshRowHouseById(id, username, role, clientId, { cacheBuster: Date.now() });
                 ('✅ Fresh Rajesh RowHouse data fetched for PDF:', {
                     bankName: dataToDownload?.bankName,
                     city: dataToDownload?.city
@@ -841,7 +920,7 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
                 }
             }
 
-            await generateBomFlatPDF(dataToDownload);
+            await generateRowHouse(dataToDownload);
             showSuccess('PDF downloaded successfully');
         } catch (error) {
             console.error('Error downloading PDF:', error);
@@ -2664,15 +2743,13 @@ const renderValuationTab = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
                         { key: 'landAreaAsPerSaleDeed', label: 'Land Area as per Sale Deed (Sq Ft)' },
-                        { key: 'plotAreaAsPerSaleDeed', label: 'Plot Area as per Sale Deed (Sq Ft)' },
                         { key: 'landAreaAsPerGRUDA', label: 'Land Area as per GRUDA (Sq Ft)' },
-                        { key: 'netPlotAreaAsPerGRUDA', label: 'Net Plot Area as per GRUDA (Sq Ft)' },
                         { key: 'builtUpAreaAsPerGRUDA', label: 'Built Up Area as per GRUDA (Sq Ft)' },
-                        { key: 'groundFloorArea', label: 'Ground Floor Area (Sq Ft)' },
-                        { key: 'firstFloorArea', label: 'First Floor Area (Sq Ft)' },
-                        { key: 'secondFloorArea', label: 'Second Floor Area (Sq Ft)' },
-                        { key: 'totalBuiltUpArea', label: 'Total Built Up Area (Sq Ft)' },
                         { key: 'cabuaSbuaInSqFt', label: 'CBUA/SBUA in Sq Ft' },
+                        { key: 'remarks', label: 'Remarks' },
+                         { key: 'guidelineRateObtainedFrom', label: 'Guideline Rate Obtained From' },
+                         { key: 'guidelineValue', label: 'Guideline Value' },
+
                     ].map(field => (
                         <div key={field.key} className="space-y-1">
                             <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
@@ -2688,32 +2765,7 @@ const renderValuationTab = () => {
                 </div>
             </div>
 
-            {/* GUIDELINE RATE DETAILS */}
-            <div className="mb-6 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Guideline Rate Details</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                        { key: 'guidelineRateObtainedFrom', label: 'Guideline Rate Obtained From' },
-                        { key: 'jantriRatePerSqMt', label: 'Jantri Rate per Sq Mt' },
-                        { key: 'revisedGuidelineRate', label: 'Revised Guideline Rate' },
-                        { key: 'jantriValueOfLand', label: 'Jantri Value of Land' },
-                        { key: 'jantriValueOfConstruction', label: 'Jantri Value of Construction' },
-                        { key: 'totalJantriValue', label: 'Total Jantri Value' },
-                        { key: 'guidelineValue', label: 'Guideline Value' },
-                    ].map(field => (
-                        <div key={field.key} className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                            <Input
-                                placeholder={`Enter ${field.label.toLowerCase()}`}
-                                value={formData.pdfDetails?.[field.key] || ""}
-                                onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-                    ))}
-                </div>
-            </div>
+           
 
             {/* LAND VALUATION */}
             <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
@@ -2722,7 +2774,6 @@ const renderValuationTab = () => {
                     {[
                         { key: 'landAreaSFT', label: 'Land Area (Sq Ft)' },
                         { key: 'landRatePerSqFt', label: 'Land Rate per Sq Ft' },
-                        { key: 'landDevelopmentCostRate', label: 'Land Development Cost Rate per Sq Ft' },
                         { key: 'valueOfLand', label: 'Value of Land' },
                         { key: 'totalLandValue', label: 'Total Land Value' },
                     ].map(field => (
@@ -2746,14 +2797,11 @@ const renderValuationTab = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
                         { key: 'totalBUA', label: 'Total BUA (Built Up Area)' },
-                        { key: 'plinthArea', label: 'Plinth Area (Sq Ft)' },
-                        { key: 'roofHeight', label: 'Roof Height' },
-                        { key: 'ageOfBuilding', label: 'Age of Building' },
+                        { key: 'buildingValuePlinthArea', label: 'Plinth Area (Sq Ft)' },
+                        { key: 'buildingValueRoofHeight', label: 'Roof Height' },
+                        { key: 'buildingValueAge', label: 'Age of Building' },
                         { key: 'estimatedReplacementRate', label: 'Estimated Replacement Rate per Sq Ft' },
                         { key: 'valueOfConstruction', label: 'Value of Construction' },
-                        { key: 'buildingValuePlinthArea', label: 'Building Value (Plinth Area)' },
-                        { key: 'buildingValueRoofHeight', label: 'Building Value (Roof Height)' },
-                        { key: 'buildingValueAge', label: 'Building Value (Age)' },
                         { key: 'totalBuildingValue', label: 'Total Building Value' },
                     ].map(field => (
                         <div key={field.key} className="space-y-1">
@@ -2776,17 +2824,12 @@ const renderValuationTab = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
                         { key: 'marketValueOfProperty', label: 'Market Value of Property' },
-                        { key: 'fairMarketValue', label: 'Fair Market Value' },
-                        { key: 'fairMarketValueInWords', label: 'Fair Market Value (In Words)' },
                         { key: 'realizableValue', label: 'Realizable Value' },
-                        { key: 'realizableValueInWords', label: 'Realizable Value (In Words)' },
-                        { key: 'realizableValuePercentage', label: 'Realizable Value Percentage' },
                         { key: 'distressValue', label: 'Distress Value' },
-                        { key: 'distressValueInWords', label: 'Distress Value (In Words)' },
-                        { key: 'distressValuePercentage', label: 'Distress Value Percentage' },
-                        { key: 'insurableValue', label: 'Insurable Value' },
-                        { key: 'insurableValueInWords', label: 'Insurable Value (In Words)' },
-                    ].map(field => (
+                         { key: 'insurableValue', label: 'Insurable Value' },
+                                            { key: 'jantriValueOfProperty', label: 'Jantri Value of the Property' },
+
+                        ].map(field => (
                         <div key={field.key} className="space-y-1">
                             <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
                             <Input
@@ -2801,29 +2844,7 @@ const renderValuationTab = () => {
                 </div>
             </div>
 
-            {/* BOOK VALUE */}
-            <div className="mb-6 p-6 bg-orange-50 rounded-2xl border border-orange-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Book Value</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                        { key: 'bookValueOfProperty', label: 'Book Value of Property' },
-                        { key: 'bookValueAsPerSaleDeed', label: 'Book Value as per Sale Deed' },
-                        { key: 'saleDeedRegistrationNumber', label: 'Sale Deed Registration Number' },
-                        { key: 'saleDeedDate', label: 'Sale Deed Date' },
-                    ].map(field => (
-                        <div key={field.key} className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                            <Input
-                                placeholder={`Enter ${field.label.toLowerCase()}`}
-                                value={formData.pdfDetails?.[field.key] || ""}
-                                onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-                    ))}
-                </div>
-            </div>
+    
         </div>
     );
 };
@@ -2831,88 +2852,6 @@ const renderValuationTab = () => {
 const renderValuationAnalysisTab = () => {
     return (
         <div className="space-y-6">
-            {/* VARIATION JUSTIFICATION */}
-            <div className="mb-6 p-6 bg-lime-50 rounded-2xl border border-lime-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Variation Justification</h4>
-                <div className="space-y-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Variation of 20% or More Justification</Label>
-                        <Textarea
-                            placeholder="Enter justification for variation of 20% or more between valuation and guideline value"
-                            value={formData.pdfDetails?.variationJustification || ""}
-                            onChange={(e) => handleValuationChange('variationJustification', e.target.value)}
-                            disabled={!canEdit}
-                            className="min-h-[150px] text-xs rounded-lg border border-neutral-300 py-2 px-3 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'guidelineValueIsJantriRate', label: 'Guideline Value is Jantri Rate' },
-                            { key: 'jantriRatesLastUpdated', label: 'Jantri Rates Last Updated' },
-                            { key: 'actualMarketRateDifference', label: 'Actual Market Rate Difference' },
-                            { key: 'saleDeedsExecutedAtLowerPrice', label: 'Sale Deeds Executed at Lower Price' },
-                            { key: 'marketTransactionsOnSuperBuiltUpArea', label: 'Market Transactions on Super Built Up Area' },
-                            { key: 'carpetAreaDifferencePercentage', label: 'Carpet Area Difference Percentage' },
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter details"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* FACTORS AFFECTING VALUE */}
-            <div className="mb-6 p-6 bg-orange-50 rounded-2xl border border-orange-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Factors Affecting Value</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                        { key: 'negativePositiveFactors', label: 'Negative/Positive Factors' },
-                        { key: 'roadWidth', label: 'Road Width' },
-                        { key: 'frontageToDepthRatio', label: 'Frontage to Depth Ratio' },
-                        { key: 'adjoiningSlum', label: 'Adjoining Slum' },
-                        { key: 'titleOfProperty', label: 'Title of Property' },
-                        { key: 'religiousSentimentalFactors', label: 'Religious/Sentimental Factors' },
-                        { key: 'proximityToHighTensionLines', label: 'Proximity to High Tension Lines' },
-                        { key: 'proximityToCrematorium', label: 'Proximity to Crematorium' },
-                        { key: 'socioEconomicPattern', label: 'Socio-Economic Pattern' },
-                        { key: 'stageOfInfrastructure', label: 'Stage of Infrastructure' },
-                        { key: 'propertyOnMainRoad', label: 'Property on Main Road' },
-                        { key: 'builderReputation', label: 'Builder Reputation' },
-                        { key: 'governmentPoliciesImpact', label: 'Government Policies Impact' },
-                    ].map(field => (
-                        <div key={field.key} className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                            <Select
-                                value={formData.pdfDetails?.[field.key] || ""}
-                                onValueChange={(value) => handleValuationChange(field.key, value)}
-                                disabled={!canEdit}
-                            >
-                                <SelectTrigger className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                    <SelectValue placeholder="Select option" />
-                                </SelectTrigger>
-                                <SelectContent className="text-xs">
-                                    <SelectItem value="Positive">Positive</SelectItem>
-                                    <SelectItem value="Negative">Negative</SelectItem>
-                                    <SelectItem value="Neutral">Neutral</SelectItem>
-                                    <SelectItem value="Yes">Yes</SelectItem>
-                                    <SelectItem value="No">No</SelectItem>
-                                    <SelectItem value="High Impact">High Impact</SelectItem>
-                                    <SelectItem value="Low Impact">Low Impact</SelectItem>
-                                    <SelectItem value="No Impact">No Impact</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    ))}
-                </div>
-            </div>
 
             {/* ASSUMPTIONS & REMARKS */}
             <div className="mb-6 p-6 bg-sky-50 rounded-2xl border border-sky-100">
@@ -2923,9 +2862,6 @@ const renderValuationAnalysisTab = () => {
                         { key: 'propertyIsSARFAESICompliant', label: 'Property is SARFAESI Compliant' },
                         { key: 'propertyBelongsToSocialInfrastructure', label: 'Property Belongs to Social Infrastructure' },
                         { key: 'entireLandMortgaged', label: 'Entire Land Mortgaged' },
-                        { key: 'lastTwoTransactionsAvailable', label: 'Last Two Transactions Available' },
-                        { key: 'marketRecordsAtSubRegistrarOffice', label: 'Market Records at Sub-Registrar Office' },
-                        { key: 'unrecordedUnaccountedMarketValue', label: 'Unrecorded/Unaccounted Market Value' },
                         { key: 'anyOtherAspectOnMarketability', label: 'Any Other Aspect on Marketability' },
                     ].map(field => (
                         <div key={field.key} className="space-y-1">
@@ -2952,36 +2888,7 @@ const renderValuationAnalysisTab = () => {
                 </div>
             </div>
 
-            {/* DECLARATION */}
-            <div className="mb-6 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Declaration</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                        { key: 'propertyInspectedBy', label: 'Property Inspected By' },
-                        { key: 'inspectionDate', label: 'Inspection Date' },
-                        { key: 'valuerInterestInProperty', label: 'Valuer Interest in Property' },
-                        { key: 'informationFurnishedTrue', label: 'Information Furnished is True' },
-                        { key: 'valuationReportSubmittedDirectly', label: 'Valuation Report Submitted Directly' },
-                        { key: 'nameOfValuer', label: 'Name of Valuer' },
-                        { key: 'addressOfValuer', label: 'Address of Valuer' },
-                        { key: 'signatureOfValuer', label: 'Signature of Valuer' },
-                        { key: 'place', label: 'Place' },
-                        { key: 'dateOfDeclaration', label: 'Date of Declaration' },
-                    ].map(field => (
-                        <div key={field.key} className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                            <Input
-                                placeholder={`Enter ${field.label.toLowerCase()}`}
-                                value={formData.pdfDetails?.[field.key] || ""}
-                                onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-                    ))}
-                </div>
-            </div>
-
+          
             {/* ENCLOSURES */}
             <div className="mb-6 p-6 bg-purple-50 rounded-2xl border border-purple-100">
                 <h4 className="font-bold text-gray-900 mb-4 text-base">Enclosures</h4>
@@ -2991,7 +2898,6 @@ const renderValuationAnalysisTab = () => {
                         { key: 'buildingPlan', label: 'Building Plan' },
                         { key: 'floorPlan', label: 'Floor Plan' },
                         { key: 'photographsOfProperty', label: 'Photographs of Property' },
-                        { key: 'selfieOfValuer', label: 'Selfie of Valuer' },
                         { key: 'certifiedCopyOfApprovedPlan', label: 'Certified Copy of Approved Plan' },
                         { key: 'googleMapLocation', label: 'Google Map Location' },
                         { key: 'priceTrendFromPropertySites', label: 'Price Trend from Property Sites' },
@@ -3079,126 +2985,6 @@ const renderValuationAnalysisTab = () => {
                             </div>
                         );
                     })}
-                </div>
-            </div>
-
-            {/* STANDARD OPERATING PROCEDURE */}
-            <div className="mb-6 p-6 bg-green-50 rounded-2xl border border-green-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Standard Operating Procedure</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                        { key: 'bankGuidelinesForValuer', label: 'Bank Guidelines for Valuer' },
-                        { key: 'taskvalAppForAssignmentManagement', label: 'Taskval App for Assignment Management' },
-                        { key: 'preambleSOP', label: 'Preamble SOP' },
-                        { key: 'standardOperatingProcedure', label: 'Standard Operating Procedure' },
-                        { key: 'observationsAssumptionsLimitingConditions', label: 'Observations, Assumptions and Limiting Conditions' },
-                    ].map(field => (
-                        <div key={field.key} className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                            <Select
-                                value={formData.pdfDetails?.[field.key] || ""}
-                                onValueChange={(value) => handleValuationChange(field.key, value)}
-                                disabled={!canEdit}
-                            >
-                                <SelectTrigger className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent className="text-xs">
-                                    <SelectItem value="Followed">Followed</SelectItem>
-                                    <SelectItem value="Partially Followed">Partially Followed</SelectItem>
-                                    <SelectItem value="Not Followed">Not Followed</SelectItem>
-                                    <SelectItem value="NA">NA</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* DECLARATION-CUM-UNDERTAKING */}
-            <div className="mb-6 p-6 bg-amber-50 rounded-2xl border border-amber-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Declaration-cum-Undertaking</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                        { key: 'citizenOfIndia', label: 'Citizen of India' },
-                        { key: 'noDirectIndirectInterest', label: 'No Direct/Indirect Interest' },
-                        { key: 'informationTrueAndCorrect', label: 'Information True and Correct' },
-                        { key: 'personallyInspectedProperty', label: 'Personally Inspected Property' },
-                        { key: 'workNotSubContracted', label: 'Work Not Sub-Contracted' },
-                        { key: 'formatAsPrescribedByBank', label: 'Format as Prescribed by Bank' },
-                        { key: 'notDeemedDelistedByOtherBank', label: 'Not Deemed/Delisted by Other Bank' },
-                        { key: 'notConvictedOfAnyOffence', label: 'Not Convicted of Any Offence' },
-                        { key: 'notFoundGuiltyOfMisconduct', label: 'Not Found Guilty of Misconduct' },
-                        { key: 'notDeclaredUnsoundMind', label: 'Not Declared Unsound Mind' },
-                        { key: 'notUndischargedBankrupt', label: 'Not Undischarged Bankrupt' },
-                        { key: 'notUndischargedInsolvent', label: 'Not Undischarged Insolvent' },
-                        { key: 'noPenaltyUnderIncomeTaxAct', label: 'No Penalty Under Income Tax Act' },
-                        { key: 'notConvictedOfTaxOffences', label: 'Not Convicted of Tax Offences' },
-                        { key: 'panCardNumber', label: 'PAN Card Number' },
-                        { key: 'serviceTaxNumber', label: 'Service Tax Number' },
-                        { key: 'keepInformedOfIneligibility', label: 'Keep Informed of Ineligibility' },
-                        { key: 'noConcealmentOfInformation', label: 'No Concealment of Information' },
-                        { key: 'conformityToIBAHandbook', label: 'Conformity to IBA Handbook' },
-                        { key: 'registeredUnderWealthTaxAct', label: 'Registered Under Wealth Tax Act' },
-                        { key: 'registeredWithIBBI', label: 'Registered with IBBI' },
-                        { key: 'cibilScoreAsPerGuidelines', label: 'CIBIL Score as Per Guidelines' },
-                        { key: 'competentToSignReport', label: 'Competent to Sign Report' },
-                        { key: 'workOnLetterOfEngagement', label: 'Work on Letter of Engagement' },
-                    ].map(field => (
-                        <div key={field.key} className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                            <Select
-                                value={formData.pdfDetails?.[field.key] || ""}
-                                onValueChange={(value) => handleValuationChange(field.key, value)}
-                                disabled={!canEdit}
-                            >
-                                <SelectTrigger className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent className="text-xs">
-                                    <SelectItem value="Yes">Yes</SelectItem>
-                                    <SelectItem value="No">No</SelectItem>
-                                    <SelectItem value="Applicable">Applicable</SelectItem>
-                                    <SelectItem value="Not Applicable">Not Applicable</SelectItem>
-                                    <SelectItem value="Strike Off">Strike Off</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* BACKGROUND INFORMATION */}
-            <div className="mb-6 p-6 bg-red-50 rounded-2xl border border-red-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Background Information</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                        { key: 'backgroundInformationOfAsset', label: 'Background Information of Asset' },
-                        { key: 'purposeOfValuationAndAppointingAuthority', label: 'Purpose of Valuation and Appointing Authority' },
-                        { key: 'identityOfValuer', label: 'Identity of Valuer' },
-                        { key: 'disclosureOfValuerInterest', label: 'Disclosure of Valuer Interest' },
-                        { key: 'dateOfAppointment', label: 'Date of Appointment' },
-                        { key: 'valuationDate', label: 'Valuation Date' },
-                        { key: 'dateOfReport', label: 'Date of Report' },
-                        { key: 'inspectionsInvestigationsUndertaken', label: 'Inspections/Investigations Undertaken' },
-                        { key: 'natureSourcesOfInformation', label: 'Nature and Sources of Information' },
-                        { key: 'proceduresAdopted', label: 'Procedures Adopted' },
-                        { key: 'restrictionsOnUseOfReport', label: 'Restrictions on Use of Report' },
-                        { key: 'majorFactorsTakenIntoAccount', label: 'Major Factors Taken into Account' },
-                        { key: 'majorFactorsNotTakenIntoAccount', label: 'Major Factors Not Taken into Account' },
-                        { key: 'caveatsLimitationsDisclaimers', label: 'Caveats, Limitations and Disclaimers' },
-                    ].map(field => (
-                        <div key={field.key} className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                            <Input
-                                placeholder={`Enter ${field.label.toLowerCase()}`}
-                                value={formData.pdfDetails?.[field.key] || ""}
-                                onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-                    ))}
                 </div>
             </div>
         </div>
