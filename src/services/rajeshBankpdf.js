@@ -412,46 +412,50 @@ const getTownPlanningTableData = (pdfData) => [
 const getDeclarationData = (pdfData) => ({
     inspectionName: safeGet(pdfData, 'pdfDetails.nameOfTheDeputySuperintendentProperty') || 'Dhruvalbhai',
     inspectionTitle: 'Filed Engineer',
-    inspectionDate: formatDate(safeGet(pdfData, 'pdfDetails.dateOfInspectionOfProperty') || '26/11/2025'),
-    reportDate: formatDate(safeGet(pdfData, 'dateOfValuationReport') || '28/11/2025'),
-    valuerName: safeGet(pdfData, 'engineerName') || safeGet(pdfData, 'pdfDetails.theChiefManagerOfTheBank') || 'Rajesh Ganatra',
-    valuationCompany: safeGet(pdfData, 'pdfDetails.specificationAuthorization') || 'Rajesh Ganatra Valuation Services',
-    headOffice: safeGet(pdfData, 'pdfDetails.propertiesOfValueLimitedThroughIsGroup') || '5th floor, Shalvik Complex, behind Ganesh Plaza, Opp. Sanmukh Complex, Off. C G Road, Navrangpura, Ahmedabad – 380009. Mobile: 98257 98600,'
+    inspectionDate: formatDate(safeGet(pdfData, 'pdfDetails.dateOfInspectionOfProperty') || ''),
+    reportDate: formatDate(safeGet(pdfData, 'pdfDetails.dateOfValuationReport') || ''),
+    valuerName: safeGet(pdfData, 'engineerName') || safeGet(pdfData, 'pdfDetails.engineerName') || safeGet(pdfData, 'pdfDetails.theChiefManagerOfTheBank') || 'Rajesh Ganatra',
+    valuationCompany: safeGet(pdfData, 'pdfDetails.branchName') || safeGet(pdfData, 'pdfDetails.specificationAuthorization') || 'Rajesh Ganatra Valuation Services',
+    headOffice: safeGet(pdfData, 'pdfDetails.branchAddress') || safeGet(pdfData, 'pdfDetails.propertiesOfValueLimitedThroughIsGroup') || '5th floor, Shalvik Complex, behind Ganesh Plaza, Opp. Sanmukh Complex, Off. C G Road, Navrangpura, Ahmedabad – 380009. Mobile: 98257 98600,'
 });
 
 // PAGE 8: ENCLOSURES DATA - DYNAMIC from pdfDetails
 const getEnclosuresData = (pdfData) => [
     {
-        item: 'a) Layout plan sketch of the area in which the property is located with latitude and longitude',
+        item: ' Layout plan sketch of the area in which the property is located with latitude and longitude',
         status: safeGet(pdfData, 'pdfDetails.enclosureLayoutPlan') || safeGet(pdfData, 'pdfDetails.layoutPlanSketch') || 'Yes, It is attached herewith'
     },
     {
-        item: 'b) Building Plan',
+        item: ' Building Plan',
         status: safeGet(pdfData, 'pdfDetails.enclosureBuildingPlan') || safeGet(pdfData, 'pdfDetails.buildingPlan') || 'Yes, It is attached herewith'
     },
     {
-        item: 'c) Floor Plan',
+        item: ' Floor Plan',
         status: safeGet(pdfData, 'pdfDetails.enclosureFloorPlan') || safeGet(pdfData, 'pdfDetails.floorPlan') || 'Yes, It is attached herewith'
     },
     {
-        item: 'd) Photograph of Property',
+        item: ' Photograph of Property',
         status: safeGet(pdfData, 'pdfDetails.enclosurePhotograph') || safeGet(pdfData, 'pdfDetails.photographOfProperty') || 'Yes, It is attached herewith'
     },
     {
-        item: 'e) Approved Plan',
+        item: ' Approved Plan',
         status: safeGet(pdfData, 'pdfDetails.enclosureApprovedPlan') || 'Yes, It is attached herewith'
     },
     {
-        item: 'f) Google Map/Location Map',
+        item: ' Google Map/Location Map',
         status: safeGet(pdfData, 'pdfDetails.enclosureGoogleMap') || 'Yes, It is attached herewith'
     },
     {
-        item: 'g) Price Trend/Market Report',
-        status: safeGet(pdfData, 'pdfDetails.enclosurePriceTrend') || 'Yes, It is attached herewith'
+        item: ' Price Trend/Market Report',
+        status: safeGet(pdfData, 'pdfDetails.enclosurePriceTrend') || 'NA'
     },
     {
-        item: 'h) Guideline Rate Notification',
-        status: safeGet(pdfData, 'pdfDetails.enclosureGuidelineRate') || 'Yes, It is attached herewith'
+        item: ' Guideline Rate Notification',
+        status: safeGet(pdfData, 'pdfDetails.enclosureGuidelineRate') || 'NA'
+    },
+    {
+        item: 'Any other relevant documents/ extracts ',
+        status: safeGet(pdfData, 'pdfDetails.enclosureOtherDocuments') || 'NA'
     }
 ];
 
@@ -504,19 +508,19 @@ const getAMCOwnershipData = (pdfData) => [
     },
     {
         label: 'd) Agreement of easement if any',
-        value: safeGet(pdfData, 'pdfDetails.amenity') || 'NA'
+        value: safeGet(pdfData, 'pdfDetails.leaseAgreement') || 'NA'
     },
     {
         label: 'e) Notification of acquisition if any',
-        value: safeGet(pdfData, 'pdfDetails.heritageEasement') || 'NA'
+        value: safeGet(pdfData, 'pdfDetails.notificationOfAcquisition') || 'NA'
     },
     {
         label: 'f) Notification of road widening if any',
-        value: safeGet(pdfData, 'pdfDetails.companyInvolved') || 'NA'
+        value: safeGet(pdfData, 'pdfDetails.notificationOfRoadWidening') || 'NA'
     },
     {
         label: 'g) Heritage restriction, if any',
-        value: safeGet(pdfData, 'pdfDetails.confirmUsingMortgageChanges') || 'Nil.'
+        value: safeGet(pdfData, 'pdfDetails.heritageEasement') || 'Nil.'
     },
     {
         label: 'h) Comment on transferability of the property ownership',
@@ -1200,6 +1204,29 @@ export function generateValuationReportHTML(data = {}) {
        page-break-inside: auto;
     }
 
+    .pdf-page {
+      width: 210mm;
+      height: 297mm;
+      box-sizing: border-box;
+      overflow: hidden;
+      position: relative;
+      background: white;
+    }
+.property-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 62mm;
+  gap: 4mm;
+  padding: 0 10mm;
+  height: 240mm;
+}
+
+.property-cell img {
+  width: 100%;
+  height: 52mm;
+  object-fit: contain;
+}
+
     .print-container {
        width: 100% !important;
        page-break-inside: auto !important;
@@ -1697,7 +1724,7 @@ export function generateValuationReportHTML(data = {}) {
 
     <!-- Bank Image Below Table -->
     <div class="image-container" style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
-      ${safeGet(pdfData, 'bankImage') ? `<img src="${getImageSource(safeGet(pdfData, 'bankImage'))}" alt="Bank Image" style="width: 100%; max-width: 700px; height: auto; display: block; margin: 0 auto; border: none; background: #f5f5f5; padding: 5px; box-sizing: border-box;" crossorigin="anonymous" loading="eager" />` : ''}
+      ${safeGet(pdfData, 'bankImage') ? `<img src="${getImageSource(safeGet(pdfData, 'bankImage'))}" alt="Bank Image" style="width: 100%; max-width: 700px; height: 350px; display: block; margin: 0 auto; border: none; background: #f5f5f5; padding: 5px; box-sizing: border-box;" crossorigin="anonymous" loading="eager" />` : ''}
     </div>
     </div>
 
@@ -2054,19 +2081,19 @@ export function generateValuationReportHTML(data = {}) {
         Agreement of easement if any
       </td>
       <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
-        ${safeGet(pdfData, 'pdfDetails.amenity') || 'NA'}
+        ${safeGet(pdfData, 'pdfDetails.leaseAgreement') || 'NA'}
       </td>
     </tr>
     
     <!-- Row: e) Notification of acquisition -->
     <tr>
-      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>e)</strong></td>
-      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
-        Notification of acquisition if any
-      </td>
-      <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
-        ${safeGet(pdfData, 'pdfDetails.heritageEasement') || 'NA'}
-      </td>
+     <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;"><strong>e)</strong></td>
+     <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
+       Notification of acquisition if any
+     </td>
+     <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
+       ${safeGet(pdfData, 'pdfDetails.notificationOfAcquisition') || 'NA'}
+     </td>
     </tr>
     
     <!-- Row: f) Notification of road widening -->
@@ -2142,7 +2169,7 @@ export function generateValuationReportHTML(data = {}) {
             Whether Property is Agricultural Land if yes, any conversion is contemplated
           </td>
           <td style="border: 1px solid #000000; padding: 4px 5px; font-size: 12pt;">
-            ${safeGet(pdfData, 'pdfDetails.agricultureLandConversion') || 'NA – Commercial Shop cum Showroom'}
+            ${safeGet(pdfData, 'pdfDetails.ifPropertyIsAgriculturalLand') || 'NA – Commercial Shop cum Showroom'}
           </td>
         </tr>
         
@@ -2539,10 +2566,10 @@ export function generateValuationReportHTML(data = {}) {
      <tbody>
        <!-- PAGE TITLE -->
        <tr>
-         <td colspan="4" style="border: 1px solid #000;  text-align: center; font-weight: bold; font-size: 13pt;">
+         <td colspan="4" style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold; font-size: 13pt; background-color: #f5f5f5;">
            MARKET VALUE OF THE PROPERTY
-          </td>
-        </tr>
+         </td>
+       </tr>
         
         <!-- LAND VALUE SECTION HEADER -->
         <tr>
@@ -2562,15 +2589,15 @@ export function generateValuationReportHTML(data = {}) {
         <!-- LAND VALUE DATA ROW -->
         <tr>
           <td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">1.</td>
-          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">NA</td>
-          <td colspan="3" style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">NA</td>
-          <td colspan="2" style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">NA</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.landAreaSqmt') || 'NA'}</td>
+          <td colspan="3" style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.landRatePerSqmtr') || 'NA'}</td>
+          <td colspan="2" style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.valueOfLandMarket') || 'NA'}</td>
         </tr>
         
         <!-- TOTAL LAND VALUE ROW -->
         <tr>
           <td colspan="6" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold; font-size: 12pt;">Total Land Value</td>
-          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">NA</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.totalLandValue') || 'NA'}</td>
         </tr>
 
         <!-- BUILDING VALUE SECTION HEADER -->
@@ -2594,12 +2621,12 @@ export function generateValuationReportHTML(data = {}) {
         <!-- BUILDING VALUE DATA ROW -->
         <tr>
           <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-size: 12pt;">1.</td>
-          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">As per Allotment Deed - SBUA</td>
-          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">000.00</td>
-          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">12 Ft</td>
-          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">12 Years</td>
-          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">₹ 00,000/- per sq.ft SBUA rate Considering Furnished Unit</td>
-          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">₹ 00,00,00,000.00</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.buildingParticulars') || 'As per Allotment Deed - SBUA'}</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.plinthAreaSqft') || '000.00'}</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.roofHeightApprox') || '12 Ft'}</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.ageOfBuilding') || '12 Years'}</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.valueOfConstructionMarket') || '₹ 00,000/- per sq.ft SBUA rate Considering Furnished Unit'}</td>
+          <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #ffffffff; font-weight: bold; font-size: 12pt;">${safeGet(pdfData, 'pdfDetails.totalBuildingValue') || '₹ 00,00,00,000.00'}</td>
         </tr>
         
         <!-- TOTAL BUILDING VALUE ROW -->
@@ -2754,11 +2781,12 @@ export function generateValuationReportHTML(data = {}) {
           <tr>
             <td style="border: 1px solid #000; padding: 5px; width: 5%; vertical-align: top;"></td>
             <td style="border: 1px solid #000; padding: 5px; background-color: #ffffff; width: 95%;">
-              <strong>Date: <span>${getDeclarationData(pdfData).reportDate}</span></strong><br/><br/>
+              <strong>Date: <span>${getDeclarationData(pdfData).reportDate}</span></strong><br/>
               <strong>Name and address of the Valuer</strong><br/>
-              <strong>${getDeclarationData(pdfData).valuerName}</strong><br/>
-              <strong>${getDeclarationData(pdfData).valuationCompany}</strong><br/>
+              <strong>Rajesh Ganatra </strong><br/>
+              <strong>Rajesh Ganatra Valuation Services</strong><br/>
               <strong>Head Office: ${getDeclarationData(pdfData).headOffice}</strong>
+             <strong>${safeGet(pdfData, 'city') ||  'NA'} . Mobile: 98257 98600,</strong><br/>
             </td>
           </tr>
         </tbody>
@@ -2766,7 +2794,7 @@ export function generateValuationReportHTML(data = {}) {
     </div>
 
     <!-- Section 15: Enclosures - DYNAMIC DATA BINDING -->
-    <div style="margin-top: 5px;   width: 100%;">
+    <div style="margin-top: 20px;   width: 100%;">
       <h3 style="font-size: 12pt; font-weight: bold; margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: none;">15. Enclosures</h3>
       
       <table style="width: 100%; border-collapse: separate; border-spacing: 0;; border: 1px solid #000; font-size: 12pt;">
@@ -2778,35 +2806,27 @@ export function generateValuationReportHTML(data = {}) {
             <td style="border: 1px solid #000; padding: 8px; width: 35%;">${row.status}</td>
           </tr>
           `).join('')}
-       
-          <tr>
-            <td style="border: 1px solid #000; padding: 8px; width: 5%; font-weight: bold;">e)</td>
-            <td style="border: 1px solid #000; padding: 8px; width: 60%;">Certified copy of the approved / sanctioned plan, wherever applicable from the concerned office</td>
-            <td style="border: 1px solid #000; padding: 8px; width: 35%;">Yes</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">f)</td>
-            <td style="border: 1px solid #000; padding: 8px;">Google Map location of the property and latitude/longitude and co-ordinates of the property</td>
-            <td style="border: 1px solid #000; padding: 8px;">Yes, It is attached herewith</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">g)</td>
-            <td style="border: 1px solid #000; padding: 8px;">Price trend of the Property in the locality/city from property search sites viz. Magickbricks.com, 99Acres.com, Makan.com etc</td>
-            <td style="border: 1px solid #000; padding: 8px;">NA</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">h)</td>
-            <td style="border: 1px solid #000; padding: 8px;">Guideline rate mentioned in the valuation report must be supported by documentary evidence i.e. latest guideline rate published in district website, Registrar Office etc should be printed and sign by the concerned valuer as an evidence of authenticity</td>
-            <td style="border: 1px solid #000; padding: 8px;">Yes, It is attached herewith</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">i)</td>
-            <td style="border: 1px solid #000; padding: 8px;">Any other relevant documents/ extracts</td>
-            <td style="border: 1px solid #000; padding: 8px;">NA</td>
-          </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Custom Fields Section -->
+    ${Array.isArray(pdfData.customFields) && pdfData.customFields.length > 0 ? `
+    <div style="margin-top: 15px; width: 100%;">
+      <h3 style="font-size: 12pt; font-weight: bold; margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: none;">Additional Custom Fields</h3>
+      
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #000; font-size: 12pt;">
+        <tbody>
+          ${pdfData.customFields.map((field, idx) => `
+          <tr>
+            <td style="border: 1px solid #000; padding: 8px; width: 40%; font-weight: bold; background-color: #f0f0f0;">${field.name}</td>
+            <td style="border: 1px solid #000; padding: 8px; width: 60%;">${field.value}</td>
+          </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    ` : ''}
 
     <!-- Final Valuation Summary -->
     <div style="margin-top: 20px; line-height: 1.4;">
@@ -2835,9 +2855,9 @@ export function generateValuationReportHTML(data = {}) {
     <!-- Header Section -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
       <div style="font-size: 12pt;">
-        <p style="margin: 0px 0 5px 0;"><strong>Dated :- <span style="color: #FF9900;">${formatDate(safeGet(pdfData, 'dateOfValuationReport') || '28/11/2025')}</span></strong></p>
-        <p style="margin: 0px 0;"><strong>Place:- ${safeGet(pdfData, 'pdfDetails.place') || 'NA'}</strong></p>
-      </div>
+         <p style="margin: 0px 0 5px 0;"><strong>Dated :- <span style="color: #FF9900;">${formatDate(safeGet(pdfData, 'pdfDetails.dateOfValuationReport') || '')}</span></strong></p>
+         <p style="margin: 0px 0;"><strong>Place:- ${safeGet(pdfData, 'city') ||  'NA'}</strong></p>
+       </div>
       <div style="text-align: right; font-size: 12pt; font-weight: bold;">
         GOVT. REGD APPROVED VALUER
       </div>
@@ -2893,11 +2913,11 @@ export function generateValuationReportHTML(data = {}) {
     </table>
 
     <!-- SOP Section -->
-    <div style="margin-top: 15px; width: 60%; padding: 8px; border: 1px solid #000;">
-      <p style="margin: 4px 0; font-weight: bold; font-size: 12pt;">STANDARD OPERATING PROCEDURE (SOP)</p>
-      <p style="margin: 4px 0; font-size: 12pt;">1 &nbsp;&nbsp;BANK GUIDELINES FOR VALUER</p>
-      <p style="margin: 4px 0; font-size: 12pt;">2 &nbsp;&nbsp;<span>www.donfinworld.io</span></p>
-      <p style="margin: 4px 0; font-size: 12pt;">3 &nbsp;&nbsp;Taskval App for Assignment Management</p>
+    <div style="margin-top: 15px; width: 100%; padding: 12px; border: 1px solid #000; font-size: 12pt;">
+      <p style="margin: 0 0 8px 0; font-weight: bold; text-align: left;">STANDARD OPERATING PROCEDURE (SOP)</p>
+      <p style="margin: 4px 0; text-align: left;">1 &nbsp;&nbsp;BANK GUIDELINES FOR VALUER</p>
+      <p style="margin: 4px 0; text-align: left;">2 &nbsp;&nbsp;<span><u>www.donfinworld.io</u></span></p>
+      <p style="margin: 4px 0; text-align: left;">3 &nbsp;&nbsp;Taskval App for Assignment Management</p>
     </div>
     </div>
   
@@ -2930,7 +2950,7 @@ export function generateValuationReportHTML(data = {}) {
       <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>1.</strong> Receive a valuation request from the bank.</p>
       <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>2.</strong> Review the request thoroughly to understand the scope, purpose, and specific requirements of the valuation.</p>
       <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>3.</strong> Conduct a preliminary assessment of the property or asset to determine its feasibility for valuation.</p>
-      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>4.</strong> Gather relevant data and information about the property or asset, including legal documents, title deeds, surveys, plans, and other necessary documents provided by the bank.</p></br></br>
+      <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>4.</strong> Gather relevant data and information about the property or asset, including legal documents, title deeds, surveys, plans, and other necessary documents provided by the bank.</p>
       <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>5.</strong> Conduct an on-site inspection of the property or asset, taking photographs, measurements and noting essential details.</p>
       <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>6.</strong> Collect market data and research comparable properties or assets in the vicinity to establish a benchmark for valuation.</p>
       <p style="margin: 8px 0; font-weight: bold; page-break-inside: avoid;"><strong>7.</strong> Analyze the collected data and use appropriate valuation methods, such as the sales comparison approach, income approach, or cost approach, depending on the property or asset's nature.</p>
@@ -2960,6 +2980,7 @@ export function generateValuationReportHTML(data = {}) {
       <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Please note that this valuation exercise does not cover legal title and ownership matters. Additionally, we have not obtained any legal advice on the subject property's title and ownership during this valuation. Therefore, we advise the client/bank to seek an appropriate legal opinion before making any decision based on this report.
       </li>
+      </br>
       <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         We want to ensure that our valuation is fair and accurate. However, it's important to note that any legal, title, or ownership issues could have a significant impact on the value. If we become aware of any such issues at a later date, we may need to adjust our conclusions accordingly.
       </li>
@@ -2975,6 +2996,7 @@ export function generateValuationReportHTML(data = {}) {
       <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Kindly note that the physical measurements and area given are only approximations. The exact area of the property can only be determined based on the information obtained during inspection. Furthermore, the remaining economic lifespan is an estimate determined by our professional judgement.
       </li>
+      
       <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Please note that the valuation stated in this report is only applicable for the specific purposes mentioned herein. It is not intended for any other use and cannot be considered valid for any other purpose. The report should not be shared with any third party without our written permission. We cannot assume any responsibility for any third party who may receive or have access to this report, even if consent has been given.
       </li>
@@ -2993,6 +3015,8 @@ export function generateValuationReportHTML(data = {}) {
       <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         During the inspection, if the units were not named, we relied on identification by the owner or their representative and documents like the sale deed, light bill, plan, tax bill, the title for ownership, and boundaries of units. Without any accountability for the title of the units.
       </li>
+      </br>
+      </br>
       <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
         Kindly be informed that the valuation report may require modifications in case unanticipated circumstances arise, which were not considered in the presumptions and restrictions specified in the report.
       </li>
@@ -3028,11 +3052,12 @@ variations or additions to it) must be brought to the attention of VALUERS in wr
 the date when you became aware of or should have reasonably been aware of the relevant facts. Such issues 
 must be raised no later than six months from the completion date of the services.     </li>
       <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
+     
 7. If there is any disagreement regarding the Valuation or other Services that are provided, both parties must first 
 try to resolve the issue through conciliation with their senior representatives. If a resolution cannot be reached 
 within forty-five (45) days, the dispute will be settled through Arbitration in India, following the guidelines of 
 the Arbitration and Conciliation Act 1996. The venue of the arbitration will be located in Ahmedabad, Gujarat, 
-India. The arbitrator(s)' authority will be subject to the terms of the standard terms of service, which includes 
+India. The arbitrator(s)' authority will be subject to the terms of the  standard terms of service, which includes 
 the limitation of liability provision. All information regarding the arbitration, including the arbitral award, will 
 be kept confidential.      </li>
       <li style="margin: 6px 0; text-align: justify; page-break-after: avoid;">
@@ -3072,7 +3097,7 @@ from the date of the report. Simply possessing the report will not fulfill its i
       <p style="margin: 8px 0 0 0; font-weight: bold; font-size: 12pt;">DECLARATION- CUM- UNDERTAKING</p>
     </div>
 
-    <p style="margin: 10px 0; font-weight: bold;">I, ${safeGet(pdfData, 'engineerName') || 'Rajesh Ganatra'}, son of ${safeGet(pdfData, 'fatherName') || 'Kishorbhai Ganatra'}, do hereby solemnly affirm and state that:</p>
+    <p style="margin: 10px 0; font-weight: bold;">I,'Rajesh Ganatra' son of  'Kishorbhai Ganatra' do hereby solemnly affirm and state that:</p>
 
  <ol style="margin: 10px 0; padding-left: 20px; list-style-type: none; counter-reset: alphacounter;">
   <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
@@ -3082,14 +3107,16 @@ from the date of the report. Simply possessing the report will not fulfill its i
     <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">B.</span>I will not undertake valuation of any assets in which I have a direct or indirect interest or become so interested at any time during a period of three years prior to my appointment as valuer or three years after the valuation of assets was conducted by me
   </li>
   <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
-    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">C.</span>The information furnished in my valuation report dated <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</span> is true and correct to the best of my knowledge and belief and I have made an impartial and true valuation of the property
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">C.</span>The information furnished in my valuation report dated <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'dateOfValuationReport')) || ''}</span> is true and correct to the best of my knowledge and belief and I have made an impartial and true valuation of the property
   </li>
   <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
-    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">D.</span>We have personally inspected the property on <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'inspectionDate')) || '26/11/2025'}</span>. The work is not sub-contracted to any other valuer and carried out by myself.
+    <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">D.</span>We have personally inspected the property on <span style="text-decoration: underline;">${formatDate(safeGet(pdfData, 'dateOfInspectionOfProperty')) || ''}</span>. The work is not sub-contracted to any other valuer and carried out by myself.
   </li>
   <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
     <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">E.</span>Valuation report is submitted in the format as prescribed by the Bank.
   </li>
+  </br>
+</br>
   <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
     <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">F.</span>
   I have not been depanelled/ delisted by any other bank and in case any such deplanement by other banks 
@@ -3098,6 +3125,7 @@ from the date of the report. Simply possessing the report will not fulfill its i
   <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
     <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">F.</span>I have not been removed/dismissed from service/employment earlier
   </li>
+  </br>
   <li style="margin: 6px 0; text-align: justify; list-style-type: none; counter-increment: alphacounter; page-break-after: avoid;">
     <span style="margin-right: 8px; font-weight: bold; width: 20px; display: inline-block;">H.</span>I have not been convicted of any offence and sentenced to a term of imprisonment
   </li>
@@ -3185,7 +3213,7 @@ from the date of the report. Simply possessing the report will not fulfill its i
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">5</td>
         <td style="border: 1px solid #000; padding: 6px;">Date of appointment, valuation date and date of report</td>
-        <td style="border: 1px solid #000; padding: 6px;"><strong>Date of report: 28/11/2025<br/>Date of Visit: 26/11/2025</strong></td>
+        <td style="border: 1px solid #000; padding: 6px;"><strong>Date of report: ${formatDate(safeGet(pdfData, 'dateOfValuationReport'))}<br/>Date of Visit: ${formatDate(safeGet(pdfData, 'dateOfInspectionOfProperty'))}</strong></td>
       </tr>
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">6</td>
@@ -3220,16 +3248,16 @@ from the date of the report. Simply possessing the report will not fulfill its i
       <tr>
         <td style="border: 1px solid #000; padding: 6px; text-align: center;">12</td>
         <td style="border: 1px solid #000; padding: 6px;">Other relevant caveats, limitations and disclaimers</td>
-        <td style="border: 1px solid #000; padding: 6px;">Not responsible for Title of the property and valuations affected by the same</td>
+        <td style="border: 1px solid #000; padding: 6px;">we are Not responsible for Title of the property and valuations affected by the same</td>
       </tr>
        <tr>
       <td style="border: none; padding: 6px;">
-        <p style="margin: 0; text-align: left;"><strong>Place: Ahmedabad</strong></p>
-        <p style="margin: 5px 0;text-align: left;"><strong>Date: ${formatDate(safeGet(pdfData, 'valuationMadeDate')) || '28/11/2025'}</strong></p>
+        <p style="margin: 0; text-align: left;"><strong>Place: ${formatDate(safeGet(pdfData, 'city'))}</strong></p>
+        <p style="margin: 5px 0;text-align: left;"><strong>Date: ${formatDate(safeGet(pdfData, 'dateOfValuationReport')) || ''}</strong></p>
       </td>
       <td style="border: none; padding: 6px;">
         <div style="margin-top: 30px; text-align: right;">
-          <p style="margin: 0; font-weight: bold;">Rajesh Ganatra</p>
+          <p style="margin-left:70px; font-weight: bold;">Rajesh Ganatra</p>
         </div>
       </td>
     </tr>
@@ -3242,10 +3270,10 @@ from the date of the report. Simply possessing the report will not fulfill its i
 
 <!-- PAGE 24-25: MODEL CODE OF CONDUCT FOR VALUERS -->
 <div class="page print-container" style="margin: 0; padding: 12mm; background: white; width: 100%; box-sizing: border-box; page-break-before: always;">
-  <div style="font-size: 12pt; line-height: 1.5;">
+  <div style="font-size: 12pt; line-height: 1.4;">
     <div style="text-align: center; margin-bottom: 20px;">
       <p style="margin: 0; font-weight: bold; font-size: 12pt;">(Annexure-V)</p>
-      <p style="margin: 8px 0 0 0; font-weight: bold; font-size: 12pt;">MODEL CODE OF CONDUCT FOR VALUERS</p>
+      <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 12pt;">MODEL CODE OF CONDUCT FOR VALUERS</p>
     </div>
 
     <p style="margin: 10px 0 8px 0; font-weight: bold;">Integrity and Fairness</p>
@@ -3300,12 +3328,13 @@ from the date of the report. Simply possessing the report will not fulfill its i
       </div>
     </div>
 </br>
-    <p style="margin: 10px 0 8px 0; font-weight: bold;">Independence and Disclosure of Interest</p>
+    <p style=" font-weight: bold;">Independence and Disclosure of Interest</p>
     <div style="margin: 5px 0 10px 0; padding: 0;">
       <div style="margin: 4px 0; text-align: justify; display: flex;">
         <span style="font-weight: bold; min-width: 24px;">12.</span>
         <span>A valuer shall act with objectivity in his/its professional dealings by ensuring that his/its decisions are made without the presence of any bias, conflict of interest, coercion, or undue influence of any party, whether directly connected to the valuation assignment or not.</span>
       </div>
+      </br>
       <div style="margin: 4px 0; text-align: justify; display: flex;">
         <span style="font-weight: bold; min-width: 24px;">13.</span>
         <span>A valuer shall not take up an assignment if he/it or any of his/its relatives or associates is not independent in terms of association to the company.</span>
@@ -3416,106 +3445,118 @@ from the date of the report. Simply possessing the report will not fulfill its i
         <span style="font-weight: bold; min-width: 24px;">32.</span>
         <span>A valuer shall follow this code as amended or revised from time to time.</span>
       </div>
-    </div>
-
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #000;">
-      <p style="margin: 10px 0; font-size: 12pt;"><strong>Signature of the valuer:</strong> _________________</p>
-      <p style="margin: 10px 0; font-size: 12pt;"><strong>Name of the Valuer:</strong> Rajesh Ganatra</p>
-      <p style="margin: 10px 0 0 0; font-size: 12pt;"><strong>Address of the valuer:</strong></p>
+      <div style="margin-top: 50px;">
+      <p style="margin: 4px 0; font-size: 12pt;"><strong>Signature of the valuer:</strong> _________________</p>
+      <p style="margin: 4px 0; font-size: 12pt;"><strong>Name of the Valuer:</strong> Rajesh Ganatra</p>
+      <p style="margin: 4px 0 0 0; font-size: 12pt;"><strong>Address of the valuer:</strong></p>
       <p style="margin: 4px 0; font-size: 12pt;">5<sup>th</sup> floor, Shalvik Complex, behind Ganesh Plaza,</p>
       <p style="margin: 4px 0; font-size: 12pt;">Opp. Sanmukh Complex, off. C G Road,</p>
-      <p style="margin: 4px 0 20px 0; font-size: 12pt;">Navrangpura, Ahmedabad – 380009</p>
-      <p style="margin: 4px 0; font-size: 12pt; padding: 4px; display: inline-block;"><strong>Date: 28/11/2025</strong></p><br/>
-      <p style="margin: 10px 0; font-size: 12pt; padding: 4px; display: inline-block;"><strong>Place: Ahmedabad</strong></p>
+      <p style="margin: 4px 0 10px 0; font-size: 12pt;">Navrangpura, Ahmedabad – 380009</p>
+      <p style="margin: 4px 0; font-size: 12pt; padding: 4px; display: inline-block;"><strong>Date: ${formatDate(safeGet(pdfData, 'pdfDetails.dateOfValuationReport') || '')}</strong></p></br>
+      <p style="margin: 4px 0; font-size: 12pt; padding: 4px; display: inline-block;"><strong>Place: ${safeGet(pdfData, 'city') || 'NA'}</strong></p>
     </div>
     </div>
+    </div>
+  </div>
+  <!-- END OF CONTINUOUS WRAPPER -->
+  <div style="margin-top: 100px"></div>
+  <!-- PAGE 13: IMAGES SECTION - AREA IMAGES -->
+${(() => {
+    let allImages = [];
+    let globalIdx = 0;
     
+    if (pdfData.areaImages && typeof pdfData.areaImages === 'object' && Object.keys(pdfData.areaImages).length > 0) {
+       Object.entries(pdfData.areaImages).forEach(([areaName, areaImageList]) => {
+           if (Array.isArray(areaImageList) && areaImageList.length > 0) {
+               areaImageList.forEach((img, idx) => {
+                   const imgSrc = typeof img === 'string' ? img : (img?.url || img?.preview || img?.data || img?.src || '');
+                   // Only add images with valid, non-empty URLs
+                   if (imgSrc && imgSrc.trim() && imgSrc !== 'undefined' && imgSrc !== 'null') {
+                       allImages.push({
+                           src: imgSrc.trim(),
+                           label: areaName + ' - Image ' + (idx + 1),
+                           globalIdx: globalIdx++
+                       });
+                   }
+               });
+           }
+       });
+    }
 
-    <!-- PAGE 11: IMAGES SECTION -->
+    // Skip entire section if no valid images
+    if (allImages.length === 0) {
+       return '';
+    }
 
-    <!-- PROPERTY IMAGES -->
-    ${Array.isArray(pdfData.propertyImages) && pdfData.propertyImages.length > 0 ? `
-    <div class="page images-section property-images-page" style="page-break-before: always; break-before: page;">
-       <div style="padding: 20px; font-size: 12pt;">
-           <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold;">PROPERTY IMAGES</h2>
-           <div class="image-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-               ${pdfData.propertyImages.map((img, idx) => {
-            const imgSrc = typeof img === 'string' ? img : img?.url;
-            return imgSrc ? `
-                   <div style="page-break-inside: avoid; border: 1px solid #ccc; padding: 10px;">
-                       <img class="pdf-image" src="${imgSrc}" alt="Property Image ${idx + 1}" style="width: 100%; height: auto; max-height: 300px; object-fit: contain; display: block; margin: 5px auto;" loading="eager">
-                       <p style="margin-top: 8px; font-size: 12pt; text-align: center;">Property Image ${idx + 1}</p>
-                   </div>
-                   ` : '';
-        }).join('')}
-           </div>
-       </div>
-    </div>
-    ` : ''}
+    let pages = [];
+    for (let i = 0; i < allImages.length; i += 12) {
+       pages.push(allImages.slice(i, i + 12));
+    }
 
-    <!-- LOCATION IMAGES: Each image gets its own page with latitude/longitude -->
-    ${Array.isArray(pdfData.locationImages) && pdfData.locationImages.length > 0 ? `
+    let pageHtml = '';
+    let isFirstPage = true;
+    pages.forEach((pageImages) => {
+       // Filter out images with empty src
+       const validImages = pageImages.filter(item => item && item.src && item.src.trim());
+       if (validImages.length === 0) return; // Skip empty pages
+       
+       pageHtml += `
+       <div class="page images-section area-images-page" style="padding: 5px 10px; margin: 0; width: 100%; box-sizing: border-box; page-break-after: always;">
+            <div style="padding: 5px; font-size: 12pt;">
+                 ${isFirstPage ? '<h2 style="text-align: center; margin: 0 0 8px 0; font-weight: bold;">PROPERTY AREA IMAGES</h2>' : ''}
+                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin: 0; padding: 0;">
+                     ${validImages.map(item => `
+                     <div style="border: 1px solid #ddd; padding: 1px; text-align: center; background: #fff; margin: 0;">
+                         <img class="pdf-image" src="${getImageSource(item.src)}" alt="${item.label}" style="width: 100%; height: auto; max-height: 275px; object-fit: contain; display: block; margin: 0; padding: 0;" crossorigin="anonymous">
+                         <p style="margin: 2px 0 0 0; font-size: 6.5pt; color: #333; font-weight: bold; padding: 0;">${item.label}</p>
+                      </div>`).join('')}
+                 </div>
+            </div>
+       </div>`;
+       isFirstPage = false;
+    });
+    return pageHtml;
+    })()}
+
+
+ <!-- LOCATION IMAGES: Each image gets its own page -->
+   ${Array.isArray(pdfData.locationImages) && pdfData.locationImages.length > 0 && pdfData.locationImages.some(img => typeof img === 'string' ? img : img?.url) ? `
      ${pdfData.locationImages.map((img, idx) => {
                 const imgSrc = typeof img === 'string' ? img : img?.url;
                 return imgSrc ? `
-         <div class="page location-images-page" style="width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; box-sizing: border-box; page-break-before: always; break-before: page;">
-           <h2 style="text-align: center; margin-bottom: 15px; font-weight: bold; font-size: 16pt;">LOCATION IMAGE ${idx + 1}</h2>
-           ${pdfData.latitudeLongitude && pdfData.latitudeLongitude !== 'NA' ? `
-           <p style="text-align: center; margin-bottom: 20px; font-size: 12pt; color: #333;"><strong>Latitude, Longitude & Coordinates:</strong> ${pdfData.latitudeLongitude}</p>
-           ` : ''}
-           <img class="pdf-image" src="${imgSrc}" alt="Location Image ${idx + 1}" style="width: 90%; height: auto; max-height: 600px; object-fit: contain; margin: 0 auto;" loading="eager">
+         <div class="page" location-images-page style="width: 100%; page-break-after: always; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12mm; box-sizing: border-box; margin: 0; background: white;">
+           <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold; font-size: 14pt; color: #000;">LOCATION IMAGE ${idx + 1}</h2>
+           <img class="pdf-image" src="${getImageSource(imgSrc)}" alt="Location Image ${idx + 1}" style="width: 100%; height: auto; max-height: 100mm; object-fit: contain; margin: 0 auto; padding: 0; border: none;" crossorigin="anonymous">
          </div>
        ` : '';
             }).join('')}
-    ` : ''}
+   ` : ''}
 
-    <!-- AREA IMAGES -->
-    ${pdfData.areaImages && typeof pdfData.areaImages === 'object' && Object.keys(pdfData.areaImages).length > 0 ? `
-    <div class="page images-section area-images-page" style="page-break-before: always; break-before: page;">
-       <div style="padding: 20px; font-size: 12pt;">
-           <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold;">PROPERTY AREA IMAGES</h2>
-           ${Object.entries(pdfData.areaImages).map(([areaName, areaImageList]) => {
-            return Array.isArray(areaImageList) && areaImageList.length > 0 ? `
-               <div style="margin-bottom: 25px; page-break-inside: avoid; break-inside: avoid;">
-                   <h3 style="font-size: 13pt; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 5px; page-break-after: avoid;">${areaName}</h3>
-                   <div class="area-image-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; page-break-inside: avoid; break-inside: avoid;">
-                       ${areaImageList.map((img, idx) => {
-                const imgSrc = typeof img === 'string' ? img : (img?.url || img?.preview || img?.data || img?.src || '');
-                return imgSrc ? `
-                       <div style="page-break-inside: avoid; break-inside: avoid; border: 1px solid #ccc; padding: 6px; text-align: center;">
-                           <img class="pdf-image" src="${imgSrc}" alt="${areaName} Image ${idx + 1}" style="width: 100%; height: auto; max-height: 240px; object-fit: contain; display: block; margin: 3px auto;" loading="eager">
-                           <p style="margin-top: 4px; font-size: 12pt; color: #666;">${areaName} - Image ${idx + 1}</p>
-                       </div>
-                           ` : '';
-            }).join('')}
-                   </div>
-               </div>
-               ` : '';
-        }).join('')}
-       </div>
-    </div>
-    ` : ''}
+   <!-- SUPPORTING DOCUMENTS: Each document gets its own page -->
+     ${Array.isArray(pdfData.documentPreviews) && pdfData.documentPreviews.length > 0 && pdfData.documentPreviews.some(img => typeof img === 'string' ? img : img?.url) ? `
+     <div class="supporting-docs-section">
+    ${pdfData.documentPreviews.filter(img => {
+        const imgSrc = typeof img === 'string' ? img : img?.url;
+        return getImageSource(imgSrc);
+    }).map((img, idx) => {
+        const imgSrc = typeof img === 'string' ? img : img?.url;
+        const validImageSrc = getImageSource(imgSrc);
+        return `
+        <div class="page images-section supporting-docs-page" style="width: 100%; page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12mm; box-sizing: border-box; margin: 0; background: white;">
+            ${idx === 0 ? '<h2 style="text-align: center; margin-bottom: 20px; font-weight: bold; width: 100%; font-size: 14pt; color: #000;">SUPPORTING DOCUMENTS</h2>' : ''}
+            <div class="image-container" style="border: none; padding: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 100%; height: auto;">
+                <img class="pdf-image" src="${validImageSrc}" alt="Supporting Document ${idx + 1}" style="width: 100%; height: auto; max-height: 150mm; object-fit: contain; margin: 0 auto; padding: 0; border: none;" crossorigin="anonymous">
+                <p style="margin: 10px 0 0 0; font-size: 9pt; color: #000; text-align: center;">Document ${idx + 1}</p>
+            </div>
+        </div>
+        `;
+    }).join('')}
+     </div>
+     ` : ''}
+             </div>
 
-    <!-- SUPPORTING DOCUMENTS -->
-    ${Array.isArray(pdfData.documentPreviews) && pdfData.documentPreviews.length > 0 ? `
-    <div class="page images-section supporting-docs-page" style="page-break-before: always; break-before: page;">
-       <div style="padding: 20px; font-size: 12pt;">
-           <h2 style="text-align: center; margin-bottom: 20px; font-weight: bold;">SUPPORTING DOCUMENTS</h2>
-           ${pdfData.documentPreviews.map((img, idx) => {
-            const imgSrc = typeof img === 'string' ? img : img?.url;
-            return imgSrc ? `
-               <div class="image-container" style="page-break-inside: avoid; text-align: center; margin-bottom: 30px;">
-                   <img class="pdf-image" src="${imgSrc}" alt="Supporting Document ${idx + 1}" style="width: 100%; max-width: 500px; height: auto; max-height: 350px; object-fit: contain; display: block; margin: 5px auto;" loading="eager">
-                   <p style="margin-top: 10px; font-size: 12pt; font-weight: bold;">Supporting Document ${idx + 1}</p>
-               </div>
-               ` : '';
-        }).join('')}
-       </div>
-    </div>
-    ` : ''}
-    </div>
-    </div>
-     </body>
+               
+               </body>
      </html>
                                     `;
 }
@@ -4094,16 +4135,55 @@ export async function generateRecordPDFOffline(record) {
             console.log(`🔍 C. VALUATION DETAILS section found at Y: ${cValuationYPixels}px (canvas coordinates)`);
         }
 
+        // Detect Y position of images page wrapper for forced page break
+        const imagesPageWrapper = container?.querySelector('.images-page-wrapper');
+        let imagesPageBreakYPixels = null;
+        if (imagesPageWrapper) {
+            const rect = imagesPageWrapper.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const relativeY = rect.top - containerRect.top;
+            imagesPageBreakYPixels = relativeY * 1.5; // Apply same scale as canvas
+            console.log(`🔍 IMAGES PAGE WRAPPER found at Y: ${relativeY}px (DOM) -> ${imagesPageBreakYPixels}px (canvas coordinates)`);
+            console.log(`   Canvas height: ${mainCanvas.height}px, Total content height: ${imgHeight}mm, Usable per page: ~257mm`);
+        } else {
+            console.log(`⚠️ IMAGES PAGE WRAPPER (.images-page-wrapper) NOT found in container`);
+        }
+
         const pdf = new jsPDF('p', 'mm', 'A4');
         let pageNumber = 1;
         let heightLeft = imgHeight;
         let yPosition = 0;
         let sourceY = 0;  // Track position in the source canvas
         let cValuationPageBreakHandled = false;  // Track if we've handled the page break
+        let imagesPageBreakHandled = false;  // Track if we've handled the page break for property images
         let pageAdded = false;  // Track if first page is added to prevent empty page
         let currentPageYPosition = headerHeight;  // Track current Y position on page to avoid empty pages
 
         while (heightLeft > 5) {  // Only continue if there's meaningful content left (>5mm to avoid blank pages)
+            // Check if we need to force a page break for IMAGES section
+            if (!imagesPageBreakHandled && imagesPageBreakYPixels !== null) {
+                const sourceYPixels = (sourceY / imgHeight) * mainCanvas.height;
+                const nextSourceYPixels = sourceYPixels + (Math.min(usableHeight, heightLeft) / imgHeight) * mainCanvas.height;
+
+                // If images section will be on this page, force it to next page instead
+                if (sourceYPixels < imagesPageBreakYPixels && nextSourceYPixels > imagesPageBreakYPixels) {
+                    console.log(`⚠️ IMAGES would split across pages, forcing to new page (currently on page ${pageNumber})`);
+                    if (pageNumber > 1) {
+                        pdf.addPage();
+                        pageNumber++;
+                    }
+                    imagesPageBreakHandled = true;
+                    // Skip remaining content and restart from images break marker
+                    sourceY = (imagesPageBreakYPixels / mainCanvas.height) * imgHeight;
+                    heightLeft = imgHeight - sourceY;
+                    continue;
+                } else if (sourceYPixels >= imagesPageBreakYPixels && sourceYPixels < imagesPageBreakYPixels + 50) {
+                    // We're at the images break marker, mark it handled
+                    imagesPageBreakHandled = true;
+                    console.log(`✅ IMAGES is starting on new page as expected (page ${pageNumber})`);
+                }
+            }
+
             // Check if we need to force a page break for C. VALUATION DETAILS section
             if (!cValuationPageBreakHandled && cValuationYPixels !== null) {
                 const sourceYPixels = (sourceY / imgHeight) * mainCanvas.height;
@@ -4374,7 +4454,7 @@ export async function generateRecordPDFOffline(record) {
             const locationImgs = validImages.filter(img => img.type === 'location');
             const supportingImgs = validImages.filter(img => img.type === 'supporting');
 
-            // ===== ADD PROPERTY IMAGES: 6 per page (2 columns x 3 rows) =====
+          /*  // ===== ADD PROPERTY IMAGES: 6 per page (2 columns x 3 rows) =====
             if (propertyImgs.length > 0) {
                 pdf.addPage();
                 let imgIndex = 0;
@@ -4485,7 +4565,7 @@ export async function generateRecordPDFOffline(record) {
                         console.warn(`Failed to add supporting document ${img.label}:`, err?.message);
                     }
                 }
-            }
+            }*/
         } else {
             console.log('⏭️ No valid images to add to PDF');
         }

@@ -27,7 +27,7 @@ import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Inpu
 import { getRajeshHouseById, updateRajeshHouse, managerSubmitRajeshHouse } from "../services/rajeshHouseService";
 import { showLoader, hideLoader } from "../redux/slices/loaderSlice";
 import { useNotification } from "../context/NotificationContext";
-import { uploadPropertyImages, uploadLocationImages, uploadDocuments, uploadAreaImages } from "../services/imageService";
+import { uploadPropertyImages, uploadLocationImages, uploadDocuments } from "../services/imageService";
 import { invalidateCache } from "../services/axios";
 import { getCustomOptions } from "../services/customOptionsService";
 import ClientInfoPanel from "../components/ClientInfoPanel";
@@ -35,11 +35,11 @@ import DocumentsPanel from "../components/DocumentsPanel";
 import { generateBomFlatPDF } from "../services/bomFlatPdf";
 
 const RajeshHouseEditForm = ({ user, onLogin }) => {
-     const { id } = useParams();
-     const navigate = useNavigate();
-     const dispatch = useDispatch();
-     const { isLoading: loading } = useSelector((state) => state.loader);
-     const [valuation, setValuation] = useState(null);
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { isLoading: loading } = useSelector((state) => state.loader);
+    const [valuation, setValuation] = useState(null);
     const isLoggedIn = !!user;
     const [bankName, setBankName] = useState("");
     const [city, setCity] = useState("");
@@ -54,6 +54,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
     const [customFieldName, setCustomFieldName] = useState("");
     const [customFieldValue, setCustomFieldValue] = useState("");
     const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+    const [customConstructionCostFields, setCustomConstructionCostFields] = useState([]);
     const { showSuccess, showError } = useNotification();
     const [formData, setFormData] = useState({
         // BASIC INFO
@@ -123,486 +124,349 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
         lastUpdatedBy: '',
         lastUpdatedByRole: '',
 
-        // PDF DETAILS (AUTO-EXTRACTED)
+        // PDF DETAILS (AUTO-EXTRACTED) - 100% IDENTICAL NESTED STRUCTURE WITH BACKEND pdfDetailsSchema
         pdfDetails: {
-            // CHECKLIST OF DOCUMENTS
-            checklist_Letterofintention: '',
-            checklist_SiteDeedsConverance: '',
-            checklist_ADU_LST: '',
-            checklist_AgreementtosaleBuildingPermission: '',
-            checklist_AppropriatedUsedPropertyTaxDetails: '',
-            checklist_MortgageDocumentations: '',
-            checklist_MarketAnalysisLandandVillageName: '',
-            checklist_PlotNumberGrievanceSheet: '',
-            checklist_AreasurveynumberAsignedtotheSite: '',
-            checklist_BullingpermissionPhotoIdentiifcationSizeofPropertyDemarcation: '',
-            checklist_FencingPropertyProprietaryProprietDemarcation: '',
-            checklist_GatewayPhotographPhotoIdentifcationAreaPropertyDemarcation: '',
-            checklist_MainhobbillSummeriesPropertyProprietaryPropriertor: '',
-            checklist_PropertyProprietaryProprietDemarcation: '',
-            checklist_LandRegisterPropertyPropertyDescription: '',
-            checklist_PropertyexperienceOtherProprietary: '',
-            checklist_SeparatelyenclosedPropertySeparatelyUsedAsPrivateProperty: '',
-            checklist_PropertyexperiencedOrieralturedpropiedltureOrieralted: '',
+            // basicInfo - 7 fields
+            basicInfo: {
+                borrowerName: '',
+                ownerName: '',
+                propertyDetails: '',
+                propertyAddress: '',
+                client: '',
+                applicant: '',
+                valuationDoneBy: ''
+            },
 
-            // CHARACTERISTICS OF LOCALITY
-            characteristicOfLocality: '',
-            classificationOfLocality: '',
-            developmentSurroundingarea: '',
-            developmentPossibilityFutureCommercialMarketLike: '',
-            developmentFootholdMarketScopeBuilding: '',
-            developmentFossilusMarcetcombinedMarketConditions: '',
-            developmentLeveloflandBuilding: '',
-            developmentShapeoflandi: '',
-            developmentTypeofBuildingComplex: '',
-            developmentUseLandConstructionlocalised: '',
-            developmentLandapprovalavailableLandApprovalavailable: '',
-            developmentYes: '',
-            developmentBoundariesroadAvailable: '',
-            developmentC2Notavailable: '',
+            // valuationPurpose - 7 fields
+            valuationPurpose: {
+                purposeOfValuation: '',
+                purposeForValuation: '',
+                dateOfValuation: '',
+                dateOfInspection: '',
+                dateValuationMade: '',
+                dateOfReport: '',
+                dateOfVisit: ''
+            },
 
-            // PART A - MARKET VALUE DETAILS
-            part_A_landarea_SqYd: '',
-            part_A_rateSqYd: '',
-            part_A_totalConstructionCost: '',
-            part_A_detailsAlongChangingAccordingtoProperty: '',
-            part_A_detailsofLandandValueofLand: '',
+            // documents - nested structure matching MongoDB model
+            documents: {
+                ownershipDocuments: {
+                    engagementLetter: '',
+                    ownershipDocuments: '',
+                    conveyanceDeed: '',
+                    saleCertificate: ''
+                },
+                propertyRecords: {
+                    advTcrLsr: '',
+                    agreementForSale: '',
+                    propertyCard: '',
+                    mortgageDeed: '',
+                    leaseDeed: '',
+                    index: '',
+                    vf712Land: '',
+                    naOrder: '',
+                    naLatter: ''
+                },
+                permissions: {
+                    approvedLayoutPlan: '',
+                    commencementLetter: '',
+                    buPermission: '',
+                    healthSafetyPlan: ''
+                },
+                utilities: {
+                    eleMeterPhoto: '',
+                    lightBill: '',
+                    muniTaxBill: ''
+                },
+                propertyStatus: {
+                    numberingDetails: '',
+                    boundariesDemarcation: '',
+                    mergedProperty: '',
+                    premiseSeparationDetails: '',
+                    landLocked: '',
+                    propertyRented: '',
+                    rentAgreement: ''
+                },
+                inspectionPhotos: {
+                    siteVisitPhotos: '',
+                    selfieWithOwner: '',
+                    mobileNo: '',
+                    dataSheet: ''
+                },
+                valuation: {
+                    tentativeRate: '',
+                    saleInstanceLocalInquiry: '',
+                    brokerRecording: '',
+                    pastValuationRate: ''
+                }
+            },
 
-            // PART B - CONSTRUCTION ANALYSIS
-            part_B_areaDetails_SqM: '',
-            part_B_areaDetails_SqYd: '',
-            part_B_measurementBasisArea_SqYd: '',
-            part_B_measurementBasisHeight_SqYd: '',
-            part_B_pipeNumber: '',
-            part_B_surveyNumberofLand: '',
-            part_B_existenceOfRoadAvailable: '',
-            part_B_treeCountPropertyDetails: '',
-            part_B_yearConstructionBuilding: '',
-            part_B_plotShapeAndCondition: '',
-            part_B_conditionOfPlot: '',
-            part_B_conditionOfBuildingStructure: '',
-            part_B_generalConditionInteriorExterior: '',
-            part_B_existencePowerAvailable: '',
-            part_B_existenceWaterAvailable: '',
-            part_B_interiorExteriorPoorCondition: '',
+            // ownerDetails - 6 fields
+            ownerDetails: {
+                nameOfOwners: '',
+                ownerNameAddress: '',
+                ownerPhoneNo: '',
+                shareDetails: '',
+                ownerPhoneShare: '',
+                addressOfProperty: ''
+            },
 
-            // LOCALITY - DETAILED
-            locality_cityTownOrVillage: '',
-            locality_residentialArea: '',
-            locality_commercialArea: '',
-            locality_classificationArea: '',
-            locality_highMiddleRuralType: '',
-            locality_unionSectorCommunityLocationDetails: '',
-            locality_municipalCorporationCommercialLocationDetails: '',
-            locality_governmentSector: '',
-            locality_areaLocality_ImpactOnProperty: '',
-            locality_agricultureLandAllowedPropertyCommercialUse: '',
-            locality_restrictionsOnPropertyFuture: '',
-            locality_interestOfPropertyScopeForBuilding: '',
-            locality_scopePropertyForBuilding: '',
+            // propertyLocation - 9 fields
+            propertyLocation: {
+                plotNumber: '',
+                doorNumber: '',
+                tsNumber: '',
+                village: '',
+                ward: '',
+                taluka: '',
+                mandal: '',
+                district: '',
+                postalAddress: ''
+            },
 
-            // LEVEL OF BUILDING
-            building_estimatedValueOfLand: '',
-            building_typeOfBuildingDetails: '',
-            building_typeOfConstructionDetails: '',
-            building_yearOfConstructionBuilding: '',
-            building_numberOfFloorAreaDetails: '',
-            building_dimensionsOfBuiltArea: '',
-            building_binAreaSize: '',
-            building_conditionOfTheBuildingDetails: '',
-            building_conditionExcellent: '',
-            building_conditionGood: '',
-            building_conditionNormal: '',
-            building_conditionPoor: '',
+            // areaClassification - 10 fields
+            areaClassification: {
+                cityTown: '',
+                residentialArea: '',
+                commercialArea: '',
+                industrialArea: '',
+                areaClassification: '',
+                highMiddlePoor: '',
+                urbanSemiUrbanRural: '',
+                corporationLimitVillage: '',
+                governmentEnactments: '',
+                agriculturalLandConversion: ''
+            },
 
-            // PROPERTY SHAPE & UTILITIES
-            property_wherePropertyLocated: '',
-            property_propertyOccupiedBy: '',
-            property_buildingFootprintDetails: '',
-            property_buildingElevationDetails: '',
-            property_buildingSurroundingAreaDetails: '',
-            property_buildingTypeOfConstructionDetails: '',
-            property_buildingNoOfFloorsDetails: '',
-            property_buildingNoOfBedroomsDetails: '',
-            property_distressedSalesPropertyCondition: '',
-            property_shelterCondition: '',
-            property_sqft: '',
-            property_ratePerSqft: '',
-            property_costAnalysisPerSqft: '',
-            property_detailsOfValueOfProperty: '',
+            // boundaryDetails - 8 fields
+            boundaryDetails: {
+                east: { deed: '', visit: '' },
+                west: { deed: '', visit: '' },
+                north: { deed: '', visit: '' },
+                south: { deed: '', visit: '' }
+            },
 
-            // BOUNDARY & ACCESS
-            boundary_boundaryConditionDetails: '',
-            boundary_roadAvailableDetails: '',
-            boundary_roadWidthDetails: '',
-            boundary_approachableTypeOfRoad: '',
-            boundary_typeOfRoadAccessible: '',
-            boundary_roadAccessibilityDetails: '',
+            // dimensions - 8 fields
+            dimensions: {
+                north: { deed: '', actual: '' },
+                south: { deed: '', actual: '' },
+                east: { deed: '', actual: '' },
+                west: { deed: '', actual: '' }
+            },
 
-            // ENCROACHMENTS & ISSUES
-            encroachment_underGroundSewerageSystemArea: '',
-            encroachment_restrictionsWaterPointing: '',
+            // coordinates - 2 fields
+            coordinates: {
+                latitude: '',
+                longitude: ''
+            },
 
-            // VALUATION DETAILS
-            valuation_appreciationProperty: '',
-            valuation_depreciation: '',
-            valuation_distressSale: '',
-            valuation_interimValueProperty: '',
+            // extent - 2 fields
+            extent: {
+                extentOfSite: '',
+                extentConsideredForValuation: ''
+            },
 
-            // CERTIFICATE OF VALUATION
-            certificate_certificateNumber: '',
-            certificate_dateOfValuation: '',
-            certificate_appraiserName: '',
-            certificate_appraiserLicense: '',
+            // occupationStatus - 3 fields
+            occupationStatus: {
+                occupiedByOwnerTenant: '',
+                tenancyDuration: '',
+                rentReceivedPerMonth: ''
+            },
 
-            // PROPERTY AT A GLANCE
-            propertyGlance_applicant: '',
-            propertyGlance_valuationDrawValue: '',
-            propertyGlance_purposeOfValuation: '',
-            propertyGlance_nameOfOwner: '',
-            propertyGlance_propertyAddress: '',
-            propertyGlance_briefDescriptionProperty: '',
+            // siteCharacteristics - 21 fields
+            siteCharacteristics: {
+                classificationOfLocality: '',
+                developmentSurroundingArea: '',
+                frequentFloodingSubmerging: '',
+                feasibilityCivicAmenities: '',
+                levelOfLandTopographical: '',
+                shapeOfLand: '',
+                typeOfUse: '',
+                usageRestriction: '',
+                townPlanningApprovedLayout: '',
+                cornerPlotIntermittentPlot: '',
+                roadFacilities: '',
+                typeOfRoadAvailable: '',
+                widthOfRoad: '',
+                lockedLand: '',
+                waterPotentiality: '',
+                undergroundSewerageSystem: '',
+                powerSupplyAtSite: '',
+                advantageOfSite1: '',
+                advantageOfSite2: '',
+                specialRemarks1: '',
+                specialRemarks2: ''
+            },
 
-            // MARKET VALUE DETAILS
-            market_totalPlotArea_SqYd: '',
-            market_totalPlotArea_SqM: '',
-            market_ratePerSqYd: '',
-            market_ratePerSqM: '',
-            market_ratePerSqft: '',
-            market_rateSqm: '',
-            market_totalMarketValue: '',
-            market_totalMarketValueInWords: '',
-            market_marketValue: '',
-            market_pricePerSqft: '',
-            market_marketDemand: '',
-            market_investmentPotential: '',
-            market_marketValuePerSqft: '',
-            market_distressValuePerSqft: '',
-            market_loanValuePerSqft: '',
+            // briefDescription - 8 fields
+            briefDescription: {
+                briefDescription: '',
+                revenueDetails: '',
+                areaOfLand: '',
+                valueOfLand: '',
+                areaOfConstruction: '',
+                valueOfConstruction: '',
+                totalMarketValue: '',
+                insurableValue: ''
+            },
 
-            // LOAN DETAILS
-            loan_loanAmount: '',
-            loan_loanToValueRatio: '',
-            loan_loanValueTotal: '',
+            // landValuation - Part A: Market Value Analysis of Land
+            landValuation: {
+                plotDescription: '',
+                areaSqYd: '',
+                rate: '',
+                totalValue: '',
+                sayRO: '',
+                sizeOfPlot: {
+                    northSouth: '',
+                    eastWest: '',
+                    total: ''
+                },
+                marketRate: {
+                    prevailingRate: '',
+                    landBuildingAreaRateMethod: ''
+                },
+                guidelineRate: {
+                    fromRegistrar: '',
+                    adoptedRate: ''
+                },
+                jantriRate: {
+                    rate: '',
+                    landValue: '',
+                    buildingValue: '',
+                    totalValue: ''
+                },
+                estimatedValueOfLand: '',
+                variationClause: ''
+            },
 
-            // SITE DESCRIPTION
-            site_siteDescription: '',
-            site_locationProximity: '',
-            site_accessibilityDetails: '',
+            // buildingDetails - 11 fields
+            buildingDetails: {
+                typeOfBuilding: '',
+                typeOfConstruction: '',
+                yearOfConstruction: '',
+                numberOfFloorsHeight: '',
+                plinthAreaFloorWise: '',
+                condition: {
+                    exterior: '',
+                    interior: ''
+                },
+                approvedMap: {
+                    dateValidity: '',
+                    issuingAuthority: '',
+                    genuinessVerified: ''
+                },
+                otherCommentsOnApprovedPlan: ''
+            },
 
-            // STRUCTURE & CONDITION
-            structure_structureType: '',
-            structure_conditionOfBuilding: '',
-            structure_maintenanceStatus: '',
+            // constructionCostAnalysis - 115 fields (18 rooms × 5 fields + total)
+            constructionCostAnalysis: {
+                securityRoom: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                laboursQuarter: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                storeRoom: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                galleryRoom: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                ffLaboursQuarter: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                gfRoom: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                gfWashRoom: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                office1: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                washRoom: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                shed: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                office2: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                shed1: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                shed2Unit1: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                shed2Unit2: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                openShed: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                godown: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                shed3Unit1: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                shed3Unit2: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                shed3Unit3: { areaDetails: '', areaSMT: '', areaSYD: '', ratePerSYD: '', value: '' },
+                total: { areaSMT: '', areaSYD: '', ratePerSYD: '', totalValue: '' }
+            },
 
-            // AREA MEASUREMENT
-            area_carpetArea: '',
-            area_builtUpArea: '',
-            area_plotArea: '',
-            area_totalBuiltUpArea: '',
-            area_balconyArea: '',
+            // extraItems - 6 fields
+            extraItems: {
+                portico: '',
+                ornamentalFrontDoor: '',
+                sitOutVeranda: '',
+                overheadWaterTank: '',
+                extraSteelGates: '',
+                total: ''
+            },
 
-            // AMENITIES & FACILITIES
-            amenities_electricity: '',
-            amenities_waterSupply: '',
-            amenities_sewerage: '',
-            amenities_carParking: '',
+            // amenities - 11 fields
+            amenities: {
+                wardrobes: '',
+                glazedTiles: '',
+                extraSinksBathTub: '',
+                marbleFlooring: '',
+                interiorDecorations: '',
+                architecturalElevation: '',
+                panellingWorks: '',
+                aluminiumWorks: '',
+                aluminiumHandRails: '',
+                falseCeiling: '',
+                total: ''
+            },
 
-            // CONSTRUCTION DETAILS
-            construction_foundationType: '',
-            construction_roofType: '',
-            construction_floorsInBuilding: '',
-            construction_totalConstructionCost: '',
-            construction_groundFloor: '',
-            construction_firstFloor: '',
-            construction_secondFloor: '',
-            construction_thirdFloor: '',
-            construction_otherFloors: '',
+            // miscellaneous - 5 fields
+            miscellaneous: {
+                separateToiletRoom: '',
+                separateLumberRoom: '',
+                separateWaterTankSump: '',
+                treesGardening: '',
+                total: ''
+            },
 
-            // OBSERVED ISSUES & REMARKS
-            issues_majorIssuesObserved: '',
-            issues_minorRepairsNeeded: '',
-            issues_specialRemarks: '',
-            issues_specialRemarksAboutValuation: '',
+            // services - 6 fields
+            services: {
+                waterSupplyArrangements: '',
+                drainageArrangements: '',
+                compoundWall: '',
+                cbDepositsFittings: '',
+                pavement: '',
+                total: ''
+            },
 
-            // APPRAISER OBSERVATIONS
-            appraiser_observationsByAppraiser: '',
-            appraiser_futureGrowthPotential: '',
-            appraiser_riskFactors: '',
+            // totalAbstract - 14 fields
+            totalAbstract: {
+                partA: { description: 'Land', value: '' },
+                partB: { description: 'Building', value: '' },
+                partC: { description: 'Fixed Furniture', value: '' },
+                partD: { description: 'Amenities', value: '' },
+                partE: { description: 'Miscellaneous', value: '' },
+                partF: { description: 'Services', value: '' },
+                totalValue: '',
+                sayValue: ''
+            },
 
-            // DOCUMENT UPLOAD EVIDENCE
-            documents_certificateOfValuationFile: '',
-            documents_propertyPhotographsFile: '',
-            documents_propertyDocumentsFile: '',
-            documents_otherDocumentsFile: '',
 
-            // SPECIFICATION DETAILS
-            specification_specifications: '',
-            specification_additionalInformation: '',
-            specification_notesAndComments: '',
+            // valuationSummary - 19 fields
+            valuationSummary: {
+                presentMarketValue: { amount: '', words: '', inWords: '' },
+                realisableValue: { percentage: '85%', amount: '', words: '', inWords: '' },
+                distressValue: { percentage: '70%', amount: '', words: '', inWords: '' },
+                jantriValue: { amount: '', words: '', inWords: '' },
+                fairMarketValue: { amount: '', words: '', inWords: '' },
+                appraisalOpinion: '',
+                inspectionDetails: ''
+            },
 
-            // STATUS & DATES
-            status_valuationStatus: '',
-            status_valuationApprovedDate: '',
-            status_valuationRejectedDate: '',
-            status_valuationRevisedDate: '',
-            status_dateOfValuationReport: '',
-            status_placeOfValuation: '',
+            // signatureDetails - 8 fields
+            signatureDetails: {
+                valuer: { name: '', designation: '', date: '', place: '' },
+                branchManager: { name: '', designation: '', date: '', place: '' }
+            },
 
-            // CONSTRUCTION COST ANALYSIS
-            costAnalysis_areaSecurityQuantum: '',
-            costAnalysis_lossPlotArea: '',
-            costAnalysis_lossStoreRoom: '',
-            costAnalysis_lossDoubleQuantum: '',
-            costAnalysis_lossgranary: '',
-            costAnalysis_lossquartersquare: '',
-            costAnalysis_lossGTRoomArea: '',
-            costAnalysis_lossWall: '',
-            costAnalysis_lossOffice1: '',
-            costAnalysis_lossWallRoom: '',
-            costAnalysis_lossOffice2: '',
-            costAnalysis_lossShelteredArea: '',
-            costAnalysis_lossShed3UKold: '',
-            costAnalysis_lossShed3UKold2: '',
-            costAnalysis_lossShed3UKold3: '',
-            costAnalysis_totalarea_sqft: '',
-            costAnalysis_totalamountin_Rs: '',
-            costAnalysis_sqYdrate: '',
-            costAnalysis_ratedetailsChange_sqft: '',
-
-            // CONSTRUCTION COST VALUES
-            constructionValues_rateValue_SQM: '',
-            constructionValues_estimatedValues_sqft: '',
-            constructionValues_areaSqft: '',
-            constructionValues_areaSqM: '',
-            constructionValues_estimatedValueSqYd: '',
-
-            // FINAL VALUATION SUMMARY
-            finalValuation_estimatedValueOfBuild: '',
-            finalValuation_estimatedValueOfBuilding: '',
-            finalValuation_totalValueOfProperty: '',
-            finalValuation_totalValueInWords: '',
-            finalValuation_distressValue: '',
-            finalValuation_loanValue: '',
-
-            // APPRAISER & CERTIFICATION
-            appraisal_appraiserSignature: '',
-            appraisal_appraiserStampDate: '',
-            appraisal_dateOfValuationReport: '',
-            appraisal_placeOfValuation: '',
-
-            // PROPERTY ANALYSIS & VALUES
-            analysisProperty_propertyUseDetails: '',
-            analysisProperty_approvedUseByIndustrialArea: '',
-            analysisProperty_approvedUseByMunicipalCorporation: '',
-            analysisProperty_approvedUseByMunicipalBody: '',
-            analysisProperty_approvedUseByRailway: '',
-            analysisProperty_approvedUseByAirport: '',
-
-            // LOCATION & IDENTIFICATION
-            location_laneNumber: '',
-            location_latitude: '',
-            location_longitude: '',
-            location_areaName: '',
-            location_landmarkOrProximity: '',
-            location_plotOrBlockNumber: '',
-            location_surveyNumber: '',
-            location_villageOrTown: '',
-            location_district: '',
-            location_state: '',
-            location_postalCode: '',
-
-            // VALUATION CHECKLIST (Yes/No Matrix)
-            checklist_propertyConstructedOnAgricultureLand: '',
-            checklist_wouldAccessProperLy: '',
-            checklist_surroundingAreaSurvivalingBuilding: '',
-            checklist_noWithinTwoHundredMters: '',
-            checklist_availablewithinSiteLimitMark: '',
-            checklist_levelledProperty: '',
-            checklist_irregularShapeProperty: '',
-            checklist_useLandConstructionlocalized: '',
-            checklist_landApprovalAvailableFromConcernedAuthority: '',
-            checklist_approvalAvailable: '',
-            checklist_anyBoundariesRoadAvailable: '',
-            checklist_c2NotAvailableOnSite: '',
-            checklist_yesUndergroundSewerageSystem: '',
-            checklist_restrictionsWaterConnectPublicSewerageSystem: '',
-            checklist_lockGateInPropertyOrAnyRestriction: '',
-            checklist_waterProvenSewerage: '',
-            checklist_undergroundSewageSystem: '',
-
-            // PART C - VALUATION
-            partC_valuationOfBuilding: '',
-            partC_federalDetailsOfBuildingConstruction: '',
-            partC_typeOfBuildingConstruction: '',
-            partC_constructionLocalBuilding: '',
-            partC_yearOfConstructionBuilding: '',
-            partC_numberOfFloorsAreaProperty: '',
-            partC_briefAreaUsageOfEachFloor: '',
-            partC_planAreaOfEachFloor: '',
-            partC_conditionOfTheBuildingValueCondition: '',
-            partC_existenceOfElectricalPower: '',
-            partC_existenceOfWaterSupply: '',
-            partC_existenceOfSewerageSystem: '',
-            partC_interiorExteriorPoorCondition: '',
-
-            // DEPRECIATION & VALUATION FACTORS
-            depreciation_physicalDepreciation: '',
-            depreciation_functionalDepreciation: '',
-            depreciation_externalDepreciation: '',
-            depreciation_totalDepreciation: '',
-            depreciation_percentageDepreciation: '',
-
-            // DISTRESS & LOAN VALUES
-            value_marketValue: '',
-            value_distressValue: '',
-            value_loanValue: '',
-            value_marketValueInWords: '',
-            value_distressValueInWords: '',
-            value_loanValueInWords: '',
-
-            // REMARKS & OBSERVATIONS
-            remarks_generalRemarks: '',
-            remarks_aboutProperty: '',
-            remarks_approvedUseOfProperty: '',
-            remarks_datingFutureEnhancement: '',
-            remarks_futureGrowthPotential: '',
-            remarks_riskFactors: '',
-            remarks_specialNotesAndObservations: '',
-
-            // DOCUMENT VALIDATION & CERTIFICATION
-            validation_dateOfInspection: '',
-            validation_dateOfDocumentedValidation: '',
-            validation_certificateOfValuationFile: '',
-            validation_validationApprovedDate: '',
-            validation_validationRejectedDate: '',
-
-            // BANK & INSURANCE MANDATE
-            mandate_bankName: '',
-            mandate_bankGuidelinesForValuation: '',
-            mandate_insuranceValuationMandates: '',
-            mandate_valuationPurpose: '',
-
-            // QR CODE & DIGITAL SIGNATURE
-            digital_qrCodeGenerated: '',
-            digital_qrCodeLink: '',
-            digital_appraiserDigitalSignature: '',
-            digital_reportVersion: '',
-
-            // VALUATION REPORT HEADER
-            report_comfinancePrice: '',
-            report_dateOfInspection: '',
-            report_dateOfDocumentProducedSal: '',
-            report_seedNo: '',
-            report_seedNo_2: '',
-
-            // FINANCIAL ASSISTANCE
-            financial_confirmFinancePrice: '',
-            financial_totalCost: '',
-
-            // AREA ANALYSIS
-            area_analysis_squareArea: '',
-            area_analysis_ratePerSqft: '',
-            area_analysis_totalRate: '',
-
-            // RATE AND DEPRECIATION
-            rate_oldPrice: '',
-            rate_depreciation: '',
-            rate_ageOfBuilding: '',
-
-            // METHOD APPLIED
-            method_pricingModel: '',
-            method_comparisonMethod: '',
-            method_costMethod: '',
-
-            // LANDMARK & UTILITIES
-            landmark_landmarkOrProximity: '',
-            landmark_approachableRoad: '',
-            landmark_roadsideAvailability: '',
-
-            // CONSTRUCTION DETAILS PART B
-            constructionPartB_glassDetails: '',
-            constructionPartB_northSouth: '',
-            constructionPartB_eastWest: '',
-            constructionPartB_totalLengthAndBreadth: '',
-            constructionPartB_estimatedAreaOfPlot: '',
-
-            // GUARDIANS VALUATION SECTION
-            guardians_toBank: '',
-            guardians_stateBank: '',
-            guardians_AmunicipialCorporation: '',
-            guardians_dateIncertioninValuation: '',
-            guardians_coverageDocumentation: '',
-
-            // VALUATION REPORT DETAILS
-            valuationReport_confirmFinancePrice: '',
-            valuationReport_dateOfInspection: '',
-            valuationReport_dateOfDocumentProducedSal: '',
-            valuationReport_seedNo: '',
-            valuationReport_seedNo_2: '',
-
-            // CONSTRUCTION COST EXTENDED
-            constructionCost_ratePerSqft: '',
-            constructionCost_areaInSqft: '',
-            constructionCost_totalConstructionCost: '',
-
-            // PLOT DETAILS
-            plot_sqftArea: '',
-            plot_roadAccess: '',
-            plot_boundaries: '',
-            plot_utilities: '',
-
-            // VALUATION ANALYSIS
-            valuationAnalysis_methodApplied: '',
-            valuationAnalysis_costApproach: '',
-            valuationAnalysis_comparisonApproach: '',
-            valuationAnalysis_incomeApproach: '',
-
-            // DEPRECIATION DETAILS
-            depreciationDetails_physicalDeteriorationPercentage: '',
-            depreciationDetails_functionalObsolescence: '',
-            depreciationDetails_externalFactors: '',
-            depreciationDetails_totalDepreciationPercentage: '',
-
-            // FINAL VALUES
-            finalValue_marketValue: '',
-            finalValue_distressValue: '',
-            finalValue_loanValue: '',
-            finalValue_marketValueInWords: '',
-            finalValue_distressValueInWords: '',
-            finalValue_loanValueInWords: '',
-
-            // CERTIFICATION & VALIDATION
-            certification_appraiserName: '',
-            certification_appraiserLicense: '',
-            certification_dateOfValuation: '',
-            certification_placeOfValuation: '',
-            certification_appraiserSignature: '',
-            certification_stampDate: '',
-
-            // ADDITIONAL IDENTIFICATION
-            identification_plotNumber: '',
-            identification_surveyNumber: '',
-            identification_villageOrTown: '',
-            identification_district: '',
-            identification_state: '',
-            identification_postalCode: '',
-
-            // BUILDING CHARACTERISTICS
-            buildingChar_typeOfBuilding: '',
-            buildingChar_yearOfConstruction: '',
-            buildingChar_numberOfFloors: '',
-            buildingChar_numberOfRooms: '',
-            buildingChar_conditionOfBuilding: '',
+            // qrCode - 1 field
+            qrCode: {
+                url: ''
+            }
         },
-
-        // CUSTOM FIELDS FOR DROPDOWN HANDLING
-        customBankName: '',
-        customCity: '',
     });
 
     const [imagePreviews, setImagePreviews] = useState([]);
     const [locationImagePreviews, setLocationImagePreviews] = useState([]);
+    const [bankImagePreview, setBankImagePreview] = useState(null);
 
     const defaultBanks = ["SBI", "HDFC", "ICICI", "Axis", "PNB", "BOB"];
     const defaultCities = ["Surat", "vadodara", "Ahmedabad", "Kheda"];
@@ -626,6 +490,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
     const fileInputRef4 = useRef(null);
     const locationFileInputRef = useRef(null);
     const documentFileInputRef = useRef(null);
+    const bankFileInputRef = useRef(null);
     const dropdownFetchedRef = useRef(false);
 
     const username = user?.username || "";
@@ -671,6 +536,36 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
     useEffect(() => {
         if (id) loadValuation();
     }, [id]);
+
+    // Log when formData loads to verify data binding
+    useEffect(() => {
+        if (formData?.constructionCostAnalysis && Object.keys(formData.constructionCostAnalysis).length > 0) {
+            console.log('[rajeshHouse.jsx] Construction Cost Analysis data loaded:', formData.constructionCostAnalysis);
+        }
+    }, [formData?.constructionCostAnalysis]);
+
+    // Monitor landValuation data to ensure it's being loaded properly
+    useEffect(() => {
+        if (formData?.pdfDetails?.landValuation) {
+            console.log('[rajeshHouse.jsx] Land Valuation (Part A) data loaded:', formData.pdfDetails.landValuation);
+        }
+    }, [formData?.pdfDetails?.landValuation]);
+
+    // Monitor area images to ensure they're properly loaded on initial page load
+    useEffect(() => {
+        if (formData?.areaImages && Object.keys(formData.areaImages).length > 0) {
+            console.log('[rajeshHouse.jsx] Area Images data loaded:', Object.keys(formData.areaImages));
+        }
+    }, [formData?.areaImages]);
+
+    // Monitor bank image preview state
+    useEffect(() => {
+        if (bankImagePreview) {
+            console.log('[rajeshHouse.jsx] Bank image preview state updated:', bankImagePreview);
+        } else {
+            console.log('[rajeshHouse.jsx] Bank image preview is null/empty');
+        }
+    }, [bankImagePreview]);
 
     // Helper function to convert file to base64
     const fileToBase64 = (file) => {
@@ -730,6 +625,136 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
         }));
     }, [bankName, city, dsa, engineerName]);
 
+    // Helper function to restore image previews from data
+    const restoreImagePreviews = (data) => {
+        // Restore property image previews
+        if (data.propertyImages && Array.isArray(data.propertyImages)) {
+            const propertyPreviews = data.propertyImages
+                .filter(img => img && typeof img === 'object')
+                .map((img, idx) => {
+                    let previewUrl = '';
+                    if (img.url) {
+                        previewUrl = img.url;
+                    } else if (img.path) {
+                        const fileName = img.path.split('\\').pop() || img.path.split('/').pop();
+                        previewUrl = `/api/uploads/${fileName}`;
+                    } else if (img.fileName) {
+                        previewUrl = `/api/uploads/${img.fileName}`;
+                    }
+                    return {
+                        preview: previewUrl,
+                        url: previewUrl,
+                        name: img.name || `Property Image ${idx + 1}`,
+                        fileName: img.fileName || `Property Image ${idx + 1}`,
+                        path: img.path || img.fileName || '',
+                        size: img.size || 0
+                    };
+                });
+            setImagePreviews(propertyPreviews);
+        }
+
+        // Restore location image previews
+        if (data.locationImages && Array.isArray(data.locationImages)) {
+            const locationPreviews = data.locationImages
+                .filter(img => img && typeof img === 'object')
+                .map((img, idx) => {
+                    let previewUrl = '';
+                    if (img.url) {
+                        previewUrl = img.url;
+                    } else if (img.path) {
+                        const fileName = img.path.split('\\').pop() || img.path.split('/').pop();
+                        previewUrl = `/api/uploads/${fileName}`;
+                    } else if (img.fileName) {
+                        previewUrl = `/api/uploads/${img.fileName}`;
+                    }
+                    return {
+                        preview: previewUrl,
+                        url: previewUrl,
+                        name: img.name || `Location Image ${idx + 1}`,
+                        fileName: img.fileName || `Location Image ${idx + 1}`,
+                        path: img.path || img.fileName || '',
+                        size: img.size || 0
+                    };
+                });
+            setLocationImagePreviews(locationPreviews);
+        }
+
+        // Restore document previews
+        if (data.documentPreviews && Array.isArray(data.documentPreviews)) {
+            setFormData(prev => ({
+                ...prev,
+                documentPreviews: data.documentPreviews
+            }));
+        }
+
+        // Restore area images from database - NORMALIZE STRUCTURE
+        if (data.areaImages && typeof data.areaImages === 'object' && Object.keys(data.areaImages).length > 0) {
+            console.log('[rajeshHouse.jsx] Restoring area images:', Object.keys(data.areaImages));
+            // Normalize area images to ensure they have proper structure
+            const normalizedAreaImages = {};
+            Object.keys(data.areaImages).forEach(area => {
+                if (Array.isArray(data.areaImages[area])) {
+                    normalizedAreaImages[area] = data.areaImages[area].map(img => {
+                        let imageUrl = '';
+                        if (img.url) {
+                            imageUrl = img.url;
+                        } else if (img.preview) {
+                            imageUrl = img.preview;
+                        } else if (img.path) {
+                            const fileName = img.path.split('\\').pop() || img.path.split('/').pop();
+                            imageUrl = `/api/uploads/${fileName}`;
+                        } else if (img.fileName) {
+                            imageUrl = `/api/uploads/${img.fileName}`;
+                        }
+                        return {
+                            preview: imageUrl,
+                            url: imageUrl,
+                            fileName: img.fileName || img.name || `Image`,
+                            size: img.size || 0,
+                            file: img.file || null
+                        };
+                    });
+                }
+            });
+            setFormData(prev => ({
+                ...prev,
+                areaImages: normalizedAreaImages
+            }));
+            console.log('[rajeshHouse.jsx] Area images restored:', normalizedAreaImages);
+        }
+
+        // Restore bank image from database
+        if (data.bankImage && typeof data.bankImage === 'object') {
+            console.log('[rajeshHouse.jsx] Restoring bank image - data:', data.bankImage);
+            let previewUrl = '';
+            if (data.bankImage.url) {
+                previewUrl = data.bankImage.url;
+                console.log('[rajeshHouse.jsx] Bank image URL from url field:', previewUrl);
+            } else if (data.bankImage.path) {
+                const fileName = data.bankImage.path.split('\\').pop() || data.bankImage.path.split('/').pop();
+                previewUrl = `/api/uploads/${fileName}`;
+                console.log('[rajeshHouse.jsx] Bank image URL from path:', previewUrl);
+            } else if (data.bankImage.fileName) {
+                previewUrl = `/api/uploads/${data.bankImage.fileName}`;
+                console.log('[rajeshHouse.jsx] Bank image URL from fileName:', previewUrl);
+            }
+            if (previewUrl) {
+                const bankImageObj = {
+                    preview: previewUrl,
+                    name: data.bankImage.name || 'Bank Image',
+                    path: data.bankImage.path || data.bankImage.fileName || ''
+                };
+                console.log('[rajeshHouse.jsx] Bank image preview object:', bankImageObj);
+                setBankImagePreview(bankImageObj);
+                console.log('[rajeshHouse.jsx] Bank image preview set successfully');
+            } else {
+                console.log('[rajeshHouse.jsx] No preview URL found for bank image');
+            }
+        } else {
+            console.log('[rajeshHouse.jsx] No bank image data found - data.bankImage:', data.bankImage);
+        }
+    };
+
     const loadValuation = async () => {
         const savedData = localStorage.getItem(`valuation_draft_${username}`);
         if (savedData) {
@@ -737,6 +762,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
             if (parsedData.uniqueId === id) {
                 setValuation(parsedData);
                 mapDataToForm(parsedData);
+                restoreImagePreviews(parsedData);
                 return;
             }
         }
@@ -744,62 +770,15 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
         try {
             // Pass user info for authentication
             const dbData = await getRajeshHouseById(id, username, role, clientId);
+            console.log('[rajeshHouse.jsx] Loaded data from API:', {
+                hasAreaImages: !!dbData.areaImages,
+                areaImagesKeys: dbData.areaImages ? Object.keys(dbData.areaImages) : [],
+                hasBankImage: !!dbData.bankImage,
+                bankImageData: dbData.bankImage
+            });
             setValuation(dbData);
             mapDataToForm(dbData);
-
-            // Restore property image previews from database
-            if (dbData.propertyImages && Array.isArray(dbData.propertyImages)) {
-                const propertyPreviews = dbData.propertyImages
-                    .filter(img => img && typeof img === 'object')
-                    .map((img, idx) => {
-                        let previewUrl = '';
-                        if (img.url) {
-                            previewUrl = img.url;
-                        } else if (img.path) {
-                            const fileName = img.path.split('\\').pop() || img.path.split('/').pop();
-                            previewUrl = `/api/uploads/${fileName}`;
-                        } else if (img.fileName) {
-                            previewUrl = `/api/uploads/${img.fileName}`;
-                        }
-                        return { url: previewUrl, name: img.name || `Property Image ${idx + 1}`, path: img.path || img.fileName || '' };
-                    });
-                setImagePreviews(propertyPreviews);
-            }
-
-            // Restore location image previews from database
-            if (dbData.locationImages && Array.isArray(dbData.locationImages)) {
-                const locationPreviews = dbData.locationImages
-                    .filter(img => img && typeof img === 'object')
-                    .map((img, idx) => {
-                        let previewUrl = '';
-                        if (img.url) {
-                            previewUrl = img.url;
-                        } else if (img.path) {
-                            const fileName = img.path.split('\\').pop() || img.path.split('/').pop();
-                            previewUrl = `/api/uploads/${fileName}`;
-                        } else if (img.fileName) {
-                            previewUrl = `/api/uploads/${img.fileName}`;
-                        }
-                        return { url: previewUrl, name: img.name || `Location Image ${idx + 1}`, path: img.path || img.fileName || '' };
-                    });
-                setLocationImagePreviews(locationPreviews);
-            }
-
-            // Restore document previews from database
-            if (dbData.documentPreviews && Array.isArray(dbData.documentPreviews)) {
-                setFormData(prev => ({
-                    ...prev,
-                    documentPreviews: dbData.documentPreviews
-                }));
-            }
-
-            // Restore area images from database
-            if (dbData.areaImages && typeof dbData.areaImages === 'object' && Object.keys(dbData.areaImages).length > 0) {
-                setFormData(prev => ({
-                    ...prev,
-                    areaImages: dbData.areaImages
-                }));
-            }
+            restoreImagePreviews(dbData);
 
             setBankName(dbData.bankName || "");
             setCity(dbData.city || "");
@@ -835,11 +814,42 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
             setCustomFields(data.customFields);
         }
 
-        setFormData(prev => ({
-            ...prev,
-            ...data,
-            pdfDetails: data.pdfDetails ? { ...prev.pdfDetails, ...data.pdfDetails } : prev.pdfDetails
-        }));
+        // Load custom construction cost fields from data
+        if (data.customConstructionCostFields && Array.isArray(data.customConstructionCostFields)) {
+            setCustomConstructionCostFields(data.customConstructionCostFields);
+        }
+
+        setFormData(prev => {
+            // Extract constructionCostAnalysis from either direct property or pdfDetails
+            let incomingConstructionCostAnalysis = data.constructionCostAnalysis;
+            if (!incomingConstructionCostAnalysis && data.pdfDetails?.constructionCostAnalysis) {
+                incomingConstructionCostAnalysis = data.pdfDetails.constructionCostAnalysis;
+            }
+
+            // Deep merge constructionCostAnalysis to preserve all room data
+            let mergedConstructionCostAnalysis = { ...prev.constructionCostAnalysis };
+            if (incomingConstructionCostAnalysis) {
+                Object.keys(incomingConstructionCostAnalysis).forEach(key => {
+                    if (typeof incomingConstructionCostAnalysis[key] === 'object' && incomingConstructionCostAnalysis[key] !== null) {
+                        mergedConstructionCostAnalysis[key] = {
+                            ...mergedConstructionCostAnalysis[key],
+                            ...incomingConstructionCostAnalysis[key]
+                        };
+                    } else {
+                        mergedConstructionCostAnalysis[key] = incomingConstructionCostAnalysis[key];
+                    }
+                });
+            }
+
+            console.log('[rajeshHouse.jsx] mapDataToForm - constructionCostAnalysis:', mergedConstructionCostAnalysis);
+
+            return {
+                ...prev,
+                ...data,
+                pdfDetails: data.pdfDetails ? { ...prev.pdfDetails, ...data.pdfDetails } : prev.pdfDetails,
+                constructionCostAnalysis: mergedConstructionCostAnalysis
+            };
+        });
     };
 
     const canEdit = isLoggedIn && (
@@ -913,27 +923,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
     const handleSave = async () => {
         try {
             dispatch(showLoader());
-            
-            // Upload area images if they exist and contain files
-            let dataToSave = { ...formData };
-            
-            if (formData.areaImages && Object.keys(formData.areaImages).length > 0) {
-                console.log('📤 Uploading area images...');
-                try {
-                    const uploadedAreaImages = await uploadAreaImages(formData.areaImages, valuation.uniqueId);
-                    dataToSave = {
-                        ...dataToSave,
-                        areaImages: uploadedAreaImages
-                    };
-                    console.log('✅ Area images uploaded:', uploadedAreaImages);
-                } catch (error) {
-                    console.error('⚠️ Error uploading area images:', error);
-                    // Continue saving even if area images fail to upload
-                    showError('Some area images failed to upload, but saving form data');
-                }
-            }
-            
-            await updateRajeshHouse(id, dataToSave, user.username, user.role, user.clientId);
+            await updateRajeshHouse(id, formData, user.username, user.role, user.clientId);
             invalidateCache();
             dispatch(hideLoader());
             showSuccess('Rajesh House form saved successfully');
@@ -944,12 +934,119 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
         }
     };
 
+    // Helper function to set nested object properties
+    const setNestedProperty = (obj, path, value) => {
+        const keys = path.split('.');
+        let current = obj;
+
+        for (let i = 0; i < keys.length - 1; i++) {
+            const key = keys[i];
+            if (!current[key] || typeof current[key] !== 'object') {
+                current[key] = {};
+            }
+            current = current[key];
+        }
+
+        current[keys[keys.length - 1]] = value;
+    };
+
+    // Helper function to get nested object properties
+    const getNestedProperty = (obj, path) => {
+        const keys = path.split('.');
+        let current = obj;
+
+        for (const key of keys) {
+            current = current?.[key];
+            if (current === undefined) return '';
+        }
+
+        return current || '';
+    };
+
+    // Check if field is a date field
+    const isDateField = (key) => {
+        const dateKeywords = ['date', 'Date'];
+        return dateKeywords.some(keyword => key.includes(keyword));
+    };
+
+    // Check if field is a dropdown/select field
+    const isDropdownField = (key) => {
+        const dropdownKeywords = ['status', 'condition', 'type', 'Type', 'available', 'Available', 'classification', 'Classification', 'approval', 'Approval'];
+        return dropdownKeywords.some(keyword => key.includes(keyword));
+    };
+
+    // Get dropdown options based on field
+    const getDropdownOptions = (key) => {
+        if (key.includes('status') || key.includes('Status')) {
+            return ['', 'Approved', 'Rejected', 'Pending', 'In Progress'];
+        }
+        if (key.includes('condition') || key.includes('Condition')) {
+            return ['', 'Excellent', 'Good', 'Average', 'Poor', 'Very Poor'];
+        }
+        if (key.includes('type') || key.includes('Type')) {
+            return ['', 'Residential', 'Commercial', 'Industrial', 'Mixed Use'];
+        }
+        if (key.includes('available') || key.includes('Available')) {
+            return ['', 'Yes', 'No'];
+        }
+        if (key.includes('classification') || key.includes('Classification')) {
+            return ['', 'High Class', 'Middle Class', 'Lower Class', 'Rural'];
+        }
+        if (key.includes('approval') || key.includes('Approval')) {
+            return ['', 'Yes', 'No', 'Pending'];
+        }
+        return [];
+    };
+
+    // Render field based on type
+    const renderFormField = (field) => {
+        const value = getNestedProperty(formData.pdfDetails, field.key);
+
+        if (isDateField(field.key)) {
+            return (
+                <input
+                    type="date"
+                    value={value}
+                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
+                    disabled={!canEdit}
+                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed w-full"
+                />
+            );
+        }
+
+        if (isDropdownField(field.key)) {
+            const options = getDropdownOptions(field.key);
+            if (options.length > 0) {
+                return (
+                    <select
+                        value={value}
+                        onChange={(e) => handleValuationChange(field.key, e.target.value)}
+                        disabled={!canEdit}
+                        className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed w-full"
+                    >
+                        {options.map(option => (
+                            <option key={option} value={option}>{option || 'Select'}</option>
+                        ))}
+                    </select>
+                );
+            }
+        }
+
+        return (
+            <Input
+                placeholder="Enter value"
+                value={value}
+                onChange={(e) => handleValuationChange(field.key, e.target.value)}
+                disabled={!canEdit}
+                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            />
+        );
+    };
+
     const handleValuationChange = (field, value) => {
         setFormData(prev => {
-            const newPdfDetails = {
-                ...prev.pdfDetails,
-                [field]: value
-            };
+            const newPdfDetails = JSON.parse(JSON.stringify(prev.pdfDetails));
+            setNestedProperty(newPdfDetails, field, value);
 
             // Auto-calculate Estimated Value = Qty × Rate for all 10 items
             const items = [
@@ -968,10 +1065,10 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
             // Check if the changed field is a qty or rate field and auto-calculate
             items.forEach(item => {
                 if (field === item.qtyField || field === item.rateField) {
-                    const qty = parseFloat(newPdfDetails[item.qtyField]) || 0;
-                    const rate = parseFloat(newPdfDetails[item.rateField]) || 0;
+                    const qty = parseFloat(getNestedProperty(newPdfDetails, item.qtyField)) || 0;
+                    const rate = parseFloat(getNestedProperty(newPdfDetails, item.rateField)) || 0;
                     const estimatedValue = qty * rate;
-                    newPdfDetails[item.valueField] = estimatedValue > 0 ? estimatedValue.toString() : '';
+                    setNestedProperty(newPdfDetails, item.valueField, estimatedValue > 0 ? estimatedValue.toString() : '');
                 }
             });
 
@@ -979,7 +1076,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
             const isQtyOrRateField = items.some(item => field === item.qtyField || field === item.rateField);
             if (isQtyOrRateField) {
                 const totalValuation = items.reduce((sum, item) => {
-                    const value = parseFloat(newPdfDetails[item.valueField]) || 0;
+                    const value = parseFloat(getNestedProperty(newPdfDetails, item.valueField)) || 0;
                     return sum + value;
                 }, 0);
 
@@ -1121,6 +1218,31 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
         }));
     };
 
+    const handleBankImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const base64 = await fileToBase64(file);
+            setBankImagePreview({ preview: base64, name: file.name, file: file });
+
+            // Reset input
+            if (bankFileInputRef.current) {
+                bankFileInputRef.current.value = '';
+            }
+        } catch (error) {
+            console.error('Error converting file to base64:', error);
+            showError('Failed to upload bank image');
+        }
+    };
+
+    const removeBankImage = () => {
+        setBankImagePreview(null);
+        if (bankFileInputRef.current) {
+            bankFileInputRef.current.value = '';
+        }
+    };
+
     const handleCoordinateChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
@@ -1139,6 +1261,142 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                 [direction]: value
             }
         }));
+    };
+
+    const handleConstructionCostChange = (field, value) => {
+        setFormData(prev => {
+            const newConstructionCostAnalysis = prev.constructionCostAnalysis ? JSON.parse(JSON.stringify(prev.constructionCostAnalysis)) : {};
+            setNestedProperty(newConstructionCostAnalysis, field, value);
+
+            // Auto-calculate Value = Area SMT × Rate Per SYD
+            const parts = field.split('.');
+            if (parts.length === 2) {
+                const section = parts[0];
+                const fieldType = parts[1];
+
+                if (fieldType === 'areaSMT' || fieldType === 'ratePerSYD') {
+                    const areaSMT = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.areaSMT`)) || 0;
+                    const ratePerSYD = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.ratePerSYD`)) || 0;
+                    const calculatedValue = areaSMT * ratePerSYD;
+                    setNestedProperty(newConstructionCostAnalysis, `${section}.value`, calculatedValue > 0 ? calculatedValue.toString() : '');
+                }
+            }
+
+            // Auto-calculate totals
+            const sections = ['securityRoom', 'laboursQuarter', 'storeRoom', 'galleryRoom', 'ffLaboursQuarter', 'gfRoom', 'gfWashRoom', 'office1', 'washRoom', 'shed', 'office2', 'shed1', 'shed2Unit1', 'shed2Unit2', 'shed3', 'openShed', 'godown', 'shed3Unit1', 'shed3Unit2', 'shed3Unit3'];
+
+            let totalValue = 0;
+            let totalAreaSMT = 0;
+            let totalAreaSYD = 0;
+            let lastRatePerSYD = 0;
+
+            sections.forEach(section => {
+                const sectionValue = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.value`)) || 0;
+                const sectionAreaSMT = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.areaSMT`)) || 0;
+                const sectionAreaSYD = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.areaSYD`)) || 0;
+                const sectionRatePerSYD = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.ratePerSYD`)) || 0;
+
+                totalValue += sectionValue;
+                totalAreaSMT += sectionAreaSMT;
+                totalAreaSYD += sectionAreaSYD;
+
+                // Keep track of last non-zero rate per SYD
+                if (sectionRatePerSYD > 0) {
+                    lastRatePerSYD = sectionRatePerSYD;
+                }
+            });
+
+            if (!newConstructionCostAnalysis.total) {
+                newConstructionCostAnalysis.total = {};
+            }
+            newConstructionCostAnalysis.total.totalValue = totalValue > 0 ? totalValue.toString() : '';
+            newConstructionCostAnalysis.total.roundedValue = totalValue > 0 ? Math.round(totalValue / 1000) * 1000 : '';
+            newConstructionCostAnalysis.total.areaSMT = totalAreaSMT > 0 ? totalAreaSMT.toString() : '';
+            newConstructionCostAnalysis.total.areaSYD = totalAreaSYD > 0 ? totalAreaSYD.toString() : '';
+            newConstructionCostAnalysis.total.ratePerSYD = lastRatePerSYD > 0 ? lastRatePerSYD.toString() : '';
+
+            return {
+                ...prev,
+                constructionCostAnalysis: newConstructionCostAnalysis
+            };
+        });
+    };
+
+    const handleCustomConstructionCostChange = (idx, field, value) => {
+        setCustomConstructionCostFields(prev => {
+            const updated = [...prev];
+            updated[idx][field] = value;
+
+            // Auto-calculate Value = Area SMT × Rate Per SYD (if both fields exist)
+            if ((field === 'areaSMT' || field === 'ratePerSYD') && updated[idx].areaSMT && updated[idx].ratePerSYD) {
+                const areaSMTValue = parseFloat(updated[idx].areaSMT);
+                const ratePerSYDValue = parseFloat(updated[idx].ratePerSYD);
+                if (!isNaN(areaSMTValue) && !isNaN(ratePerSYDValue) && areaSMTValue > 0 && ratePerSYDValue > 0) {
+                    updated[idx].value = (areaSMTValue * ratePerSYDValue).toFixed(2);
+                } else {
+                    updated[idx].value = '';
+                }
+            }
+
+            return updated;
+        });
+
+        // Also update totals in constructionCostAnalysis to include custom fields
+        setFormData(prev => {
+            const newConstructionCostAnalysis = prev.constructionCostAnalysis ? JSON.parse(JSON.stringify(prev.constructionCostAnalysis)) : {};
+            const sections = ['securityRoom', 'laboursQuarter', 'storeRoom', 'galleryRoom', 'ffLaboursQuarter', 'gfRoom', 'gfWashRoom', 'office1', 'washRoom', 'shed', 'office2', 'shed1', 'shed2Unit1', 'shed2Unit2', 'shed3', 'openShed', 'godown', 'shed3Unit1', 'shed3Unit2', 'shed3Unit3'];
+
+            let totalValue = 0;
+            let totalAreaSMT = 0;
+            let totalAreaSYD = 0;
+            let lastRatePerSYD = 0;
+
+            // Include fixed rows
+            sections.forEach(section => {
+                const sectionValue = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.value`)) || 0;
+                const sectionAreaSMT = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.areaSMT`)) || 0;
+                const sectionAreaSYD = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.areaSYD`)) || 0;
+                const sectionRatePerSYD = parseFloat(getNestedProperty(newConstructionCostAnalysis, `${section}.ratePerSYD`)) || 0;
+
+                totalValue += sectionValue;
+                totalAreaSMT += sectionAreaSMT;
+                totalAreaSYD += sectionAreaSYD;
+
+                if (sectionRatePerSYD > 0) {
+                    lastRatePerSYD = sectionRatePerSYD;
+                }
+            });
+
+            // Include custom rows
+            customConstructionCostFields.forEach(customField => {
+                const customValue = parseFloat(customField.value) || 0;
+                const customAreaSMT = parseFloat(customField.areaSMT) || 0;
+                const customAreaSYD = parseFloat(customField.areaSYD) || 0;
+                const customRatePerSYD = parseFloat(customField.ratePerSYD) || 0;
+
+                totalValue += customValue;
+                totalAreaSMT += customAreaSMT;
+                totalAreaSYD += customAreaSYD;
+
+                if (customRatePerSYD > 0) {
+                    lastRatePerSYD = customRatePerSYD;
+                }
+            });
+
+            if (!newConstructionCostAnalysis.total) {
+                newConstructionCostAnalysis.total = {};
+            }
+            newConstructionCostAnalysis.total.totalValue = totalValue > 0 ? totalValue.toString() : '';
+            newConstructionCostAnalysis.total.roundedValue = totalValue > 0 ? Math.round(totalValue / 1000) * 1000 : '';
+            newConstructionCostAnalysis.total.areaSMT = totalAreaSMT > 0 ? totalAreaSMT.toString() : '';
+            newConstructionCostAnalysis.total.areaSYD = totalAreaSYD > 0 ? totalAreaSYD.toString() : '';
+            newConstructionCostAnalysis.total.ratePerSYD = lastRatePerSYD > 0 ? lastRatePerSYD.toString() : '';
+
+            return {
+                ...prev,
+                constructionCostAnalysis: newConstructionCostAnalysis
+            };
+        });
     };
 
     const validateForm = () => {
@@ -1218,10 +1476,214 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
         return errors;
     };
 
-    const handleManagerAction = (action) => {
-        setModalAction(action);
-        setModalFeedback("");
-        setModalOpen(true);
+    const handleManagerAction = async (action) => {
+        // For Approve action, trigger Save first
+        if (action === "approve") {
+            try {
+                // Create a promise to handle the async save
+                const savePromise = new Promise((resolve, reject) => {
+                    dispatch(showLoader("Saving form..."));
+
+                    // Call the save logic (from onFinish but without redirect)
+                    (async () => {
+                        try {
+                            if (!user) {
+                                showError('Authentication required. Please log in.');
+                                onLogin?.();
+                                reject(new Error('Not authenticated'));
+                                return;
+                            }
+
+                            // Build the complete payload
+                            const payload = {
+                                clientId: user.clientId,
+                                uniqueId: formData.uniqueId || id,
+                                username: formData.username || user.username,
+                                dateTime: formData.dateTime,
+                                day: formData.day,
+                                bankName: bankName || "",
+                                city: city || "",
+                                clientName: formData.clientName,
+                                mobileNumber: formData.mobileNumber,
+                                address: formData.address,
+                                payment: formData.payment,
+                                collectedBy: formData.collectedBy,
+                                dsa: dsa || "",
+                                engineerName: engineerName || "",
+                                notes: formData.notes,
+                                elevation: formData.elevation,
+                                directions: formData.directions,
+                                coordinates: formData.coordinates,
+                                ...(valuation?._id && { status: "on-progress" }),
+                                managerFeedback: formData.managerFeedback,
+                                submittedByManager: formData.submittedByManager,
+                                customFields: customFields,
+                                customConstructionCostFields: customConstructionCostFields,
+                                constructionCostAnalysis: formData.constructionCostAnalysis,
+                                pdfDetails: formData.pdfDetails
+                            };
+
+                            // Parallel image uploads (including supporting images and area images)
+                            const [uploadedPropertyImages, uploadedLocationImages, uploadedSupportingImages, uploadedAreaImages] = await Promise.all([
+                                (async () => {
+                                    const newPropertyImages = imagePreviews.filter(p => p && p.file);
+                                    if (newPropertyImages.length > 0) {
+                                        return await uploadPropertyImages(newPropertyImages, valuation.uniqueId);
+                                    }
+                                    return [];
+                                })(),
+                                (async () => {
+                                    const newLocationImages = locationImagePreviews.filter(p => p && p.file);
+                                    if (newLocationImages.length > 0) {
+                                        return await uploadLocationImages(newLocationImages, valuation.uniqueId);
+                                    }
+                                    return [];
+                                })(),
+                                (async () => {
+                                    // Handle supporting images (documents) - upload any with file objects
+                                    const newSupportingImages = (formData.documentPreviews || []).filter(d => d && d.file);
+                                    if (newSupportingImages.length > 0) {
+                                        return await uploadPropertyImages(newSupportingImages, valuation.uniqueId);
+                                    }
+                                    return [];
+                                })(),
+                                (async () => {
+                                    // Handle area images - upload any with file objects
+                                    if (formData.areaImages && Object.keys(formData.areaImages).length > 0) {
+                                        const areaImagesObj = {};
+                                        const areaImagesToUpload = {};
+
+                                        for (const [area, images] of Object.entries(formData.areaImages)) {
+                                            if (Array.isArray(images)) {
+                                                const filesToUpload = images.filter(img => img && img.file);
+                                                const previousImages = images.filter(img => img && !img.file);
+
+                                                areaImagesObj[area] = previousImages.map(img => ({
+                                                    fileName: img.fileName || img.name || 'Image',
+                                                    size: img.size || 0,
+                                                    url: img.url || img.preview
+                                                }));
+
+                                                if (filesToUpload.length > 0) {
+                                                    areaImagesToUpload[area] = filesToUpload;
+                                                }
+                                            }
+                                        }
+
+                                        // Upload any new files
+                                        if (Object.keys(areaImagesToUpload).length > 0) {
+                                            const uploadPromises = [];
+                                            for (const [area, files] of Object.entries(areaImagesToUpload)) {
+                                                if (files.length > 0) {
+                                                    uploadPromises.push(
+                                                        uploadPropertyImages(files, valuation.uniqueId).then(uploaded => ({
+                                                            area,
+                                                            uploaded
+                                                        }))
+                                                    );
+                                                }
+                                            }
+
+                                            if (uploadPromises.length > 0) {
+                                                const results = await Promise.all(uploadPromises);
+                                                for (const result of results) {
+                                                    const uploadedImages = result.uploaded.map(img => ({
+                                                        fileName: img.originalFileName || img.publicId || 'Image',
+                                                        size: img.bytes || img.size || 0,
+                                                        url: img.url
+                                                    }));
+                                                    areaImagesObj[result.area] = [
+                                                        ...(areaImagesObj[result.area] || []),
+                                                        ...uploadedImages
+                                                    ];
+                                                }
+                                            }
+                                        }
+
+                                        return areaImagesObj;
+                                    }
+                                    return {};
+                                })()
+                            ]);
+
+                            // Combine previously saved images with newly uploaded URLs
+                            const previousPropertyImages = imagePreviews
+                                .filter(p => p && !p.file && p.preview)
+                                .map((preview, idx) => ({
+                                    url: preview.preview,
+                                    index: idx
+                                }));
+
+                            // For location images: if new image uploaded, use only the new one; otherwise use previous
+                            const previousLocationImages = (uploadedLocationImages.length === 0)
+                                ? locationImagePreviews
+                                    .filter(p => p && !p.file && p.preview)
+                                    .map((preview, idx) => ({
+                                        url: preview.preview,
+                                        index: idx
+                                    }))
+                                : [];
+
+                            // Combine supporting images with previously saved ones
+                            const previousSupportingImages = (formData.documentPreviews || [])
+                                .filter(d => d && !d.file && d.url)
+                                .map(d => ({
+                                    fileName: d.fileName,
+                                    size: d.size,
+                                    url: d.url
+                                }));
+
+                            payload.propertyImages = [...previousPropertyImages, ...uploadedPropertyImages];
+                            payload.locationImages = uploadedLocationImages.length > 0 ? uploadedLocationImages : previousLocationImages;
+                            payload.documentPreviews = [...previousSupportingImages, ...uploadedSupportingImages.map(img => ({
+                                fileName: img.originalFileName || img.publicId || 'Image',
+                                size: img.bytes || img.size || 0,
+                                url: img.url
+                            }))];
+
+                            // Handle area images - combine uploaded with existing ones
+                            if (uploadedAreaImages && Object.keys(uploadedAreaImages).length > 0) {
+                                payload.areaImages = uploadedAreaImages;
+                            } else if (formData.areaImages && Object.keys(formData.areaImages).length > 0) {
+                                // Keep existing area images if no new uploads
+                                payload.areaImages = formData.areaImages;
+                            }
+
+                            // Clear draft before API call
+                            localStorage.removeItem(`valuation_draft_${user.username}`);
+
+                            // Call API to update rajesh house
+                            await updateRajeshHouse(id, payload, user.username, user.role, user.clientId);
+                            invalidateCache("/rajesh-house");
+
+                            showSuccess('Rajesh House form saved successfully');
+                            resolve();
+                        } catch (error) {
+                            console.error("Error saving Rajesh House form:", error);
+                            showError('Failed to save Rajesh House form');
+                            reject(error);
+                        } finally {
+                            dispatch(hideLoader());
+                        }
+                    })();
+                });
+
+                await savePromise;
+
+                // If save succeeded, proceed with approval
+                setModalAction(action);
+                setModalFeedback("");
+                setModalOpen(true);
+            } catch (error) {
+                console.error('Save failed before approval:', error);
+                return;
+            }
+        } else {
+            // For Reject action, open modal directly
+            setModalAction(action);
+            setModalFeedback("");
+            setModalOpen(true);
+        }
     };
 
     const handleModalOk = async () => {
@@ -1286,6 +1748,8 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
         try {
             dispatch(showLoader("Saving..."));
 
+            console.log('[rajeshHouse.jsx] onFinish - landValuation data:', formData.pdfDetails?.landValuation);
+
             const payload = {
                 clientId: clientId,
                 uniqueId: formData.uniqueId || id,
@@ -1314,7 +1778,12 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                 })),
                 photos: formData.photos || { elevationImages: [], siteImages: [] },
                 status: "on-progress",
-                pdfDetails: formData.pdfDetails,
+                pdfDetails: {
+                    ...(formData.pdfDetails || {}),
+                    constructionCostAnalysis: formData.constructionCostAnalysis
+                },
+                constructionCostAnalysis: formData.constructionCostAnalysis,
+                customConstructionCostFields: customConstructionCostFields,
                 customFields: customFields,
                 managerFeedback: formData.managerFeedback || "",
                 submittedByManager: formData.submittedByManager || false,
@@ -1322,8 +1791,8 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                 lastUpdatedByRole: role
             };
 
-            // Handle image uploads - parallel (including supporting images)
-            const [uploadedPropertyImages, uploadedLocationImages, uploadedSupportingImages] = await Promise.all([
+            // Handle image uploads - parallel (including supporting images and bank image)
+            const [uploadedPropertyImages, uploadedLocationImages, uploadedSupportingImages, uploadedBankImage] = await Promise.all([
                 (async () => {
                     const newPropertyImages = imagePreviews.filter(p => p && p.file);
                     if (newPropertyImages.length > 0) {
@@ -1345,6 +1814,14 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                         return await uploadPropertyImages(newSupportingImages, valuation.uniqueId);
                     }
                     return [];
+                })(),
+                (async () => {
+                    // Handle bank image upload
+                    if (bankImagePreview && bankImagePreview.file) {
+                        const result = await uploadPropertyImages([{ file: bankImagePreview.file, inputNumber: 1 }], valuation.uniqueId);
+                        return result.length > 0 ? result[0] : null;
+                    }
+                    return null;
                 })()
             ]);
 
@@ -1383,6 +1860,43 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                 url: img.url
             }))];
 
+            // Handle area images - preserve them in payload
+            if (formData.areaImages && typeof formData.areaImages === 'object') {
+                const areaImagesObj = {};
+                for (const [area, images] of Object.entries(formData.areaImages)) {
+                    if (Array.isArray(images)) {
+                        areaImagesObj[area] = images.map(img => ({
+                            fileName: img.fileName || img.name || 'Image',
+                            size: img.size || 0,
+                            url: img.url || img.preview
+                        }));
+                    }
+                }
+                payload.areaImages = areaImagesObj;
+            } else {
+                payload.areaImages = {};
+            }
+
+            // Handle bank image
+            if (uploadedBankImage) {
+                // New bank image was uploaded
+                payload.bankImage = {
+                    url: uploadedBankImage.url,
+                    fileName: uploadedBankImage.originalFileName || uploadedBankImage.publicId || 'Bank Image',
+                    size: uploadedBankImage.bytes || uploadedBankImage.size || 0
+                };
+            } else if (bankImagePreview && !bankImagePreview.file && bankImagePreview.preview) {
+                // Existing bank image from database - keep the preview URL
+                payload.bankImage = {
+                    url: bankImagePreview.preview,
+                    fileName: bankImagePreview.name || 'Bank Image',
+                    path: bankImagePreview.path || ''
+                };
+            } else if (!bankImagePreview) {
+                // No bank image
+                payload.bankImage = null;
+            }
+
             // Clear draft before API call
             localStorage.removeItem(`valuation_draft_${username}`);
 
@@ -1392,6 +1906,11 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                 uniqueId: payload.uniqueId,
                 bankName: payload.bankName,
                 city: payload.city,
+                hasLandValuation: !!payload.landValuation,
+                landValuationData: payload.landValuation,
+                areaImagesCount: Object.keys(payload.areaImages || {}).length,
+                areaImagesAreas: Object.keys(payload.areaImages || {}),
+                bankImage: !!payload.bankImage,
                 pdfDetailsKeys: Object.keys(payload.pdfDetails || {}).length,
                 pdfDetailsSample: payload.pdfDetails ? {
                     purposeOfValuation: payload.pdfDetails.purposeOfValuation,
@@ -1423,14 +1942,32 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
             setBankName(bankState);
             setCity(cityState);
             // Update formData with trimmed custom values
-            setFormData(prev => ({
-                ...prev,
-                ...payload,
-                customBankName: bankState === "other" ? payload.bankName : "",
-                customCity: cityState === "other" ? payload.city : "",
-                customDsa: formData.dsa === "other" ? (payload.dsa || "").trim() : "",
-                customEngineerName: formData.engineerName === "other" ? (payload.engineerName || "").trim() : ""
-            }));
+            setFormData(prev => {
+                // Deep merge landValuation to preserve nested structure
+                let mergedLandValuation = { ...prev.landValuation };
+                if (payload.landValuation) {
+                    Object.keys(payload.landValuation).forEach(key => {
+                        if (typeof payload.landValuation[key] === 'object' && payload.landValuation[key] !== null && !Array.isArray(payload.landValuation[key])) {
+                            mergedLandValuation[key] = {
+                                ...mergedLandValuation[key],
+                                ...payload.landValuation[key]
+                            };
+                        } else {
+                            mergedLandValuation[key] = payload.landValuation[key];
+                        }
+                    });
+                }
+
+                return {
+                    ...prev,
+                    ...payload,
+                    landValuation: mergedLandValuation,
+                    customBankName: bankState === "other" ? payload.bankName : "",
+                    customCity: cityState === "other" ? payload.city : "",
+                    customDsa: formData.dsa === "other" ? (payload.dsa || "").trim() : "",
+                    customEngineerName: formData.engineerName === "other" ? (payload.engineerName || "").trim() : ""
+                };
+            });
 
             showSuccess("Form saved successfully!");
             dispatch(hideLoader());
@@ -1441,195 +1978,247 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
             const errorMessage = err.message || "Failed to update form";
             showError(errorMessage);
             dispatch(hideLoader());
-            }
+        }
     };
 
     const renderGeneralTab = () => (
         <div className="space-y-6">
+            {/* basicInfo - 7 fields */}
             <div className="mb-6 p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                <h4 className="font-bold text-gray-900 mb-4">Purpose of Valuation</h4>
-                <div className="space-y-3">
-                    <div className="max-w-6xl">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">Purpose of Valuation</Label>
-                                <Input
-                                    placeholder="e.g., Mortgage/Loan Purpose"
-                                    value={formData.pdfDetails?.propertyGlance_purposeOfValuation || ""}
-                                    onChange={(e) => handleValuationChange('propertyGlance_purposeOfValuation', e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">Date of Inspection</Label>
-                                <Input
-                                    type="date"
-                                    value={formData.pdfDetails?.validation_dateOfInspection || ""}
-                                    onChange={(e) => handleValuationChange('validation_dateOfInspection', e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
+                <h4 className="font-bold text-gray-900 mb-4">Basic Information</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[
+                        { key: 'basicInfo.borrowerName', label: 'Borrower Name' },
+                        { key: 'basicInfo.ownerName', label: 'Owner Name' },
+                        { key: 'basicInfo.propertyDetails', label: 'Property Details' },
+                        { key: 'basicInfo.propertyAddress', label: 'Property Address' },
+                        { key: 'basicInfo.client', label: 'Client' },
+                        { key: 'basicInfo.applicant', label: 'Applicant' },
+                        { key: 'basicInfo.valuationDoneBy', label: 'Valuation Done By' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
                         </div>
-                    </div>
+                    ))}
                 </div>
             </div>
 
-            {/* OWNER & BRIEF DESCRIPTION */}
+            {/* valuationPurpose - 7 fields */}
             <div className="mb-6 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
-                <h4 className="font-bold text-gray-900 mb-4">Owner Information</h4>
+                <h4 className="font-bold text-gray-900 mb-4">Valuation Purpose</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Name of the owner</Label>
-                        <Input
-                            placeholder="Enter owner name"
-                            value={formData.pdfDetails?.propertyGlance_nameOfOwner || ""}
-                            onChange={(e) => handleValuationChange('propertyGlance_nameOfOwner', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Brief Description of the Property</Label>
-                        <Input
-                            placeholder="Enter brief description"
-                            value={formData.pdfDetails?.propertyGlance_briefDescriptionProperty || ""}
-                            onChange={(e) => handleValuationChange('propertyGlance_briefDescriptionProperty', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Property Address</Label>
-                        <Input
-                            placeholder="Enter full address"
-                            value={formData.pdfDetails?.propertyGlance_propertyAddress || ""}
-                            onChange={(e) => handleValuationChange('propertyGlance_propertyAddress', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
+                    {[
+                        { key: 'valuationPurpose.purposeOfValuation', label: 'Purpose Of Valuation' },
+                        { key: 'valuationPurpose.purposeForValuation', label: 'Purpose For Valuation' },
+                        { key: 'valuationPurpose.dateOfValuation', label: 'Date Of Valuation' },
+                        { key: 'valuationPurpose.dateOfInspection', label: 'Date Of Inspection' },
+                        { key: 'valuationPurpose.dateValuationMade', label: 'Date Valuation Made' },
+                        { key: 'valuationPurpose.dateOfReport', label: 'Date Of Report' },
+                        { key: 'valuationPurpose.dateOfVisit', label: 'Date Of Visit' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            {/* LOCATION DETAILS */}
+            {/* documents - Ownership Documents & Permissions */}
             <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
-                <h4 className="font-bold text-gray-900 mb-4">Location Details</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Survey Number</Label>
-                        <Input
-                            placeholder="e.g., S. No. 26"
-                            value={formData.pdfDetails?.location_surveyNumber || ""}
-                            onChange={(e) => handleValuationChange('location_surveyNumber', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
+                <h4 className="font-bold text-gray-900 mb-4">Documents</h4>
+
+                <div className="mb-4">
+                    <h5 className="font-semibold text-gray-800 mb-3">Ownership Documents</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {[
+                            { key: 'documents.ownershipDocuments.conveyanceDeed', label: 'Conveyance Deed' },
+                            { key: 'documents.ownershipDocuments.saleCertificate', label: 'Sale Certificate' },
+                            { key: 'documents.propertyRecords.naLatter', label: 'Na Lattr' }
+                        ].map(field => (
+                            <div key={field.key} className="space-y-1">
+                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                                {renderFormField(field)}
+                            </div>
+                        ))}
                     </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Village / Town</Label>
-                        <Input
-                            placeholder="e.g., Yasai"
-                            value={formData.pdfDetails?.location_villageOrTown || ""}
-                            onChange={(e) => handleValuationChange('location_villageOrTown', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">District</Label>
-                        <Input
-                            placeholder="e.g., District"
-                            value={formData.pdfDetails?.location_district || ""}
-                            onChange={(e) => handleValuationChange('location_district', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">State</Label>
-                        <Input
-                            placeholder="e.g., State"
-                            value={formData.pdfDetails?.location_state || ""}
-                            onChange={(e) => handleValuationChange('location_state', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Postal Code</Label>
-                        <Input
-                            placeholder="e.g., 400703"
-                            value={formData.pdfDetails?.location_postalCode || ""}
-                            onChange={(e) => handleValuationChange('location_postalCode', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Latitude</Label>
-                        <Input
-                            placeholder="e.g., 19.0760"
-                            value={formData.pdfDetails?.location_latitude || ""}
-                            onChange={(e) => handleValuationChange('location_latitude', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Longitude</Label>
-                        <Input
-                            placeholder="e.g., 73.0037"
-                            value={formData.pdfDetails?.location_longitude || ""}
-                            onChange={(e) => handleValuationChange('location_longitude', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">City / Town / Village Type</Label>
-                        <select
-                            value={formData.pdfDetails?.locality_cityTownOrVillage || ""}
-                            onChange={(e) => handleValuationChange('locality_cityTownOrVillage', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Type</option>
-                            <option value="City">City</option>
-                            <option value="Town">Town</option>
-                            <option value="Village">Village</option>
-                        </select>
+                </div>
+
+                <div>
+                    <h5 className="font-semibold text-gray-800 mb-3">Permissions</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {[
+                            { key: 'documents.permissions.healthSafetyPlan', label: 'Health & Safety Plan' },
+                            { key: 'documents.permissions.approvedLayoutPlan', label: 'Approved Layout Plan' },
+                            { key: 'documents.permissions.commencementLetter', label: 'Commencement Letter' }
+                        ].map(field => (
+                            <div key={field.key} className="space-y-1">
+                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                                {renderFormField(field)}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            {/* AREA CLASSIFICATION */}
+            {/* ownerDetails - 6 fields */}
+            <div className="mb-6 p-6 bg-rose-50 rounded-2xl border border-rose-100">
+                <h4 className="font-bold text-gray-900 mb-4">Owner Details</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[
+                        { key: 'ownerDetails.nameOfOwners', label: 'Name Of Owners' },
+                        { key: 'ownerDetails.ownerNameAddress', label: 'Owner Name Address' },
+                        { key: 'ownerDetails.ownerPhoneNo', label: 'Owner Phone No' },
+                        { key: 'ownerDetails.shareDetails', label: 'Share Details' },
+                        { key: 'ownerDetails.ownerPhoneShare', label: 'Owner Phone Share' },
+                        { key: 'ownerDetails.addressOfProperty', label: 'Address Of Property' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* propertyLocation - 9 fields */}
+            <div className="mb-6 p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                <h4 className="font-bold text-gray-900 mb-4">Property Location</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[
+                        { key: 'propertyLocation.plotNumber', label: 'Plot Number' },
+                        { key: 'propertyLocation.doorNumber', label: 'Door Number' },
+                        { key: 'propertyLocation.tsNumber', label: 'Ts Number' },
+                        { key: 'propertyLocation.village', label: 'Village' },
+                        { key: 'propertyLocation.ward', label: 'Ward' },
+                        { key: 'propertyLocation.taluka', label: 'Taluka' },
+                        { key: 'propertyLocation.mandal', label: 'Mandal' },
+                        { key: 'propertyLocation.district', label: 'District' },
+                        { key: 'propertyLocation.postalAddress', label: 'Postal Address' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* areaClassification - 10 fields */}
             <div className="mb-6 p-6 bg-violet-50 rounded-2xl border border-violet-100">
                 <h4 className="font-bold text-gray-900 mb-4">Area Classification</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Residential Area</Label>
-                        <Input
-                            type="text"
-                            placeholder="e.g., Details"
-                            value={formData.pdfDetails?.locality_residentialArea || ""}
-                            onChange={(e) => handleValuationChange('locality_residentialArea', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Commercial Area</Label>
-                        <Input
-                            type="text"
-                            placeholder="e.g., Details"
-                            value={formData.pdfDetails?.locality_commercialArea || ""}
-                            onChange={(e) => handleValuationChange('locality_commercialArea', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
+                    {[
+                        { key: 'areaClassification.cityTown', label: 'City Town' },
+                        { key: 'areaClassification.residentialArea', label: 'Residential Area' },
+                        { key: 'areaClassification.commercialArea', label: 'Commercial Area' },
+                        { key: 'areaClassification.industrialArea', label: 'Industrial Area' },
+                        { key: 'areaClassification.areaClassification', label: 'Area Classification' },
+                        { key: 'areaClassification.highMiddlePoor', label: 'High Middle Poor' },
+                        { key: 'areaClassification.urbanSemiUrbanRural', label: 'Urban Semi Urban Rural' },
+                        { key: 'areaClassification.corporationLimitVillage', label: 'Corporation Limit Village' },
+                        { key: 'areaClassification.governmentEnactments', label: 'Government Enactments' },
+                        { key: 'areaClassification.agriculturalLandConversion', label: 'Agricultural Land Conversion' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* boundaryDetails - 8 fields (east.deed, east.visit, west.deed, west.visit, north.deed, north.visit, south.deed, south.visit) */}
+            <div className="mb-6 p-6 bg-teal-50 rounded-2xl border border-teal-100">
+                <h4 className="font-bold text-gray-900 mb-4">Boundary Details</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {[
+                        { key: 'boundaryDetails.east.deed', label: 'East - Deed' },
+                        { key: 'boundaryDetails.east.visit', label: 'East - Visit' },
+                        { key: 'boundaryDetails.west.deed', label: 'West - Deed' },
+                        { key: 'boundaryDetails.west.visit', label: 'West - Visit' },
+                        { key: 'boundaryDetails.north.deed', label: 'North - Deed' },
+                        { key: 'boundaryDetails.north.visit', label: 'North - Visit' },
+                        { key: 'boundaryDetails.south.deed', label: 'South - Deed' },
+                        { key: 'boundaryDetails.south.visit', label: 'South - Visit' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* dimensions - 8 fields (north.deed, north.actual, south.deed, south.actual, east.deed, east.actual, west.deed, west.actual) */}
+            <div className="mb-6 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <h4 className="font-bold text-gray-900 mb-4">Dimensions</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {[
+                        { key: 'dimensions.north.deed', label: 'North - Deed' },
+                        { key: 'dimensions.north.actual', label: 'North - Actual' },
+                        { key: 'dimensions.south.deed', label: 'South - Deed' },
+                        { key: 'dimensions.south.actual', label: 'South - Actual' },
+                        { key: 'dimensions.east.deed', label: 'East - Deed' },
+                        { key: 'dimensions.east.actual', label: 'East - Actual' },
+                        { key: 'dimensions.west.deed', label: 'West - Deed' },
+                        { key: 'dimensions.west.actual', label: 'West - Actual' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* coordinates - 2 fields */}
+            <div className="mb-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                <h4 className="font-bold text-gray-900 mb-4">Coordinates</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                        { key: 'coordinates.latitude', label: 'Latitude' },
+                        { key: 'coordinates.longitude', label: 'Longitude' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* extent - 2 fields */}
+            <div className="mb-6 p-6 bg-orange-50 rounded-2xl border border-orange-100">
+                <h4 className="font-bold text-gray-900 mb-4">Extent</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                        { key: 'extent.extentOfSite', label: 'Extent Of Site' },
+                        { key: 'extent.extentConsideredForValuation', label: 'Extent Considered For Valuation' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* occupationStatus - 3 fields */}
+            <div className="mb-6 p-6 bg-lime-50 rounded-2xl border border-lime-100">
+                <h4 className="font-bold text-gray-900 mb-4">Occupation Status</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[
+                        { key: 'occupationStatus.occupiedByOwnerTenant', label: 'Occupied By Owner Tenant' },
+                        { key: 'occupationStatus.tenancyDuration', label: 'Tenancy Duration' },
+                        { key: 'occupationStatus.rentReceivedPerMonth', label: 'Rent Received Per Month' }
+                    ].map(field => (
+                        <div key={field.key} className="space-y-1">
+                            <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                            {renderFormField(field)}
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
@@ -1638,2460 +2227,689 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
     const renderValuationTab = () => {
         return (
             <div className="space-y-6">
-                {/* CHECKLIST OF DOCUMENTS */}
+                {/* SITE CHARACTERISTICS */}
                 <div className="mb-6 p-6 bg-purple-50 rounded-2xl border border-purple-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Checklist of Documents</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Site Characteristics</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'checklist_Letterofintention', label: 'Letter of Intention' },
-                            { key: 'checklist_SiteDeedsConverance', label: 'Site Deeds Conveyance' },
-                            { key: 'checklist_ADU_LST', label: 'ADU/LST' },
-                            { key: 'checklist_AgreementtosaleBuildingPermission', label: 'Agreement to Sale/Building Permission' },
-                            { key: 'checklist_AppropriatedUsedPropertyTaxDetails', label: 'Appropriated Used Property Tax Details' },
-                            { key: 'checklist_MortgageDocumentations', label: 'Mortgage Documentations' },
-                            { key: 'checklist_MarketAnalysisLandandVillageName', label: 'Market Analysis Land and Village Name' },
-                            { key: 'checklist_PlotNumberGrievanceSheet', label: 'Plot Number Grievance Sheet' },
-                            { key: 'checklist_AreasurveynumberAsignedtotheSite', label: 'Area Survey Number Assigned to the Site' },
-                            { key: 'checklist_BullingpermissionPhotoIdentiifcationSizeofPropertyDemarcation', label: 'Building Permission Photo Identification' },
-                            { key: 'checklist_FencingPropertyProprietaryProprietDemarcation', label: 'Fencing Property Proprietary Demarcation' },
-                            { key: 'checklist_GatewayPhotographPhotoIdentifcationAreaPropertyDemarcation', label: 'Gateway Photograph Photo Identification' },
-                            { key: 'checklist_MainhobbillSummeriesPropertyProprietaryPropriertor', label: 'Main Hobbill Summaries Property' },
-                            { key: 'checklist_PropertyProprietaryProprietDemarcation', label: 'Property Proprietary Demarcation' },
-                            { key: 'checklist_LandRegisterPropertyPropertyDescription', label: 'Land Register Property Description' },
-                            { key: 'checklist_PropertyexperienceOtherProprietary', label: 'Property Experience Other Proprietary' },
-                            { key: 'checklist_SeparatelyenclosedPropertySeparatelyUsedAsPrivateProperty', label: 'Separately Enclosed Property' },
-                            { key: 'checklist_PropertyexperiencedOrieralturedpropiedltureOrieralted', label: 'Property Experienced Oriented' }
+                            { key: 'siteCharacteristics.classificationOfLocality', label: 'Classification of Locality' },
+                            { key: 'siteCharacteristics.developmentSurroundingArea', label: 'Development Surrounding Area' },
+                            { key: 'siteCharacteristics.frequentFloodingSubmerging', label: 'Frequent Flooding Submerging' },
+                            { key: 'siteCharacteristics.feasibilityCivicAmenities', label: 'Feasibility Civic Amenities' },
+                            { key: 'siteCharacteristics.levelOfLandTopographical', label: 'Level of Land Topographical' },
+                            { key: 'siteCharacteristics.shapeOfLand', label: 'Shape of Land' },
+                            { key: 'siteCharacteristics.typeOfUse', label: 'Type of Use' },
+                            { key: 'siteCharacteristics.usageRestriction', label: 'Usage Restriction' },
+                            { key: 'siteCharacteristics.townPlanningApprovedLayout', label: 'Town Planning Approved Layout' },
+                            { key: 'siteCharacteristics.cornerPlotIntermittentPlot', label: 'Corner Plot Intermittent Plot' },
+                            { key: 'siteCharacteristics.roadFacilities', label: 'Road Facilities' },
+                            { key: 'siteCharacteristics.typeOfRoadAvailable', label: 'Type of Road Available' },
+                            { key: 'siteCharacteristics.widthOfRoad', label: 'Width of Road' },
+                            { key: 'siteCharacteristics.lockedLand', label: 'Locked Land' },
+                            { key: 'siteCharacteristics.waterPotentiality', label: 'Water Potentiality' },
+                            { key: 'siteCharacteristics.undergroundSewerageSystem', label: 'Underground Sewerage System' },
+                            { key: 'siteCharacteristics.powerSupplyAtSite', label: 'Power Supply at Site' },
+                            { key: 'siteCharacteristics.advantageOfSite1', label: 'Advantage of Site 1' },
+                            { key: 'siteCharacteristics.advantageOfSite2', label: 'Advantage of Site 2' },
+                            { key: 'siteCharacteristics.specialRemarks1', label: 'Special Remarks 1' },
+                            { key: 'siteCharacteristics.specialRemarks2', label: 'Special Remarks 2' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* CHARACTERISTICS OF LOCALITY */}
+                {/* BRIEF DESCRIPTION */}
                 <div className="mb-6 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Characteristics of Locality</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Brief Description</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'characteristicOfLocality', label: 'Characteristic of Locality' },
-                            { key: 'classificationOfLocality', label: 'Classification of Locality' },
-                            { key: 'developmentSurroundingarea', label: 'Development Surrounding Area' },
-                            { key: 'developmentPossibilityFutureCommercialMarketLike', label: 'Development Possibility Future Commercial Market' },
-                            { key: 'developmentFootholdMarketScopeBuilding', label: 'Development Foothold Market Scope Building' },
-                            { key: 'developmentFossilusMarcetcombinedMarketConditions', label: 'Development Market Combined Conditions' },
-                            { key: 'developmentLeveloflandBuilding', label: 'Development Level of Land Building' },
-                            { key: 'developmentShapeoflandi', label: 'Development Shape of Land' },
-                            { key: 'developmentTypeofBuildingComplex', label: 'Development Type of Building Complex' },
-                            { key: 'developmentUseLandConstructionlocalised', label: 'Development Use Land Construction' },
-                            { key: 'developmentLandapprovalavailableLandApprovalavailable', label: 'Development Land Approval Available' },
-                            { key: 'developmentYes', label: 'Development Yes' },
-                            { key: 'developmentBoundariesroadAvailable', label: 'Development Boundaries Road Available' },
-                            { key: 'developmentC2Notavailable', label: 'Development C2 Not Available' }
+                            { key: 'briefDescription.briefDescription', label: 'Brief Description' },
+                            { key: 'briefDescription.revenueDetails', label: 'Revenue Details' },
+                            { key: 'briefDescription.areaOfLand', label: 'Area of Land' },
+                            { key: 'briefDescription.valueOfLand', label: 'Value of Land' },
+                            { key: 'briefDescription.areaOfConstruction', label: 'Area of Construction' },
+                            { key: 'briefDescription.valueOfConstruction', label: 'Value of Construction' },
+                            { key: 'briefDescription.totalMarketValue', label: 'Total Market Value' },
+                            { key: 'briefDescription.insurableValue', label: 'Insurable Value' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* PART A - MARKET VALUE DETAILS */}
+                {/* LAND VALUATION */}
                 <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Part A - Market Value Details</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Land Valuation</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'part_A_landarea_SqYd', label: 'Land Area (Sq Yd)' },
-                            { key: 'part_A_rateSqYd', label: 'Rate (Sq Yd)' },
-                            { key: 'part_A_totalConstructionCost', label: 'Total Construction Cost' },
-                            { key: 'part_A_detailsAlongChangingAccordingtoProperty', label: 'Details Along Changing According to Property' },
-                            { key: 'part_A_detailsofLandandValueofLand', label: 'Details of Land and Value of Land' }
+                            { key: 'landValuation.sizeOfPlot.northSouth', label: 'Size of Plot - North South' },
+                            { key: 'landValuation.sizeOfPlot.eastWest', label: 'Size of Plot - East West' },
+                            { key: 'landValuation.sizeOfPlot.total', label: 'Size of Plot - Total' },
+                            { key: 'landValuation.marketRate.prevailingRate', label: 'Market Rate - Prevailing Rate' },
+                            { key: 'landValuation.marketRate.landBuildingAreaRateMethod', label: 'Market Rate - Land Building Area Rate' },
+                            { key: 'landValuation.guidelineRate.fromRegistrar', label: 'Guideline Rate - From Registrar' },
+                            { key: 'landValuation.guidelineRate.adoptedRate', label: 'Guideline Rate - Adopted Rate' },
+                            { key: 'landValuation.jantriRate.rate', label: 'Jantri Rate - Rate' },
+                            { key: 'landValuation.jantriRate.landValue', label: 'Jantri Rate - Land Value' },
+                            { key: 'landValuation.jantriRate.buildingValue', label: 'Jantri Rate - Building Value' },
+                            { key: 'landValuation.jantriRate.totalValue', label: 'Jantri Rate - Total Value' },
+                            { key: 'landValuation.estimatedValueOfLand', label: 'Estimated Value of Land' },
+                            { key: 'landValuation.variationClause', label: 'Variation Clause' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* PART B - CONSTRUCTION ANALYSIS */}
+                {/* BUILDING DETAILS */}
                 <div className="mb-6 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Part B - Construction Analysis</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Building Details</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'part_B_areaDetails_SqM', label: 'Area Details (Sq M)' },
-                            { key: 'part_B_areaDetails_SqYd', label: 'Area Details (Sq Yd)' },
-                            { key: 'part_B_measurementBasisArea_SqYd', label: 'Measurement Basis Area (Sq Yd)' },
-                            { key: 'part_B_measurementBasisHeight_SqYd', label: 'Measurement Basis Height (Sq Yd)' },
-                            { key: 'part_B_pipeNumber', label: 'Pipe Number' },
-                            { key: 'part_B_surveyNumberofLand', label: 'Survey Number of Land' },
-                            { key: 'part_B_existenceOfRoadAvailable', label: 'Existence of Road Available' },
-                            { key: 'part_B_treeCountPropertyDetails', label: 'Tree Count Property Details' },
-                            { key: 'part_B_yearConstructionBuilding', label: 'Year Construction Building' },
-                            { key: 'part_B_plotShapeAndCondition', label: 'Plot Shape and Condition' },
-                            { key: 'part_B_conditionOfPlot', label: 'Condition of Plot' },
-                            { key: 'part_B_conditionOfBuildingStructure', label: 'Condition of Building Structure' },
-                            { key: 'part_B_generalConditionInteriorExterior', label: 'General Condition Interior Exterior' },
-                            { key: 'part_B_existencePowerAvailable', label: 'Existence Power Available' },
-                            { key: 'part_B_existenceWaterAvailable', label: 'Existence Water Available' },
-                            { key: 'part_B_interiorExteriorPoorCondition', label: 'Interior Exterior Poor Condition' }
+                            { key: 'buildingDetails.typeOfBuilding', label: 'Type of Building' },
+                            { key: 'buildingDetails.typeOfConstruction', label: 'Type of Construction' },
+                            { key: 'buildingDetails.yearOfConstruction', label: 'Year of Construction' },
+                            { key: 'buildingDetails.numberOfFloorsHeight', label: 'Number of Floors Height' },
+                            { key: 'buildingDetails.plinthAreaFloorWise', label: 'Plinth Area Floor Wise' },
+                            { key: 'buildingDetails.condition.exterior', label: 'Condition - Exterior' },
+                            { key: 'buildingDetails.condition.interior', label: 'Condition - Interior' },
+                            { key: 'buildingDetails.approvedMap.dateValidity', label: 'Approved Map - Date Validity' },
+                            { key: 'buildingDetails.approvedMap.issuingAuthority', label: 'Approved Map - Issuing Authority' },
+                            { key: 'buildingDetails.approvedMap.genuinessVerified', label: 'Approved Map - Genuineness Verified' },
+                            { key: 'buildingDetails.otherCommentsOnApprovedPlan', label: 'Other Comments on Approved Plan' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
-                </div>
 
-                {/* LOCALITY - DETAILED */}
-                <div className="mb-6 p-6 bg-pink-50 rounded-2xl border border-pink-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Locality - Detailed</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'locality_cityTownOrVillage', label: 'City Town Or Village' },
-                            { key: 'locality_residentialArea', label: 'Residential Area' },
-                            { key: 'locality_commercialArea', label: 'Commercial Area' },
-                            { key: 'locality_classificationArea', label: 'Classification Area' },
-                            { key: 'locality_highMiddleRuralType', label: 'High Middle Rural Type' },
-                            { key: 'locality_unionSectorCommunityLocationDetails', label: 'Union Sector Community Location Details' },
-                            { key: 'locality_municipalCorporationCommercialLocationDetails', label: 'Municipal Corporation Commercial Location Details' },
-                            { key: 'locality_governmentSector', label: 'Government Sector' },
-                            { key: 'locality_areaLocality_ImpactOnProperty', label: 'Area Locality Impact On Property' },
-                            { key: 'locality_agricultureLandAllowedPropertyCommercialUse', label: 'Agriculture Land Allowed Property Commercial Use' },
-                            { key: 'locality_restrictionsOnPropertyFuture', label: 'Restrictions On Property Future' },
-                            { key: 'locality_interestOfPropertyScopeForBuilding', label: 'Interest Of Property Scope For Building' },
-                            { key: 'locality_scopePropertyForBuilding', label: 'Scope Property For Building' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
+                    {/* Part A: Market Value Analysis of Land */}
+                    <div className="mt-6 pt-6 border-t border-emerald-200">
+                        <h5 className="font-bold text-gray-900 mb-3 text-sm">Part A: Market Value Analysis of Land</h5>
+                        <div className="w-full overflow-x-auto">
+                            <table className="min-w-full text-xs border-collapse">
+                                <thead>
+                                    <tr className="bg-emerald-100 border border-emerald-200">
+                                        <th className="px-2 py-2 text-left font-bold text-gray-900 border border-emerald-200 min-w-[150px]">Plot Description</th>
+                                        <th className="px-2 py-2 text-center font-bold text-gray-900 border border-emerald-200 min-w-[100px]">Area (Sq.Yd)</th>
+                                        <th className="px-2 py-2 text-center font-bold text-gray-900 border border-emerald-200 min-w-[100px]">Rate</th>
+                                        <th className="px-2 py-2 text-center font-bold text-gray-900 border border-emerald-200 min-w-[120px]">Total Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="border border-emerald-200 bg-white">
+                                        <td className="px-2 py-2 border border-emerald-200">
+                                            <Input
+                                                placeholder="Plot Description"
+                                                value={formData.pdfDetails?.landValuation?.plotDescription || ""}
+                                                onChange={(e) => setFormData(prev => ({
+                                                    ...prev,
+                                                    pdfDetails: { ...prev.pdfDetails, landValuation: { ...prev.pdfDetails.landValuation, plotDescription: e.target.value } }
+                                                }))}
+                                                className="h-7 text-xs"
+                                                disabled={!canEdit}
+                                            />
+                                        </td>
+                                        <td className="px-2 py-2 border border-emerald-200">
+                                            <Input
+                                                type="number"
+                                                placeholder="Area Sq.Yd"
+                                                value={formData.pdfDetails?.landValuation?.areaSqYd || ""}
+                                                onChange={(e) => {
+                                                    const areaSqYd = e.target.value;
+                                                    const rate = formData.pdfDetails?.landValuation?.rate || 0;
+                                                    const total = areaSqYd && rate ? Math.round(parseFloat(areaSqYd) * parseFloat(rate)) : "";
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        pdfDetails: {
+                                                            ...prev.pdfDetails,
+                                                            landValuation: {
+                                                                ...prev.pdfDetails.landValuation,
+                                                                areaSqYd: areaSqYd,
+                                                                totalValue: total.toString(),
+                                                                sayRO: total.toString()
+                                                            }
+                                                        }
+                                                    }));
+                                                }}
+                                                className="h-7 text-xs"
+                                                disabled={!canEdit}
+                                            />
+                                        </td>
+                                        <td className="px-2 py-2 border border-emerald-200">
+                                            <Input
+                                                type="number"
+                                                placeholder="Rate"
+                                                value={formData.pdfDetails?.landValuation?.rate || ""}
+                                                onChange={(e) => {
+                                                    const rate = e.target.value;
+                                                    const areaSqYd = formData.pdfDetails?.landValuation?.areaSqYd || 0;
+                                                    const total = rate && areaSqYd ? Math.round(parseFloat(areaSqYd) * parseFloat(rate)) : "";
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        pdfDetails: {
+                                                            ...prev.pdfDetails,
+                                                            landValuation: {
+                                                                ...prev.pdfDetails.landValuation,
+                                                                rate: rate,
+                                                                totalValue: total.toString(),
+                                                                sayRO: total.toString()
+                                                            }
+                                                        }
+                                                    }));
+                                                }}
+                                                className="h-7 text-xs"
+                                                disabled={!canEdit}
+                                            />
+                                        </td>
+                                        <td className="px-2 py-2 border border-emerald-200">
+                                            <Input
+                                                type="number"
+                                                placeholder="Total"
+                                                value={formData.pdfDetails?.landValuation?.totalValue || ""}
+                                                onChange={(e) => setFormData(prev => ({
+                                                    ...prev,
+                                                    pdfDetails: { ...prev.pdfDetails, landValuation: { ...prev.pdfDetails.landValuation, totalValue: e.target.value } }
+                                                }))}
+                                                className="h-7 text-xs bg-gray-50"
+                                                disabled={true}
+                                                title="Automatically calculated from Area × Rate (rounded)"
+                                            />
+                                        </td>
+                                    </tr>
+                                    {/* Say. R/O Row - Summary */}
+                                    <tr className="border border-emerald-200 bg-emerald-50">
+                                        <td className="px-2 py-2 border border-emerald-200"></td>
+                                        <td className="px-2 py-2 border border-emerald-200"></td>
+                                        <td className="px-2 py-2 border border-emerald-200 text-right font-bold text-gray-900">Say. R/O</td>
+                                        <td className="px-2 py-2 border border-emerald-200">
+                                            <Input
+                                                type="number"
+                                                placeholder="Rounded Value"
+                                                value={formData.pdfDetails?.landValuation?.sayRO || ""}
+                                                onChange={(e) => setFormData(prev => ({
+                                                    ...prev,
+                                                    pdfDetails: { ...prev.pdfDetails, landValuation: { ...prev.pdfDetails.landValuation, sayRO: e.target.value } }
+                                                }))}
+                                                className="h-7 text-xs bg-yellow-50 font-semibold"
+                                                disabled={!canEdit}
+                                                title="Say Rate/Order - Rounded figure of total value"
+                                            />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-2 italic">Total = Area (Sq.Yd) × Rate, automatically rounded to nearest whole number. Say. R/O shows the rounded final value.</p>
                     </div>
                 </div>
 
-                {/* VALUATION DETAILS */}
+                {/* CONSTRUCTION COST ANALYSIS */}
                 <div className="mb-6 p-6 bg-rose-50 rounded-2xl border border-rose-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Valuation Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'valuation_appreciationProperty', label: 'Appreciation Property' },
-                            { key: 'valuation_depreciation', label: 'Depreciation' },
-                            { key: 'valuation_distressSale', label: 'Distress Sale' },
-                            { key: 'valuation_interimValueProperty', label: 'Interim Value Property' },
-                            { key: 'value_marketValue', label: 'Market Value' },
-                            { key: 'value_distressValue', label: 'Distress Value' },
-                            { key: 'value_loanValue', label: 'Loan Value' },
-                            { key: 'value_marketValueInWords', label: 'Market Value In Words' },
-                            { key: 'value_distressValueInWords', label: 'Distress Value In Words' },
-                            { key: 'value_loanValueInWords', label: 'Loan Value In Words' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
+                    <h4 className="font-bold text-gray-900 mb-3">Construction Cost Analysis</h4>
+                    <div className="w-full overflow-x-auto">
+                        <table className="min-w-full text-sm border-collapse">
+                            <thead>
+                                <tr className="bg-rose-100 border border-rose-200">
+                                    <th className="px-2 py-2 text-left font-bold text-gray-900 border border-rose-200 min-w-[50px]">Sr. No.</th>
+                                    <th className="px-2 py-2 text-left font-bold text-gray-900 border border-rose-200 min-w-[150px]">Area Details</th>
+                                    <th className="px-2 py-2 text-left font-bold text-gray-900 border border-rose-200 min-w-[120px]">Area - SMT</th>
+                                    <th className="px-2 py-2 text-left font-bold text-gray-900 border border-rose-200 min-w-[120px]">Area - SYD</th>
+                                    <th className="px-2 py-2 text-left font-bold text-gray-900 border border-rose-200 min-w-[140px]">Rate per SYD</th>
+                                    <th className="px-2 py-2 text-left font-bold text-gray-900 border border-rose-200 min-w-[150px]">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span>Value</span>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    const updated = customConstructionCostFields ? [...customConstructionCostFields] : [];
+                                                    updated.push({
+                                                        id: `custom_construction_${Date.now()}_${Math.random()}`,
+                                                        srNo: (updated.length + 21).toString(),
+                                                        areaDetails: '',
+                                                        areaSMT: '',
+                                                        areaSYD: '',
+                                                        ratePerSYD: '',
+                                                        value: ''
+                                                    });
+                                                    setCustomConstructionCostFields(updated);
+                                                }}
+                                                disabled={!canEdit}
+                                                className="px-1.5 py-0.5 bg-white hover:bg-gray-100 text-rose-600 text-sm font-bold rounded disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                                                title="Add Custom Field"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">1</td>
+                                    <td className="px-2 py-2 border border-rose-200">Security Room</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.securityRoom?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('securityRoom.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.securityRoom?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('securityRoom.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.securityRoom?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('securityRoom.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.securityRoom?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">2</td>
+                                    <td className="px-2 py-2 border border-rose-200">Labours Quarter</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.laboursQuarter?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('laboursQuarter.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.laboursQuarter?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('laboursQuarter.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.laboursQuarter?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('laboursQuarter.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.laboursQuarter?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">3</td>
+                                    <td className="px-2 py-2 border border-rose-200">Store Room</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.storeRoom?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('storeRoom.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.storeRoom?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('storeRoom.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.storeRoom?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('storeRoom.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.storeRoom?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">4</td>
+                                    <td className="px-2 py-2 border border-rose-200">Gallery room</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.galleryRoom?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('galleryRoom.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.galleryRoom?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('galleryRoom.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.galleryRoom?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('galleryRoom.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.galleryRoom?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">5</td>
+                                    <td className="px-2 py-2 border border-rose-200">FF Labours Quarter</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.ffLaboursQuarter?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('ffLaboursQuarter.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.ffLaboursQuarter?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('ffLaboursQuarter.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.ffLaboursQuarter?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('ffLaboursQuarter.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.ffLaboursQuarter?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">6</td>
+                                    <td className="px-2 py-2 border border-rose-200">GF Room</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.gfRoom?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('gfRoom.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.gfRoom?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('gfRoom.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.gfRoom?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('gfRoom.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.gfRoom?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">7</td>
+                                    <td className="px-2 py-2 border border-rose-200">GF Wash Room</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.gfWashRoom?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('gfWashRoom.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.gfWashRoom?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('gfWashRoom.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.gfWashRoom?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('gfWashRoom.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.gfWashRoom?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">8</td>
+                                    <td className="px-2 py-2 border border-rose-200">Office-1</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.office1?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('office1.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.office1?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('office1.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.office1?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('office1.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.office1?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">9</td>
+                                    <td className="px-2 py-2 border border-rose-200">Wash Room</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.washRoom?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('washRoom.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.washRoom?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('washRoom.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.washRoom?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('washRoom.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.washRoom?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">10</td>
+                                    <td className="px-2 py-2 border border-rose-200">Shed</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.shed?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('shed.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.shed?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('shed.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.shed?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('shed.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.shed?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">11</td>
+                                    <td className="px-2 py-2 border border-rose-200">Office-2</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.office2?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('office2.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.office2?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('office2.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.office2?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('office2.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.office2?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">12</td>
+                                    <td className="px-2 py-2 border border-rose-200">Shed-1</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.shed1?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('shed1.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.shed1?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('shed1.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.shed1?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('shed1.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.shed1?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">13</td>
+                                    <td className="px-2 py-2 border border-rose-200">Shed-2/Unit-1</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.shed2Unit1?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('shed2Unit1.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.shed2Unit1?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('shed2Unit1.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.shed2Unit1?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('shed2Unit1.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.shed2Unit1?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">14</td>
+                                    <td className="px-2 py-2 border border-rose-200">Shed-2/Unit-2</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.shed2Unit2?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('shed2Unit2.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.shed2Unit2?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('shed2Unit2.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.shed2Unit2?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('shed2Unit2.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.shed2Unit2?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">15</td>
+                                    <td className="px-2 py-2 border border-rose-200">Shed-3</td>
+                                    <td className="px-2 py-2 border border-rose-200">
+                                        <Input
+                                            type="number"
+                                            placeholder="Area SMT"
+                                            value={formData.constructionCostAnalysis?.shed3?.areaSMT || ""}
+                                            onChange={(e) => handleConstructionCostChange('shed3.areaSMT', e.target.value)}
+                                            className="h-7 text-xs"
+                                            disabled={!canEdit}
+                                        />
+                                    </td>
+                                    <td className="px-2 py-2 border border-rose-200">
+                                        <Input
+                                            type="number"
+                                            placeholder="Area SYD"
+                                            value={formData.constructionCostAnalysis?.shed3?.areaSYD || ""}
+                                            onChange={(e) => handleConstructionCostChange('shed3.areaSYD', e.target.value)}
+                                            className="h-7 text-xs"
+                                            disabled={!canEdit}
+                                        />
+                                    </td>
+                                    <td className="px-2 py-2 border border-rose-200">
+                                        <Input
+                                            type="number"
+                                            placeholder="Rate per SYD"
+                                            value={formData.constructionCostAnalysis?.shed3?.ratePerSYD || ""}
+                                            onChange={(e) => handleConstructionCostChange('shed3.ratePerSYD', e.target.value)}
+                                            className="h-7 text-xs"
+                                            disabled={!canEdit}
+                                        />
+                                    </td>
+                                    <td className="px-2 py-2 border border-rose-200">
+                                        <Input
+                                            type="number"
+                                            placeholder="Value"
+                                            value={formData.constructionCostAnalysis?.shed3?.value || ""}
+                                            disabled
+                                            className="h-7 text-xs bg-gray-100"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">16</td>
+                                    <td className="px-2 py-2 border border-rose-200">Open shed</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.openShed?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('openShed.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.openShed?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('openShed.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.openShed?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('openShed.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.openShed?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">17</td>
+                                    <td className="px-2 py-2 border border-rose-200">Godown</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.godown?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('godown.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.godown?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('godown.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.godown?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('godown.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.godown?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">18</td>
+                                    <td className="px-2 py-2 border border-rose-200">Shed-3/Unit-1</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.shed3Unit1?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('shed3Unit1.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.shed3Unit1?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('shed3Unit1.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.shed3Unit1?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('shed3Unit1.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.shed3Unit1?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">19</td>
+                                    <td className="px-2 py-2 border border-rose-200">Shed-3/Unit-2</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.shed3Unit2?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('shed3Unit2.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.shed3Unit2?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('shed3Unit2.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.shed3Unit2?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('shed3Unit2.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.shed3Unit2?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                                <tr className="border border-rose-200">
+                                    <td className="px-2 py-2 border border-rose-200 text-center font-bold">20</td>
+                                    <td className="px-2 py-2 border border-rose-200">Shed-3/Unit-3</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={formData.constructionCostAnalysis?.shed3Unit3?.areaSMT || ""} onChange={(e) => handleConstructionCostChange('shed3Unit3.areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={formData.constructionCostAnalysis?.shed3Unit3?.areaSYD || ""} onChange={(e) => handleConstructionCostChange('shed3Unit3.areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={formData.constructionCostAnalysis?.shed3Unit3?.ratePerSYD || ""} onChange={(e) => handleConstructionCostChange('shed3Unit3.ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={formData.constructionCostAnalysis?.shed3Unit3?.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+
+                                {/* Custom Rows */}
+                                {customConstructionCostFields && customConstructionCostFields.map((field, idx) => (
+                                    <tr key={field.id || idx} className="border border-rose-200">
+                                        <td className="px-2 py-2 border border-rose-200 text-center font-bold">{21 + idx}</td>
+                                        <td className="px-2 py-2 border border-rose-200">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <Input
+                                                    placeholder="Enter field name"
+                                                    value={field.name || ""}
+                                                    onChange={(e) => {
+                                                        const updated = [...customConstructionCostFields];
+                                                        updated[idx].name = e.target.value;
+                                                        setCustomConstructionCostFields(updated);
+                                                    }}
+                                                    disabled={!canEdit}
+                                                    className="h-7 text-xs flex-1"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        const updated = customConstructionCostFields.filter((_, i) => i !== idx);
+                                                        setCustomConstructionCostFields(updated);
+                                                    }}
+                                                    disabled={!canEdit}
+                                                    className="text-red-500 hover:text-red-700 disabled:text-gray-300 text-lg font-bold hover:bg-red-50 rounded p-1 transition-colors"
+                                                    title="Delete field"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SMT" value={field.areaSMT || ""} onChange={(e) => handleCustomConstructionCostChange(idx, 'areaSMT', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                        <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Area SYD" value={field.areaSYD || ""} onChange={(e) => handleCustomConstructionCostChange(idx, 'areaSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                        <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Rate per SYD" value={field.ratePerSYD || ""} onChange={(e) => handleCustomConstructionCostChange(idx, 'ratePerSYD', e.target.value)} className="h-7 text-xs" disabled={!canEdit} /></td>
+                                        <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="Value" value={field.value || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                    </tr>
+                                ))}
+
+                                <tr className="bg-rose-100 border border-rose-200 font-bold">
+                                    <td colSpan="2" className="px-2 py-2 border border-rose-200 text-right">TOTAL</td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="0" value={formData.constructionCostAnalysis?.total?.areaSMT || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="0" value={formData.constructionCostAnalysis?.total?.areaSYD || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                    <td className="px-2 py-2 border border-rose-200"></td>
+                                    <td className="px-2 py-2 border border-rose-200"><Input type="number" placeholder="0" value={formData.constructionCostAnalysis?.total?.totalValue || ""} disabled className="h-7 text-xs bg-gray-100" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                {/* CERTIFICATE OF VALUATION */}
+                {/* EXTRA ITEMS */}
                 <div className="mb-6 p-6 bg-orange-50 rounded-2xl border border-orange-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Certificate of Valuation</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Extra Items</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'certificate_certificateNumber', label: 'Certificate Number' },
-                            { key: 'certificate_dateOfValuation', label: 'Date of Valuation' },
-                            { key: 'certificate_appraiserName', label: 'Appraiser Name' },
-                            { key: 'certificate_appraiserLicense', label: 'Appraiser License' }
+                            { key: 'extraItems.portico', label: 'Portico' },
+                            { key: 'extraItems.ornamentalFrontDoor', label: 'Ornamental Front Door' },
+                            { key: 'extraItems.sitOutVeranda', label: 'Sit Out Veranda' },
+                            { key: 'extraItems.overheadWaterTank', label: 'Overhead Water Tank' },
+                            { key: 'extraItems.extraSteelGates', label: 'Extra Steel Gates' },
+                            { key: 'extraItems.total', label: 'Total' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* PROPERTY AT A GLANCE */}
-                <div className="mb-6 p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Property at a Glance</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'propertyGlance_applicant', label: 'Applicant' },
-                            { key: 'propertyGlance_valuationDrawValue', label: 'Valuation Draw Value' },
-                            { key: 'propertyGlance_purposeOfValuation', label: 'Purpose of Valuation' },
-                            { key: 'propertyGlance_nameOfOwner', label: 'Name of Owner' },
-                            { key: 'propertyGlance_propertyAddress', label: 'Property Address' },
-                            { key: 'propertyGlance_briefDescriptionProperty', label: 'Brief Description Property' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* MARKET VALUE ANALYSIS */}
-                <div className="mb-6 p-6 bg-green-50 rounded-2xl border border-green-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Market Value Analysis</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'market_totalPlotArea_SqYd', label: 'Total Plot Area (Sq Yd)' },
-                            { key: 'market_totalPlotArea_SqM', label: 'Total Plot Area (Sq M)' },
-                            { key: 'market_ratePerSqYd', label: 'Rate Per Sq Yd' },
-                            { key: 'market_ratePerSqM', label: 'Rate Per Sq M' },
-                            { key: 'market_ratePerSqft', label: 'Rate Per Sq Ft' },
-                            { key: 'market_rateSqm', label: 'Rate Sq M' },
-                            { key: 'market_totalMarketValue', label: 'Total Market Value' },
-                            { key: 'market_totalMarketValueInWords', label: 'Total Market Value In Words' },
-                            { key: 'market_marketValue', label: 'Market Value' },
-                            { key: 'market_pricePerSqft', label: 'Price Per Sq Ft' },
-                            { key: 'market_marketDemand', label: 'Market Demand' },
-                            { key: 'market_investmentPotential', label: 'Investment Potential' },
-                            { key: 'market_marketValuePerSqft', label: 'Market Value Per Sq Ft' },
-                            { key: 'market_distressValuePerSqft', label: 'Distress Value Per Sq Ft' },
-                            { key: 'market_loanValuePerSqft', label: 'Loan Value Per Sq Ft' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* LOAN DETAILS */}
-                <div className="mb-6 p-6 bg-yellow-50 rounded-2xl border border-yellow-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Loan Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'loan_loanAmount', label: 'Loan Amount' },
-                            { key: 'loan_loanToValueRatio', label: 'Loan to Value Ratio' },
-                            { key: 'loan_loanValueTotal', label: 'Loan Value Total' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* SITE & STRUCTURE */}
-                <div className="mb-6 p-6 bg-teal-50 rounded-2xl border border-teal-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Site & Structure Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'site_siteDescription', label: 'Site Description' },
-                            { key: 'site_locationProximity', label: 'Location Proximity' },
-                            { key: 'site_accessibilityDetails', label: 'Accessibility Details' },
-                            { key: 'structure_structureType', label: 'Structure Type' },
-                            { key: 'structure_conditionOfBuilding', label: 'Condition of Building' },
-                            { key: 'structure_maintenanceStatus', label: 'Maintenance Status' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* AREA DETAILS */}
-                <div className="mb-6 p-6 bg-red-50 rounded-2xl border border-red-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Area Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'area_carpetArea', label: 'Carpet Area' },
-                            { key: 'area_builtUpArea', label: 'Built Up Area' },
-                            { key: 'area_plotArea', label: 'Plot Area' },
-                            { key: 'area_totalBuiltUpArea', label: 'Total Built Up Area' },
-                            { key: 'area_balconyArea', label: 'Balcony Area' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* AMENITIES */}
+                <div className="mb-6 p-6 bg-lime-50 rounded-2xl border border-lime-100">
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Amenities</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {[
+                            { key: 'amenities.wardrobes', label: 'Wardrobes' },
+                            { key: 'amenities.glazedTiles', label: 'Glazed Tiles' },
+                            { key: 'amenities.extraSinksBathTub', label: 'Extra Sinks Bath Tub' },
+                            { key: 'amenities.marbleFlooring', label: 'Marble Flooring' },
+                            { key: 'amenities.interiorDecorations', label: 'Interior Decorations' },
+                            { key: 'amenities.architecturalElevation', label: 'Architectural Elevation' },
+                            { key: 'amenities.panellingWorks', label: 'Panelling Works' },
+                            { key: 'amenities.aluminiumWorks', label: 'Aluminium Works' },
+                            { key: 'amenities.aluminiumHandRails', label: 'Aluminium Hand Rails' },
+                            { key: 'amenities.falseCeiling', label: 'False Ceiling' },
+                            { key: 'amenities.total', label: 'Total' }
+                        ].map(field => (
+                            <div key={field.key} className="space-y-1">
+                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                                {renderFormField(field)}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* MISCELLANEOUS */}
                 <div className="mb-6 p-6 bg-violet-50 rounded-2xl border border-violet-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Amenities & Facilities</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Miscellaneous</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'amenities_electricity', label: 'Electricity' },
-                            { key: 'amenities_waterSupply', label: 'Water Supply' },
-                            { key: 'amenities_sewerage', label: 'Sewerage' },
-                            { key: 'amenities_carParking', label: 'Car Parking' }
+                            { key: 'miscellaneous.separateToiletRoom', label: 'Separate Toilet Room' },
+                            { key: 'miscellaneous.separateLumberRoom', label: 'Separate Lumber Room' },
+                            { key: 'miscellaneous.separateWaterTankSump', label: 'Separate Water Tank Sump' },
+                            { key: 'miscellaneous.treesGardening', label: 'Trees Gardening' },
+                            { key: 'miscellaneous.total', label: 'Total' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* CONSTRUCTION DETAILS */}
-                <div className="mb-6 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Construction Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'construction_foundationType', label: 'Foundation Type' },
-                            { key: 'construction_roofType', label: 'Roof Type' },
-                            { key: 'construction_floorsInBuilding', label: 'Floors in Building' },
-                            { key: 'construction_totalConstructionCost', label: 'Total Construction Cost' },
-                            { key: 'construction_groundFloor', label: 'Ground Floor' },
-                            { key: 'construction_firstFloor', label: 'First Floor' },
-                            { key: 'construction_secondFloor', label: 'Second Floor' },
-                            { key: 'construction_thirdFloor', label: 'Third Floor' },
-                            { key: 'construction_otherFloors', label: 'Other Floors' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* ISSUES & OBSERVATIONS */}
-                <div className="mb-6 p-6 bg-amber-50 rounded-2xl border border-amber-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Issues & Observations</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'issues_majorIssuesObserved', label: 'Major Issues Observed' },
-                            { key: 'issues_minorRepairsNeeded', label: 'Minor Repairs Needed' },
-                            { key: 'issues_specialRemarks', label: 'Special Remarks' },
-                            { key: 'issues_specialRemarksAboutValuation', label: 'Special Remarks About Valuation' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* APPRAISER DETAILS */}
-                <div className="mb-6 p-6 bg-fuchsia-50 rounded-2xl border border-fuchsia-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Appraiser Observations</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'appraiser_observationsByAppraiser', label: 'Observations by Appraiser' },
-                            { key: 'appraiser_futureGrowthPotential', label: 'Future Growth Potential' },
-                            { key: 'appraiser_riskFactors', label: 'Risk Factors' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* DOCUMENT UPLOADS */}
-                <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Document Evidence</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'documents_certificateOfValuationFile', label: 'Certificate of Valuation File' },
-                            { key: 'documents_propertyPhotographsFile', label: 'Property Photographs File' },
-                            { key: 'documents_propertyDocumentsFile', label: 'Property Documents File' },
-                            { key: 'documents_otherDocumentsFile', label: 'Other Documents File' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderValuationAnalysisTab = () => {
-        return (
-            <div className="space-y-6">
-                {/* SPECIFICATION & STATUS */}
-                <div className="mb-6 p-6 bg-lime-50 rounded-2xl border border-lime-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Specification & Status</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'specification_specifications', label: 'Specifications' },
-                            { key: 'specification_additionalInformation', label: 'Additional Information' },
-                            { key: 'specification_notesAndComments', label: 'Notes and Comments' },
-                            { key: 'status_valuationStatus', label: 'Valuation Status' },
-                            { key: 'status_valuationApprovedDate', label: 'Valuation Approved Date' },
-                            { key: 'status_valuationRejectedDate', label: 'Valuation Rejected Date' },
-                            { key: 'status_valuationRevisedDate', label: 'Valuation Revised Date' },
-                            { key: 'status_dateOfValuationReport', label: 'Date of Valuation Report' },
-                            { key: 'status_placeOfValuation', label: 'Place of Valuation' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* COST ANALYSIS */}
-                <div className="mb-6 p-6 bg-orange-50 rounded-2xl border border-orange-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Cost Analysis</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'costAnalysis_areaSecurityQuantum', label: 'Area Security Quantum' },
-                            { key: 'costAnalysis_lossPlotArea', label: 'Loss Plot Area' },
-                            { key: 'costAnalysis_lossStoreRoom', label: 'Loss Store Room' },
-                            { key: 'costAnalysis_lossDoubleQuantum', label: 'Loss Double Quantum' },
-                            { key: 'costAnalysis_lossgranary', label: 'Loss Granary' },
-                            { key: 'costAnalysis_lossquartersquare', label: 'Loss Quarter Square' },
-                            { key: 'costAnalysis_lossGTRoomArea', label: 'Loss GT Room Area' },
-                            { key: 'costAnalysis_lossWall', label: 'Loss Wall' },
-                            { key: 'costAnalysis_lossOffice1', label: 'Loss Office 1' },
-                            { key: 'costAnalysis_lossWallRoom', label: 'Loss Wall Room' },
-                            { key: 'costAnalysis_lossOffice2', label: 'Loss Office 2' },
-                            { key: 'costAnalysis_lossShelteredArea', label: 'Loss Sheltered Area' },
-                            { key: 'costAnalysis_lossShed3UKold', label: 'Loss Shed 3 UK Old' },
-                            { key: 'costAnalysis_lossShed3UKold2', label: 'Loss Shed 3 UK Old 2' },
-                            { key: 'costAnalysis_lossShed3UKold3', label: 'Loss Shed 3 UK Old 3' },
-                            { key: 'costAnalysis_totalarea_sqft', label: 'Total Area Sq Ft' },
-                            { key: 'costAnalysis_totalamountin_Rs', label: 'Total Amount in Rs' },
-                            { key: 'costAnalysis_sqYdrate', label: 'Sq Yd Rate' },
-                            { key: 'costAnalysis_ratedetailsChange_sqft', label: 'Rate Details Change Sq Ft' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* CONSTRUCTION VALUES & FINAL VALUATION */}
+                {/* SERVICES */}
                 <div className="mb-6 p-6 bg-sky-50 rounded-2xl border border-sky-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Construction Values & Final Valuation</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Services</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'constructionValues_rateValue_SQM', label: 'Rate Value SQ M' },
-                            { key: 'constructionValues_estimatedValues_sqft', label: 'Estimated Values Sq Ft' },
-                            { key: 'constructionValues_areaSqft', label: 'Area Sq Ft' },
-                            { key: 'constructionValues_areaSqM', label: 'Area Sq M' },
-                            { key: 'constructionValues_estimatedValueSqYd', label: 'Estimated Value Sq Yd' },
-                            { key: 'finalValuation_estimatedValueOfBuild', label: 'Estimated Value of Build' },
-                            { key: 'finalValuation_estimatedValueOfBuilding', label: 'Estimated Value of Building' },
-                            { key: 'finalValuation_totalValueOfProperty', label: 'Total Value of Property' },
-                            { key: 'finalValuation_totalValueInWords', label: 'Total Value in Words' },
-                            { key: 'finalValuation_distressValue', label: 'Distress Value' },
-                            { key: 'finalValuation_loanValue', label: 'Loan Value' }
+                            { key: 'services.waterSupplyArrangements', label: 'Water Supply Arrangements' },
+                            { key: 'services.drainageArrangements', label: 'Drainage Arrangements' },
+                            { key: 'services.compoundWall', label: 'Compound Wall' },
+                            { key: 'services.cbDepositsFittings', label: 'CB Deposits Fittings' },
+                            { key: 'services.pavement', label: 'Pavement' },
+                            { key: 'services.total', label: 'Total' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* APPRAISAL & CERTIF */}
+                {/* TOTAL ABSTRACT */}
+                <div className="mb-6 p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Total Abstract</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {[
+                            { key: 'totalAbstract.partA.value', label: 'Part A - Land Value' },
+                            { key: 'totalAbstract.partB.value', label: 'Part B - Building Value' },
+                            { key: 'totalAbstract.partC.value', label: 'Part C - Fixed Furniture Value' },
+                            { key: 'totalAbstract.partD.value', label: 'Part D - Amenities Value' },
+                            { key: 'totalAbstract.partE.value', label: 'Part E - Miscellaneous Value' },
+                            { key: 'totalAbstract.partF.value', label: 'Part F - Services Value' },
+                            { key: 'totalAbstract.totalValue', label: 'Total Value' },
+                            { key: 'totalAbstract.sayValue', label: 'Say Value' }
+                        ].map(field => (
+                            <div key={field.key} className="space-y-1">
+                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                                {renderFormField(field)}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* VALUATION SUMMARY */}
                 <div className="mb-6 p-6 bg-rose-50 rounded-2xl border border-rose-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Appraisal & Certification</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Valuation Summary</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'appraisal_appraiserSignature', label: 'Appraiser Signature' },
-                            { key: 'appraisal_appraiserStampDate', label: 'Appraiser Stamp Date' },
-                            { key: 'appraisal_dateOfValuationReport', label: 'Date of Valuation Report' },
-                            { key: 'appraisal_placeOfValuation', label: 'Place of Valuation' }
+                            { key: 'valuationSummary.presentMarketValue.amount', label: 'Present Market Value - Amount' },
+                            { key: 'valuationSummary.presentMarketValue.words', label: 'Present Market Value - Words' },
+                            { key: 'valuationSummary.presentMarketValue.inWords', label: 'Present Market Value - In Words' },
+                            { key: 'valuationSummary.realisableValue.percentage', label: 'Realisable Value - Percentage' },
+                            { key: 'valuationSummary.realisableValue.amount', label: 'Realisable Value - Amount' },
+                            { key: 'valuationSummary.realisableValue.words', label: 'Realisable Value - Words' },
+                            { key: 'valuationSummary.realisableValue.inWords', label: 'Realisable Value - In Words' },
+                            { key: 'valuationSummary.distressValue.percentage', label: 'Distress Value - Percentage' },
+                            { key: 'valuationSummary.distressValue.amount', label: 'Distress Value - Amount' },
+                            { key: 'valuationSummary.distressValue.words', label: 'Distress Value - Words' },
+                            { key: 'valuationSummary.distressValue.inWords', label: 'Distress Value - In Words' },
+                            { key: 'valuationSummary.jantriValue.amount', label: 'Jantri Value - Amount' },
+                            { key: 'valuationSummary.jantriValue.words', label: 'Jantri Value - Words' },
+                            { key: 'valuationSummary.jantriValue.inWords', label: 'Jantri Value - In Words' },
+                            { key: 'valuationSummary.fairMarketValue.amount', label: 'Fair Market Value - Amount' },
+                            { key: 'valuationSummary.fairMarketValue.words', label: 'Fair Market Value - Words' },
+                            { key: 'valuationSummary.fairMarketValue.inWords', label: 'Fair Market Value - In Words' },
+                            { key: 'valuationSummary.appraisalOpinion', label: 'Appraisal Opinion' },
+                            { key: 'valuationSummary.inspectionDetails', label: 'Inspection Details' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* PROPERTY ANALYSIS */}
-                <div className="mb-6 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Property Analysis & Usage</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'analysisProperty_propertyUseDetails', label: 'Property Use Details' },
-                            { key: 'analysisProperty_approvedUseByIndustrialArea', label: 'Approved Use By Industrial Area' },
-                            { key: 'analysisProperty_approvedUseByMunicipalCorporation', label: 'Approved Use By Municipal Corporation' },
-                            { key: 'analysisProperty_approvedUseByMunicipalBody', label: 'Approved Use By Municipal Body' },
-                            { key: 'analysisProperty_approvedUseByRailway', label: 'Approved Use By Railway' },
-                            { key: 'analysisProperty_approvedUseByAirport', label: 'Approved Use By Airport' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* LOCATION IDENTIFICATION */}
-                <div className="mb-6 p-6 bg-purple-50 rounded-2xl border border-purple-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Location & Identification</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'location_laneNumber', label: 'Lane Number' },
-                            { key: 'location_latitude', label: 'Latitude' },
-                            { key: 'location_longitude', label: 'Longitude' },
-                            { key: 'location_areaName', label: 'Area Name' },
-                            { key: 'location_landmarkOrProximity', label: 'Landmark or Proximity' },
-                            { key: 'location_plotOrBlockNumber', label: 'Plot or Block Number' },
-                            { key: 'location_surveyNumber', label: 'Survey Number' },
-                            { key: 'location_villageOrTown', label: 'Village or Town' },
-                            { key: 'location_district', label: 'District' },
-                            { key: 'location_state', label: 'State' },
-                            { key: 'location_postalCode', label: 'Postal Code' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* CHECKLIST & VALIDATION */}
+                {/* SIGNATURE DETAILS */}
                 <div className="mb-6 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Valuation Checklist & Validation</h4>
+                    <h4 className="font-bold text-gray-900 mb-4 text-base">Signature Details</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {[
-                            { key: 'checklist_propertyConstructedOnAgricultureLand', label: 'Property Constructed on Agriculture Land' },
-                            { key: 'checklist_wouldAccessProperLy', label: 'Would Access Properly' },
-                            { key: 'checklist_surroundingAreaSurvivalingBuilding', label: 'Surrounding Area Surviving Building' },
-                            { key: 'checklist_noWithinTwoHundredMters', label: 'No Within Two Hundred Meters' },
-                            { key: 'checklist_availablewithinSiteLimitMark', label: 'Available within Site Limit Mark' },
-                            { key: 'checklist_levelledProperty', label: 'Levelled Property' },
-                            { key: 'checklist_irregularShapeProperty', label: 'Irregular Shape Property' },
-                            { key: 'checklist_useLandConstructionlocalized', label: 'Use Land Construction Localized' },
-                            { key: 'checklist_landApprovalAvailableFromConcernedAuthority', label: 'Land Approval Available From Concerned Authority' },
-                            { key: 'checklist_approvalAvailable', label: 'Approval Available' },
-                            { key: 'checklist_anyBoundariesRoadAvailable', label: 'Any Boundaries Road Available' },
-                            { key: 'checklist_c2NotAvailableOnSite', label: 'C2 Not Available On Site' },
-                            { key: 'checklist_yesUndergroundSewerageSystem', label: 'Yes Underground Sewerage System' },
-                            { key: 'checklist_restrictionsWaterConnectPublicSewerageSystem', label: 'Restrictions Water Connect Public Sewerage System' },
-                            { key: 'checklist_lockGateInPropertyOrAnyRestriction', label: 'Lock Gate in Property or Any Restriction' },
-                            { key: 'checklist_waterProvenSewerage', label: 'Water Proven Sewerage' },
-                            { key: 'checklist_undergroundSewageSystem', label: 'Underground Sewage System' },
-                            { key: 'validation_dateOfInspection', label: 'Date of Inspection' },
-                            { key: 'validation_dateOfDocumentedValidation', label: 'Date of Documented Validation' },
-                            { key: 'validation_certificateOfValuationFile', label: 'Certificate of Valuation File' },
-                            { key: 'validation_validationApprovedDate', label: 'Validation Approved Date' },
-                            { key: 'validation_validationRejectedDate', label: 'Validation Rejected Date' }
+                            { key: 'signatureDetails.valuer.name', label: 'Valuer Name' },
+                            { key: 'signatureDetails.valuer.designation', label: 'Valuer Designation' },
+                            { key: 'signatureDetails.valuer.date', label: 'Valuer Date' },
+                            { key: 'signatureDetails.valuer.place', label: 'Valuer Place' },
+                            { key: 'signatureDetails.branchManager.name', label: 'Branch Manager Name' },
+                            { key: 'signatureDetails.branchManager.designation', label: 'Branch Manager Designation' },
+                            { key: 'signatureDetails.branchManager.date', label: 'Branch Manager Date' },
+                            { key: 'signatureDetails.branchManager.place', label: 'Branch Manager Place' }
                         ].map(field => (
                             <div key={field.key} className="space-y-1">
                                 <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                {renderFormField(field)}
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* PART C - VALUATION */}
-                <div className="mb-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Part C - Valuation Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'partC_valuationOfBuilding', label: 'Valuation of Building' },
-                            { key: 'partC_federalDetailsOfBuildingConstruction', label: 'Federal Details of Building Construction' },
-                            { key: 'partC_typeOfBuildingConstruction', label: 'Type of Building Construction' },
-                            { key: 'partC_constructionLocalBuilding', label: 'Construction Local Building' },
-                            { key: 'partC_yearOfConstructionBuilding', label: 'Year of Construction Building' },
-                            { key: 'partC_numberOfFloorsAreaProperty', label: 'Number of Floors Area Property' },
-                            { key: 'partC_briefAreaUsageOfEachFloor', label: 'Brief Area Usage of Each Floor' },
-                            { key: 'partC_planAreaOfEachFloor', label: 'Plan Area of Each Floor' },
-                            { key: 'partC_conditionOfTheBuildingValueCondition', label: 'Condition of the Building Value Condition' },
-                            { key: 'partC_existenceOfElectricalPower', label: 'Existence of Electrical Power' },
-                            { key: 'partC_existenceOfWaterSupply', label: 'Existence of Water Supply' },
-                            { key: 'partC_existenceOfSewerageSystem', label: 'Existence of Sewerage System' },
-                            { key: 'partC_interiorExteriorPoorCondition', label: 'Interior Exterior Poor Condition' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* DEPRECIATION DETAILS */}
-                <div className="mb-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Depreciation Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'depreciation_physicalDepreciation', label: 'Physical Depreciation' },
-                            { key: 'depreciation_functionalDepreciation', label: 'Functional Depreciation' },
-                            { key: 'depreciation_externalDepreciation', label: 'External Depreciation' },
-                            { key: 'depreciation_totalDepreciation', label: 'Total Depreciation' },
-                            { key: 'depreciation_percentageDepreciation', label: 'Percentage Depreciation' },
-                            { key: 'depreciationDetails_physicalDeteriorationPercentage', label: 'Physical Deterioration Percentage' },
-                            { key: 'depreciationDetails_functionalObsolescence', label: 'Functional Obsolescence' },
-                            { key: 'depreciationDetails_externalFactors', label: 'External Factors' },
-                            { key: 'depreciationDetails_totalDepreciationPercentage', label: 'Total Depreciation Percentage' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* REMARKS */}
-                <div className="mb-6 p-6 bg-stone-50 rounded-2xl border border-stone-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Remarks & Final Values</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'remarks_generalRemarks', label: 'General Remarks' },
-                            { key: 'remarks_aboutProperty', label: 'About Property' },
-                            { key: 'remarks_approvedUseOfProperty', label: 'Approved Use of Property' },
-                            { key: 'remarks_datingFutureEnhancement', label: 'Dating Future Enhancement' },
-                            { key: 'remarks_futureGrowthPotential', label: 'Future Growth Potential' },
-                            { key: 'remarks_riskFactors', label: 'Risk Factors' },
-                            { key: 'remarks_specialNotesAndObservations', label: 'Special Notes and Observations' },
-                            { key: 'finalValue_marketValue', label: 'Market Value' },
-                            { key: 'finalValue_distressValue', label: 'Distress Value' },
-                            { key: 'finalValue_loanValue', label: 'Loan Value' },
-                            { key: 'finalValue_marketValueInWords', label: 'Market Value In Words' },
-                            { key: 'finalValue_distressValueInWords', label: 'Distress Value In Words' },
-                            { key: 'finalValue_loanValueInWords', label: 'Loan Value In Words' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* BANK & INSURANCE MANDATE */}
-                <div className="mb-6 p-6 bg-teal-50 rounded-2xl border border-teal-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Bank & Insurance Mandate</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'mandate_bankName', label: 'Bank Name' },
-                            { key: 'mandate_bankGuidelinesForValuation', label: 'Bank Guidelines for Valuation' },
-                            { key: 'mandate_insuranceValuationMandates', label: 'Insurance Valuation Mandates' },
-                            { key: 'mandate_valuationPurpose', label: 'Valuation Purpose' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* QR CODE & DIGITAL */}
-                <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">QR Code & Digital Signature</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'digital_qrCodeGenerated', label: 'QR Code Generated' },
-                            { key: 'digital_qrCodeLink', label: 'QR Code Link' },
-                            { key: 'digital_appraiserDigitalSignature', label: 'Appraiser Digital Signature' },
-                            { key: 'digital_reportVersion', label: 'Report Version' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* VALUATION REPORT */}
-                <div className="mb-6 p-6 bg-amber-50 rounded-2xl border border-amber-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Valuation Report</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'report_comfinancePrice', label: 'Comfinance Price' },
-                            { key: 'report_dateOfInspection', label: 'Date of Inspection' },
-                            { key: 'report_dateOfDocumentProducedSal', label: 'Date of Document Produced' },
-                            { key: 'report_seedNo', label: 'Seed No' },
-                            { key: 'report_seedNo_2', label: 'Seed No 2' },
-                            { key: 'valuationReport_confirmFinancePrice', label: 'Confirm Finance Price' },
-                            { key: 'valuationReport_dateOfInspection', label: 'Date of Inspection (Report)' },
-                            { key: 'valuationReport_dateOfDocumentProducedSal', label: 'Date of Document Produced (Report)' },
-                            { key: 'valuationReport_seedNo', label: 'Seed No (Report)' },
-                            { key: 'valuationReport_seedNo_2', label: 'Seed No 2 (Report)' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* FINANCIAL & ADDITIONAL */}
-                <div className="mb-6 p-6 bg-green-50 rounded-2xl border border-green-100">
-                    <h4 className="font-bold text-gray-900 mb-4 text-base">Financial & Additional Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {[
-                            { key: 'financial_confirmFinancePrice', label: 'Confirm Finance Price' },
-                            { key: 'financial_totalCost', label: 'Total Cost' },
-                            { key: 'area_analysis_squareArea', label: 'Square Area' },
-                            { key: 'area_analysis_ratePerSqft', label: 'Rate Per Sq Ft' },
-                            { key: 'area_analysis_totalRate', label: 'Total Rate' },
-                            { key: 'rate_oldPrice', label: 'Old Price' },
-                            { key: 'rate_depreciation', label: 'Depreciation' },
-                            { key: 'rate_ageOfBuilding', label: 'Age of Building' },
-                            { key: 'property_sqft', label: 'Property Sq Ft' },
-                            { key: 'property_ratePerSqft', label: 'Property Rate Per Sq Ft' },
-                            { key: 'property_costAnalysisPerSqft', label: 'Property Cost Analysis Per Sq Ft' },
-                            { key: 'property_detailsOfValueOfProperty', label: 'Property Details of Value' },
-                            { key: 'method_pricingModel', label: 'Pricing Model' },
-                            { key: 'method_comparisonMethod', label: 'Comparison Method' },
-                            { key: 'method_costMethod', label: 'Cost Method' },
-                            { key: 'landmark_landmarkOrProximity', label: 'Landmark or Proximity' },
-                            { key: 'landmark_approachableRoad', label: 'Approachable Road' },
-                            { key: 'landmark_roadsideAvailability', label: 'Roadside Availability' },
-                            { key: 'constructionPartB_glassDetails', label: 'Glass Details' },
-                            { key: 'constructionPartB_northSouth', label: 'North South' },
-                            { key: 'constructionPartB_eastWest', label: 'East West' },
-                            { key: 'constructionPartB_totalLengthAndBreadth', label: 'Total Length and Breadth' },
-                            { key: 'constructionPartB_estimatedAreaOfPlot', label: 'Estimated Area of Plot' },
-                            { key: 'guardians_toBank', label: 'To Bank' },
-                            { key: 'guardians_stateBank', label: 'State Bank' },
-                            { key: 'guardians_AmunicipialCorporation', label: 'A Municipal Corporation' },
-                            { key: 'guardians_dateIncertioninValuation', label: 'Date Inception in Valuation' },
-                            { key: 'guardians_coverageDocumentation', label: 'Coverage Documentation' },
-                            { key: 'constructionCost_ratePerSqft', label: 'Construction Cost Rate Per Sq Ft' },
-                            { key: 'constructionCost_areaInSqft', label: 'Construction Cost Area in Sq Ft' },
-                            { key: 'constructionCost_totalConstructionCost', label: 'Construction Cost Total' },
-                            { key: 'plot_sqftArea', label: 'Plot Sq Ft Area' },
-                            { key: 'plot_roadAccess', label: 'Plot Road Access' },
-                            { key: 'plot_boundaries', label: 'Plot Boundaries' },
-                            { key: 'plot_utilities', label: 'Plot Utilities' },
-                            { key: 'valuationAnalysis_methodApplied', label: 'Valuation Method Applied' },
-                            { key: 'valuationAnalysis_costApproach', label: 'Cost Approach' },
-                            { key: 'valuationAnalysis_comparisonApproach', label: 'Comparison Approach' },
-                            { key: 'valuationAnalysis_incomeApproach', label: 'Income Approach' },
-                            { key: 'certification_appraiserName', label: 'Appraiser Name (Certification)' },
-                            { key: 'certification_appraiserLicense', label: 'Appraiser License (Certification)' },
-                            { key: 'certification_dateOfValuation', label: 'Date of Valuation (Certification)' },
-                            { key: 'certification_placeOfValuation', label: 'Place of Valuation (Certification)' },
-                            { key: 'certification_appraiserSignature', label: 'Appraiser Signature (Certification)' },
-                            { key: 'certification_stampDate', label: 'Stamp Date (Certification)' },
-                            { key: 'identification_plotNumber', label: 'Identification Plot Number' },
-                            { key: 'identification_surveyNumber', label: 'Identification Survey Number' },
-                            { key: 'identification_villageOrTown', label: 'Identification Village or Town' },
-                            { key: 'identification_district', label: 'Identification District' },
-                            { key: 'identification_state', label: 'Identification State' },
-                            { key: 'identification_postalCode', label: 'Identification Postal Code' },
-                            { key: 'buildingChar_typeOfBuilding', label: 'Type of Building' },
-                            { key: 'buildingChar_yearOfConstruction', label: 'Year of Construction' },
-                            { key: 'buildingChar_numberOfFloors', label: 'Number of Floors' },
-                            { key: 'buildingChar_numberOfRooms', label: 'Number of Rooms' },
-                            { key: 'buildingChar_conditionOfBuilding', label: 'Condition of Building' }
-                        ].map(field => (
-                            <div key={field.key} className="space-y-1">
-                                <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                                <Input
-                                    placeholder="Enter value"
-                                    value={formData.pdfDetails?.[field.key] || ""}
-                                    onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                                    disabled={!canEdit}
-                                    className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderMarketAnalysisTab = () => (
-        <div className="space-y-6">
-            {/* IV MARKETABILITY SECTION */}
-            <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Marketability</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-900 block">Marketability</Label>
-                        <Input
-                            placeholder="e.g., Property is good..."
-                            value={formData.pdfDetails?.marketability || ""}
-                            onChange={(e) => handleValuationChange('marketability', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-900 block">Favoring Factors</Label>
-                        <Input
-                            placeholder="e.g., Amenities nearby..."
-                            value={formData.pdfDetails?.favoringFactors || ""}
-                            onChange={(e) => handleValuationChange('favoringFactors', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="md:col-span-2 space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-900 block">Negative Factors</Label>
-                        <Input
-                            placeholder="e.g., No negative factors"
-                            value={formData.pdfDetails?.negativeFactors || ""}
-                            onChange={(e) => handleValuationChange('negativeFactors', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* RATE SECTION */}
-            <div className="mb-6 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
-                <h4 className="font-bold text-gray-900 mb-4 text-base">Rate Analysis</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-900 block">Applicable Rate</Label>
-                        <Input
-                            placeholder="e.g., Rate per sq.ft..."
-                            value={formData.pdfDetails?.marketabilityDescription || ""}
-                            onChange={(e) => handleValuationChange('marketabilityDescription', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-900 block">Land Rate (New Const.)</Label>
-                        <Input
-                            placeholder="e.g., Land rate..."
-                            value={formData.pdfDetails?.smallFlatDescription || ""}
-                            onChange={(e) => handleValuationChange('smallFlatDescription', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="md:col-span-2 space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-900 block">Rate Adjustments</Label>
-                        <Input
-                            placeholder="e.g., Adjustments..."
-                            value={formData.pdfDetails?.rateAdjustments || ""}
-                            onChange={(e) => handleValuationChange('rateAdjustments', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* BREAK-UP FOR THE RATE */}
-            <div className="mb-6 p-6 bg-purple-50 rounded-2xl border border-purple-100">
-                <h4 className="font-bold text-gray-900 mb-4"> Break-up for the above Rate</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Building + Services </Label>
-                        <Input
-                            placeholder="e.g., ₹ 3,000/- per Sq. ft."
-                            value={formData.pdfDetails?.buildingServicesRate || ""}
-                            onChange={(e) => handleValuationChange('buildingServicesRate', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Land + Other </Label>
-                        <Input
-                            placeholder="e.g., ₹ 15,000/- per Sq. ft."
-                            value={formData.pdfDetails?.landOthersRate || ""}
-                            onChange={(e) => handleValuationChange('landOthersRate', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* COMPOSITE RATE AFTER DEPRECIATION */}
-            <div className="mb-6 p-6 bg-orange-50 rounded-2xl border border-orange-100">
-                <h4 className="font-bold text-gray-900 mb-4">Composite Rate after depreciation</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Depreciation Building Date</Label>
-                        <Input
-                            type="date"
-                            value={formData.pdfDetails?.depreciationBuildingDate || ""}
-                            onChange={(e) => handleValuationChange('depreciationBuildingDate', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Replacement Cost Services</Label>
-                        <Input
-                            placeholder="e.g., ₹ Value"
-                            value={formData.pdfDetails?.replacementCostServices || ""}
-                            onChange={(e) => handleValuationChange('replacementCostServices', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Age of the Building/Assumed</Label>
-                        <Input
-                            placeholder="e.g., 42 years"
-                            value={formData.pdfDetails?.buildingAge || ""}
-                            onChange={(e) => handleValuationChange('buildingAge', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Future Life of Building estimated</Label>
-                        <Input
-                            placeholder="e.g., 18 years"
-                            value={formData.pdfDetails?.buildingLife || ""}
-                            onChange={(e) => handleValuationChange('buildingLife', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Depreciation percentage</Label>
-                        <Input
-                            placeholder="e.g., 58 %"
-                            value={formData.pdfDetails?.depreciationPercentage || ""}
-                            onChange={(e) => handleValuationChange('depreciationPercentage', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Depreciation Rate of the building </Label>
-                        <Input
-                            placeholder="e.g., Value"
-                            value={formData.pdfDetails?.depreciationStorage || ""}
-                            onChange={(e) => handleValuationChange('depreciationStorage', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* TOTAL COMPOSITE RATE */}
-            <div className="mb-6 p-6 bg-green-50 rounded-2xl border border-green-100">
-                <h4 className="font-bold text-gray-900 mb-4">Total Composite Rate</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Total Composite Rate</Label>
-                        <Input
-                            placeholder="e.g., ₹ Value"
-                            value={formData.pdfDetails?.totalCompositeRate || ""}
-                            onChange={(e) => handleValuationChange('totalCompositeRate', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Depreciated Building Rate</Label>
-                        <Input
-                            placeholder="e.g., ₹ Value per Sq. ft."
-                            value={formData.pdfDetails?.depreciatedBuildingRate || ""}
-                            onChange={(e) => handleValuationChange('depreciatedBuildingRate', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Rate for Land & Other</Label>
-                        <Input
-                            placeholder="e.g., ₹ Value"
-                            value={formData.pdfDetails?.rateForLandOther || ""}
-                            onChange={(e) => handleValuationChange('rateForLandOther', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* FLAT/UNIT SPECIFICATIONS */}
-            <div className="mb-6 p-6 bg-sky-50 rounded-2xl border border-sky-100">
-                <h4 className="font-bold text-gray-900 mb-4">Unit Specifications</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">The floor in which the Unit is situated</Label>
-                        <select
-                            value={formData.pdfDetails?.unitFloor || ""}
-                            onChange={(e) => handleValuationChange('unitFloor', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Floor</option>
-                            <option value="Ground">Ground</option>
-                            <option value="1st">1st</option>
-                            <option value="2nd">2nd</option>
-                            <option value="3rd">3rd</option>
-                            <option value="Higher">Higher</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Door Number of the Flat</Label>
-                        <Input
-                            placeholder="e.g., Flat No. B-402"
-                            value={formData.pdfDetails?.unitDoorNo || ""}
-                            onChange={(e) => handleValuationChange('unitDoorNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Specifications - Roof</Label>
-                        <Input
-                            placeholder="e.g., RCC"
-                            value={formData.pdfDetails?.unitRoof || ""}
-                            onChange={(e) => handleValuationChange('unitRoof', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Specifications - Flooring</Label>
-                        <Input
-                            placeholder="e.g., Marble/Tiles"
-                            value={formData.pdfDetails?.unitFlooring || ""}
-                            onChange={(e) => handleValuationChange('unitFlooring', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Specifications - Doors & Windows</Label>
-                        <Input
-                            placeholder="e.g., Details"
-                            value={formData.pdfDetails?.unitDoors || ""}
-                            onChange={(e) => handleValuationChange('unitDoors', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Specifications - Bath & WC</Label>
-                        <Input
-                            placeholder="e.g., Details"
-                            value={formData.pdfDetails?.unitBathAndWC || ""}
-                            onChange={(e) => handleValuationChange('unitBathAndWC', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Specifications - Electrical Wiring</Label>
-                        <Input
-                            placeholder="e.g., Details"
-                            value={formData.pdfDetails?.unitElectricalWiring || ""}
-                            onChange={(e) => handleValuationChange('unitElectricalWiring', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Specification of the Flat</Label>
-                        <Input
-                            placeholder="e.g., 1RK, 2BHK, 3BHK"
-                            value={formData.pdfDetails?.unitSpecification || ""}
-                            onChange={(e) => handleValuationChange('unitSpecification', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Specifications - Fittings</Label>
-                        <Input
-                            placeholder="e.g., Details"
-                            value={formData.pdfDetails?.unitFittings || ""}
-                            onChange={(e) => handleValuationChange('unitFittings', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Specifications - Finishing</Label>
-                        <Input
-                            placeholder="e.g., Details"
-                            value={formData.pdfDetails?.unitFinishing || ""}
-                            onChange={(e) => handleValuationChange('unitFinishing', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* UNIT TAX & ASSESSMENT (merged with Electricity Service) */}
-            <div className="mb-6 p-6 bg-lime-50 rounded-2xl border border-lime-100">
-                <h4 className="font-bold text-gray-900 mb-4">Tax & Assessment</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Assessment No.</Label>
-                        <Input
-                            placeholder="e.g., Assessment No."
-                            value={formData.pdfDetails?.assessmentNo || ""}
-                            onChange={(e) => handleValuationChange('assessmentNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Tax Paid Name</Label>
-                        <Input
-                            placeholder="e.g., Name"
-                            value={formData.pdfDetails?.taxPaidName || ""}
-                            onChange={(e) => handleValuationChange('taxPaidName', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Tax Amount</Label>
-                        <Input
-                            placeholder="e.g., Amount"
-                            value={formData.pdfDetails?.taxAmount || ""}
-                            onChange={(e) => handleValuationChange('taxAmount', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Electricity Service Number</Label>
-                        <Input
-                            placeholder="e.g., Service Number"
-                            value={formData.pdfDetails?.electricityServiceNo || ""}
-                            onChange={(e) => handleValuationChange('electricityServiceNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* UNIT AREA DETAILS (merged with Agreement for Sale) */}
-            <div className="mb-6 p-6 bg-orange-50 rounded-2xl border border-orange-100">
-                <h4 className="font-bold text-gray-900 mb-4">Area Details</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">What is the undivided area of the land as per
-                            sale deed ? </Label>
-                        <Input
-                            placeholder="e.g., Area in Sq. ft."
-                            value={formData.pdfDetails?.undividedAreaLand || ""}
-                            onChange={(e) => handleValuationChange('undividedAreaLand', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Plinth Area of Flat </Label>
-                        <Input
-                            placeholder="e.g., 278.57 Sq ft"
-                            value={formData.pdfDetails?.plinthArea || ""}
-                            onChange={(e) => handleValuationChange('plinthArea', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Carpet Area of Flat</Label>
-                        <Input
-                            placeholder="e.g., Area in Sq. ft."
-                            value={formData.pdfDetails?.carpetArea || ""}
-                            onChange={(e) => handleValuationChange('carpetArea', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">What is the floor space index?</Label>
-                        <Input
-                            placeholder="e.g., FSI value"
-                            value={formData.pdfDetails?.floorSpaceIndex || ""}
-                            onChange={(e) => handleValuationChange('floorSpaceIndex', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Agreement for Sale executed Name</Label>
-                        <Input
-                            placeholder="e.g., Agreement Name/Details"
-                            value={formData.pdfDetails?.agreementSaleExecutedName || ""}
-                            onChange={(e) => handleValuationChange('agreementSaleExecutedName', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* UNIT CLASSIFICATION (merged with Unit Maintenance) */}
-            <div className="mb-6 p-6 bg-purple-50 rounded-2xl border border-purple-100">
-                <h4 className="font-bold text-gray-900 mb-4">Unit Classification</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Is it Posh/ I Class / Medium/ Ordinary? </Label>
-                        <Input
-                            placeholder="e.g., Details"
-                            value={formData.pdfDetails?.classificationPosh || ""}
-                            onChange={(e) => handleValuationChange('classificationPosh', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Is it being used for residential or
-                            commercial?</Label>
-                        <Input
-                            placeholder="e.g., Residential/Commercial"
-                            value={formData.pdfDetails?.classificationUsage || ""}
-                            onChange={(e) => handleValuationChange('classificationUsage', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Is it owner occupied or tenanted?</Label>
-                        <select
-                            value={formData.pdfDetails?.ownerOccupancyStatus || ""}
-                            onChange={(e) => handleValuationChange('ownerOccupancyStatus', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-3"
-                        >
-                            <option value="">Select</option>
-                            <option value="Owner Occupied">Owner Occupied</option>
-                            <option value="Tenanted">Tenanted</option>
-                        </select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">If tenanted, what is the monthly rent?</Label>
-                        <Input
-                            placeholder="e.g., Amount"
-                            value={formData.pdfDetails?.monthlyRent || ""}
-                            onChange={(e) => handleValuationChange('monthlyRent', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">How is the maintenance of the Flat ?</Label>
-                        <select
-                            value={formData.pdfDetails?.unitMaintenance || ""}
-                            onChange={(e) => handleValuationChange('unitMaintenance', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-3"
-                        >
-                            <option value="">Select</option>
-                            <option value="Good">Good</option>
-                            <option value="Average">Average</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderBuildingTab = () => (
-        <div className="space-y-6">
-            {/* APARTMENT NATURE & LOCATION */}
-            <div className="mb-6 p-6 bg-green-50 rounded-2xl border border-green-100">
-                <h4 className="font-bold text-gray-900 mb-4">Apartment Nature & Location</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Nature of the Apartment</Label>
-                        <select
-                            value={formData.pdfDetails?.apartmentNature || ""}
-                            onChange={(e) => handleValuationChange('apartmentNature', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select</option>
-                            <option value="Residential">Residential</option>
-                            <option value="Commercial">Commercial</option>
-                            <option value="Mixed">Mixed</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Location</Label>
-                        <Input
-                            placeholder="e.g., CIDCO"
-                            value={formData.pdfDetails?.apartmentLocation || ""}
-                            onChange={(e) => handleValuationChange('apartmentLocation', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">C.T.S. No.</Label>
-                        <Input
-                            placeholder="e.g., Plot number"
-                            value={formData.pdfDetails?.apartmentCTSNo || ""}
-                            onChange={(e) => handleValuationChange('apartmentCTSNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Sector No.</Label>
-                        <Input
-                            placeholder="e.g., 26"
-                            value={formData.pdfDetails?.apartmentSectorNo || ""}
-                            onChange={(e) => handleValuationChange('apartmentSectorNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Block No.</Label>
-                        <Input
-                            placeholder="e.g., A"
-                            value={formData.pdfDetails?.apartmentBlockNo || ""}
-                            onChange={(e) => handleValuationChange('apartmentBlockNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Ward No.</Label>
-                        <Input
-                            placeholder="e.g., --"
-                            value={formData.pdfDetails?.apartmentWardNo || ""}
-                            onChange={(e) => handleValuationChange('apartmentWardNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Village / Municipality / Corporation</Label>
-                        <Input
-                            placeholder="e.g., CIDCO"
-                            value={formData.pdfDetails?.apartmentVillageMunicipalityCounty || ""}
-                            onChange={(e) => handleValuationChange('apartmentVillageMunicipalityCounty', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Door No. / Street or Road</Label>
-                        <Input
-                            placeholder="e.g., Flat No. B-45/0:2"
-                            value={formData.pdfDetails?.apartmentDoorNoStreetRoad || ""}
-                            onChange={(e) => handleValuationChange('apartmentDoorNoStreetRoad', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Pin Code</Label>
-                        <Input
-                            placeholder="e.g., 400703"
-                            value={formData.pdfDetails?.apartmentPinCode || ""}
-                            onChange={(e) => handleValuationChange('apartmentPinCode', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* BUILDING & CONSTRUCTION DETAILS */}
-            <div className="mb-6 p-6 bg-amber-50 rounded-2xl border border-amber-100">
-                <h4 className="font-bold text-gray-900 mb-4">Building & Construction Details</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Description of the locality (Residential / Commercial / Mixed)</Label>
-                        <select
-                            value={formData.pdfDetails?.descriptionOfLocalityResidentialCommercialMixed || ""}
-                            onChange={(e) => handleValuationChange('descriptionOfLocalityResidentialCommercialMixed', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Type</option>
-                            <option value="Residential">Residential</option>
-                            <option value="Commercial">Commercial</option>
-                            <option value="Mixed">Mixed</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Year of Construction</Label>
-                        <Input
-                            placeholder="e.g., 1993"
-                            value={formData.pdfDetails?.yearOfConstruction || ""}
-                            onChange={(e) => handleValuationChange('yearOfConstruction', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Number of Floors</Label>
-                        <Input
-                            placeholder="e.g., 5"
-                            value={formData.pdfDetails?.numberOfFloors || ""}
-                            onChange={(e) => handleValuationChange('numberOfFloors', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Type of structure</Label>
-                        <select
-                            value={formData.pdfDetails?.typeOfStructure || ""}
-                            onChange={(e) => handleValuationChange('typeOfStructure', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Structure</option>
-                            <option value="RCC Frame with Masonry">RCC Frame with Masonry</option>
-                            <option value="Load bearing Masonry">Load bearing Masonry</option>
-                            <option value="Steel Frame">Steel Frame</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Number of dwelling units in the building</Label>
-                        <Input
-                            placeholder="e.g., 10"
-                            value={formData.pdfDetails?.numberOfDwellingUnitsInBuilding || ""}
-                            onChange={(e) => handleValuationChange('numberOfDwellingUnitsInBuilding', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Quality of Construction</Label>
-                        <select
-                            value={formData.pdfDetails?.qualityOfConstruction || ""}
-                            onChange={(e) => handleValuationChange('qualityOfConstruction', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Quality</option>
-                            <option value="Good">Good</option>
-                            <option value="Average">Average</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Appearance of the Building</Label>
-                        <select
-                            value={formData.pdfDetails?.appearanceOfBuilding || ""}
-                            onChange={(e) => handleValuationChange('appearanceOfBuilding', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Appearance</option>
-                            <option value="Good">Good</option>
-                            <option value="Average">Average</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Maintenance of the Building</Label>
-                        <select
-                            value={formData.pdfDetails?.maintenanceOfBuilding || ""}
-                            onChange={(e) => handleValuationChange('maintenanceOfBuilding', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Maintenance</option>
-                            <option value="Good">Good</option>
-                            <option value="Average">Average</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {/* FACILITIES AVAILABLE */}
-            <div className="mb-6 p-6 bg-neutral-50 rounded-xl border border-neutral-200">
-                <h4 className="font-bold text-gray-900 mb-4">Facilities Available</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Lift</Label>
-                        <select value={formData.pdfDetails?.liftAvailable || ""} onChange={(e) => handleValuationChange('liftAvailable', e.target.value)} disabled={!canEdit} className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3">
-                            <option value="">Select</option>
-                            <option value="Available">Available</option>
-                            <option value="Not Available">Not Available</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Protected water supply</Label>
-                        <select value={formData.pdfDetails?.protectedWaterSupply || ""} onChange={(e) => handleValuationChange('protectedWaterSupply', e.target.value)} disabled={!canEdit} className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3">
-                            <option value="">Select</option>
-                            <option value="Available">Available</option>
-                            <option value="Not Available">Not Available</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Underground Sewerage</Label>
-                        <select value={formData.pdfDetails?.undergroundSewerage || ""} onChange={(e) => handleValuationChange('undergroundSewerage', e.target.value)} disabled={!canEdit} className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3">
-                            <option value="">Select</option>
-                            <option value="Available">Available</option>
-                            <option value="Not Available">Not Available</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Car parking (Open/Covered)</Label>
-                        <select value={formData.pdfDetails?.carParkingOpenCovered || ""} onChange={(e) => handleValuationChange('carParkingOpenCovered', e.target.value)} disabled={!canEdit} className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3">
-                            <option value="">Select</option>
-                            <option value="Open">Open</option>
-                            <option value="Covered">Covered</option>
-                            <option value="Not Available">Not Available</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Compound Wall</Label>
-                        <select value={formData.pdfDetails?.isCompoundWallExisting || ""} onChange={(e) => handleValuationChange('isCompoundWallExisting', e.target.value)} disabled={!canEdit} className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3">
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Pavement around the building</Label>
-                        <select value={formData.pdfDetails?.isPavementLaidAroundBuilding || ""} onChange={(e) => handleValuationChange('isPavementLaidAroundBuilding', e.target.value)} disabled={!canEdit} className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3">
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm font-bold text-gray-900">Any others facility</Label>
-                        <select value={formData.pdfDetails?.othersFacility || ""} onChange={(e) => handleValuationChange('othersFacility', e.target.value)} disabled={!canEdit} className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3">
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderPropertyTab = () => (
-        <div className="space-y-6">
-            {/* PROPERTY LOCATION & DESCRIPTION */}
-            <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
-                <h4 className="font-bold text-gray-900 mb-4">Location of the property</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">a) Plot No./ Survey No.</Label>
-                        <Input
-                            placeholder="e.g., S. No. 26"
-                            value={formData.pdfDetails?.plotSurveyNo || ""}
-                            onChange={(e) => handleValuationChange('plotSurveyNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">b) Door No.</Label>
-                        <Input
-                            placeholder="e.g., Hali No. B-4502"
-                            value={formData.pdfDetails?.doorNo || ""}
-                            onChange={(e) => handleValuationChange('doorNo', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">c) T.S. No./Village</Label>
-                        <Input
-                            placeholder="e.g., Yasai"
-                            value={formData.pdfDetails?.tpVillage || ""}
-                            onChange={(e) => handleValuationChange('tpVillage', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">d) Ward/Taluka</Label>
-                        <Input
-                            placeholder="e.g., Taluka"
-                            value={formData.pdfDetails?.wardTaluka || ""}
-                            onChange={(e) => handleValuationChange('wardTaluka', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">e) District</Label>
-                        <Input
-                            placeholder="e.g., District"
-                            value={formData.pdfDetails?.mandalDistrict || ""}
-                            onChange={(e) => handleValuationChange('mandalDistrict', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">f) Date of issue and validity of layout plan</Label>
-                        <Input
-                            type="date"
-                            value={formData.pdfDetails?.layoutPlanIssueDate || ""}
-                            onChange={(e) => handleValuationChange('layoutPlanIssueDate', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">g) Approved map/plan issuing authority </Label>
-                        <Input
-                            placeholder="e.g., CIDCO"
-                            value={formData.pdfDetails?.approvedMapAuthority || ""}
-                            onChange={(e) => handleValuationChange('approvedMapAuthority', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">h) Whether authenticity of approved map/plan is verified</Label>
-                        <select
-                            value={formData.pdfDetails?.authenticityVerified || ""}
-                            onChange={(e) => handleValuationChange('authenticityVerified', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Status</option>
-                            <option value="Verified">Yes</option>
-                            <option value="Not Verified">Not</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">i) Any other comments by our empanelled valuer on authentic of approved map</Label>
-                        <textarea
-                            placeholder="Comments on authenticity of approved map..."
-                            value={formData.pdfDetails?.valuerCommentOnAuthenticity || ""}
-                            onChange={(e) => handleValuationChange('valuerCommentOnAuthenticity', e.target.value)}
-                            disabled={!canEdit}
-                            rows="3"
-                            className="text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 w-full"
-                        />
-                    </div>
 
 
-                </div>
-            </div>
-
-            {/* POSTAL ADDRESS & CLASSIFICATION */}
-            <div className="mb-6 p-6 bg-violet-50 rounded-2xl border border-violet-100">
-                <h4 className="font-bold text-gray-900 mb-4">Property Classification & Address</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Postal Address of the property</Label>
-                        <Textarea
-                            placeholder="Enter full address"
-                            value={formData.pdfDetails?.postalAddress || ""}
-                            onChange={(e) => handleValuationChange('postalAddress', e.target.value)}
-                            disabled={!canEdit}
-                            className="text-sm rounded-lg border border-neutral-300"
-                            rows="3"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">City/Town</Label>
-                        <Input
-                            placeholder="e.g., Mumbai"
-                            value={formData.pdfDetails?.cityTown || ""}
-                            onChange={(e) => handleValuationChange('cityTown', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-                <div className="mt-4 space-y-3">
-                    <Label className="text-sm font-bold text-gray-900">Area Type</Label>
-                    <div className="flex gap-4">
-                        <label className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={formData.pdfDetails?.residentialArea || false}
-                                onChange={(e) => handleValuationChange('residentialArea', e.target.checked)}
-                                disabled={!canEdit}
-                                className="w-4 h-4 rounded"
-                            />
-                            <span className="text-sm">Residential Area</span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={formData.pdfDetails?.commercialArea || false}
-                                onChange={(e) => handleValuationChange('commercialArea', e.target.checked)}
-                                disabled={!canEdit}
-                                className="w-4 h-4 rounded"
-                            />
-                            <span className="text-sm">Commercial Area</span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={formData.pdfDetails?.industrialArea || false}
-                                onChange={(e) => handleValuationChange('industrialArea', e.target.checked)}
-                                disabled={!canEdit}
-                                className="w-4 h-4 rounded"
-                            />
-                            <span className="text-sm">Industrial Area</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            {/* BOUNDARIES OF PROPERTY */}
-            <div className="mb-6 p-6 bg-blue-50 rounded-2xl border border-blue-200">
-                <h4 className="font-bold text-gray-900 mb-4">Boundaries of Property</h4>
-                <div className="space-y-6">
-                    {/* Plot Boundaries Table */}
-                    <div>
-                        <table className="w-full border-collapse border border-gray-300">
-                            <thead>
-                                <tr className="bg-indigo-100">
-                                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-900 w-1/4">a</th>
-                                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-900 w-1/4">Boundaries of the property - Plot</th>
-                                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-900 w-1/4">As per Deed</th>
-                                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-900 w-1/4">As per Actual</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colSpan="1" className="border border-gray-300 p-3"></td>
-                                    <td className="border border-gray-300 p-3 font-semibold text-gray-800">North</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesPlotNorthDeed || ""}
-                                            onChange={(e) => handleValuationChange('boundariesPlotNorthDeed', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesPlotNorthActual || ""}
-                                            onChange={(e) => handleValuationChange('boundariesPlotNorthActual', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colSpan="1" className="border border-gray-300 p-3"></td>
-                                    <td className="border border-gray-300 p-3 font-semibold text-gray-800">South</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesPlotSouthDeed || ""}
-                                            onChange={(e) => handleValuationChange('boundariesPlotSouthDeed', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesPlotSouthActual || ""}
-                                            onChange={(e) => handleValuationChange('boundariesPlotSouthActual', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colSpan="1" className="border border-gray-300 p-3"></td>
-                                    <td className="border border-gray-300 p-3 font-semibold text-gray-800">East</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesPlotEastDeed || ""}
-                                            onChange={(e) => handleValuationChange('boundariesPlotEastDeed', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesPlotEastActual || ""}
-                                            onChange={(e) => handleValuationChange('boundariesPlotEastActual', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colSpan="1" className="border border-gray-300 p-3"></td>
-                                    <td className="border border-gray-300 p-3 font-semibold text-gray-800">West</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesPlotWestDeed || ""}
-                                            onChange={(e) => handleValuationChange('boundariesPlotWestDeed', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesPlotWestActual || ""}
-                                            onChange={(e) => handleValuationChange('boundariesPlotWestActual', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Flat/Shop Boundaries Table */}
-                    <div>
-                        <table className="w-full border-collapse border border-gray-300">
-                            <thead>
-                                <tr className="bg-indigo-100">
-                                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-900 w-1/4">b</th>
-                                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-900 w-1/4">Boundaries of the property - Flat</th>
-                                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-900 w-1/4">As per Deed</th>
-                                    <th className="border border-gray-300 p-3 text-left font-bold text-gray-900 w-1/4">As per Actual</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colSpan="1" className="border border-gray-300 p-3"></td>
-                                    <td className="border border-gray-300 p-3 font-semibold text-gray-800">North</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesShopNorthDeed || ""}
-                                            onChange={(e) => handleValuationChange('boundariesShopNorthDeed', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesShopNorthActual || ""}
-                                            onChange={(e) => handleValuationChange('boundariesShopNorthActual', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colSpan="1" className="border border-gray-300 p-3"></td>
-                                    <td className="border border-gray-300 p-3 font-semibold text-gray-800">South</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesShopSouthDeed || ""}
-                                            onChange={(e) => handleValuationChange('boundariesShopSouthDeed', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesShopSouthActual || ""}
-                                            onChange={(e) => handleValuationChange('boundariesShopSouthActual', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colSpan="1" className="border border-gray-300 p-3"></td>
-                                    <td className="border border-gray-300 p-3 font-semibold text-gray-800">East</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesShopEastDeed || ""}
-                                            onChange={(e) => handleValuationChange('boundariesShopEastDeed', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesShopEastActual || ""}
-                                            onChange={(e) => handleValuationChange('boundariesShopEastActual', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colSpan="1" className="border border-gray-300 p-3"></td>
-                                    <td className="border border-gray-300 p-3 font-semibold text-gray-800">West</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesShopWestDeed || ""}
-                                            onChange={(e) => handleValuationChange('boundariesShopWestDeed', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 p-2">
-                                        <Input
-                                            placeholder="NA"
-                                            value={formData.pdfDetails?.boundariesShopWestActual || ""}
-                                            onChange={(e) => handleValuationChange('boundariesShopWestActual', e.target.value)}
-                                            disabled={!canEdit}
-                                            className="h-9 text-sm rounded-lg border border-neutral-300"
-                                        />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {/* DIMENSIONS OF THE PROPERTY */}
-            <div className="mb-6 p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                <h4 className="font-bold text-gray-900 mb-4">Dimensions of the Unit</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Dimensions (as per Document)</Label>
-                        <Input
-                            placeholder="e.g., 28.88 Sq. ft. / 2.88 Sq. ft."
-                            value={formData.pdfDetails?.dimensionsDeed || ""}
-                            onChange={(e) => handleValuationChange('dimensionsDeed', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Dimensions (as per Actuals)</Label>
-                        <Input
-                            placeholder="e.g., 28.88 Sq. ft. / 2.88 Sq. ft."
-                            value={formData.pdfDetails?.dimensionsActual || ""}
-                            onChange={(e) => handleValuationChange('dimensionsActual', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* EXTENT OF THE UNIT */}
-            <div className="mb-6 p-6 bg-green-50 rounded-2xl border border-green-100">
-                <h4 className="font-bold text-gray-900 mb-4">Extent of the site</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Extent of Site</Label>
-                        <Input
-                            placeholder="e.g., ₹ 40,34,950 per Sq. ft."
-                            value={formData.pdfDetails?.extentOfUnit || ""}
-                            onChange={(e) => handleValuationChange('extentOfUnit', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Latitude/Longitude</Label>
-                        <Input
-                            placeholder="e.g., 19°07'53.2 N & 73°00"
-                            value={formData.pdfDetails?.latitudeLongitude || ""}
-                            onChange={(e) => handleValuationChange('latitudeLongitude', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-
-                </div>
-            </div>
-
-            {/* EXTENT OF SITE & RENT */}
-            <div className="mb-6 p-6 bg-yellow-50 rounded-2xl border border-yellow-100">
-                <h4 className="font-bold text-gray-900 mb-4">Extent & Occupancy Details</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Extent of Site Considered for Valuation</Label>
-                        <Input
-                            placeholder="e.g., Area in Sq. ft."
-                            value={formData.pdfDetails?.extentOfSiteValuation || ""}
-                            onChange={(e) => handleValuationChange('extentOfSiteValuation', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Whether occupied by the owner/tenant? If occupied by tenant, since how long? Rent
-                            received per month </Label>
-                        <Input
-                            placeholder="Owner/ Tenant & Rent Amount"
-                            value={formData.pdfDetails?.rentReceivedPerMonth || ""}
-                            onChange={(e) => handleValuationChange('rentReceivedPerMonth', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* AREA CLASSIFICATION */}
-            <div className="mb-6 p-6 bg-teal-50 rounded-2xl border border-teal-100">
-                <h4 className="font-bold text-gray-900 mb-4">Area Classification</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">High/Middle/Poor</Label>
-                        <select
-                            value={formData.pdfDetails?.areaClassification || ""}
-                            onChange={(e) => handleValuationChange('areaClassification', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select</option>
-                            <option value="High">High</option>
-                            <option value="Middle">Middle</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Metro / Urban / Semi-Urban / Rural</Label>
-                        <select
-                            value={formData.pdfDetails?.urbanClassification || ""}
-                            onChange={(e) => handleValuationChange('urbanClassification', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select</option>
-                            <option value="Metro">Metro</option>
-                            <option value="Urban">Urban</option>
-                            <option value="Semi-Urban">Semi-Urban</option>
-                            <option value="Rural">Rural</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Government Type / Comming Under</Label>
-                        <select
-                            value={formData.pdfDetails?.governmentType || ""}
-                            onChange={(e) => handleValuationChange('governmentType', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select Type</option>
-                            <option value="Municipal">Municipality</option>
-                            <option value="Corporation">Corporation</option>
-                            <option value="Government">Government</option>
-                            <option value="Village Panchayat">Village Panchayat</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">Whether covered under any Govt. Enactments</Label>
-                        <select
-                            value={formData.pdfDetails?.govtEnactmentsCovered || ""}
-                            onChange={(e) => handleValuationChange('govtEnactmentsCovered', e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                        >
-                            <option value="">Select</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderFlatTab = () => {
-        return (
-            <div className="space-y-6">
-                {/* FLAT/UNIT SPECIFICATIONS */}
-                <div className="mb-6 p-6 bg-sky-50 rounded-2xl border border-sky-100">
-                    <h4 className="font-bold text-gray-900 mb-4">Unit Specifications</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">The floor in which the Unit is situated</Label>
-                            <select
-                                value={formData.pdfDetails?.unitFloor || ""}
-                                onChange={(e) => handleValuationChange('unitFloor', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white px-3"
-                            >
-                                <option value="">Select Floor</option>
-                                <option value="Ground">Ground</option>
-                                <option value="1st">1st</option>
-                                <option value="2nd">2nd</option>
-                                <option value="3rd">3rd</option>
-                                <option value="Higher">Higher</option>
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Door Number of the Flat</Label>
-                            <Input
-                                placeholder="e.g., Flat No. B-402"
-                                value={formData.pdfDetails?.unitDoorNo || ""}
-                                onChange={(e) => handleValuationChange('unitDoorNo', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Specifications - Roof</Label>
-                            <Input
-                                placeholder="e.g., RCC"
-                                value={formData.pdfDetails?.unitRoof || ""}
-                                onChange={(e) => handleValuationChange('unitRoof', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Specifications - Flooring</Label>
-                            <Input
-                                placeholder="e.g., Marble/Tiles"
-                                value={formData.pdfDetails?.unitFlooring || ""}
-                                onChange={(e) => handleValuationChange('unitFlooring', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Specifications - Doors & Windows</Label>
-                            <Input
-                                placeholder="e.g., Details"
-                                value={formData.pdfDetails?.unitDoors || ""}
-                                onChange={(e) => handleValuationChange('unitDoors', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-900">Specifications - Bath & WC</Label>
-                            <Input
-                                placeholder="e.g., Details"
-                                value={formData.pdfDetails?.unitBathAndWC || ""}
-                                onChange={(e) => handleValuationChange('unitBathAndWC', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-900">Specifications - Electrical Wiring</Label>
-                            <Input
-                                placeholder="e.g., Details"
-                                value={formData.pdfDetails?.unitElectricalWiring || ""}
-                                onChange={(e) => handleValuationChange('unitElectricalWiring', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-900">Specification of the Flat</Label>
-                            <Input
-                                placeholder="e.g., 1RK, 2BHK, 3BHK"
-                                value={formData.pdfDetails?.unitSpecification || ""}
-                                onChange={(e) => handleValuationChange('unitSpecification', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-900">Specifications - Fittings</Label>
-                            <Input
-                                placeholder="e.g., Details"
-                                value={formData.pdfDetails?.unitFittings || ""}
-                                onChange={(e) => handleValuationChange('unitFittings', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-900">Specifications - Finishing</Label>
-                            <Input
-                                placeholder="e.g., Details"
-                                value={formData.pdfDetails?.unitFinishing || ""}
-                                onChange={(e) => handleValuationChange('unitFinishing', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* ELECTRICITY SERVICE */}
-                <div className="mb-6 p-6 bg-yellow-50 rounded-2xl border border-yellow-100">
-                    <h4 className="font-bold text-gray-900 mb-4">Electricity Service Details</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Electricity service connection number Meter
-                                card is in the name of </Label>
-                            <Input
-                                placeholder="e.g., Service Number"
-                                value={formData.pdfDetails?.electricityServiceNo || ""}
-                                onChange={(e) => handleValuationChange('electricityServiceNo', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-
-                    </div>
-                </div>
-
-                {/* UNIT TAX/ASSESSMENT */}
-                <div className="mb-6 p-6 bg-lime-50 rounded-2xl border border-lime-100">
-                    <h4 className="font-bold text-gray-900 mb-4">Unit Tax & Assessment</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Assessment No.</Label>
-                            <Input
-                                placeholder="e.g., Assessment No."
-                                value={formData.pdfDetails?.assessmentNo || ""}
-                                onChange={(e) => handleValuationChange('assessmentNo', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Tax Paid Name</Label>
-                            <Input
-                                placeholder="e.g., Name"
-                                value={formData.pdfDetails?.taxPaidName || ""}
-                                onChange={(e) => handleValuationChange('taxPaidName', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Tax Amount</Label>
-                            <Input
-                                placeholder="e.g., Amount"
-                                value={formData.pdfDetails?.taxAmount || ""}
-                                onChange={(e) => handleValuationChange('taxAmount', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* AGREEMENT FOR SALE */}
-                <div className="mb-6 p-6 bg-pink-50 rounded-2xl border border-pink-100">
-                    <h4 className="font-bold text-gray-900 mb-4">Agreement for Sale</h4>
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold text-gray-900">Agreement for Sale executed Name</Label>
-                            <Input
-                                placeholder="e.g., Agreement Name/Details"
-                                value={formData.pdfDetails?.agreementSaleExecutedName || ""}
-                                onChange={(e) => handleValuationChange('agreementSaleExecutedName', e.target.value)}
-                                disabled={!canEdit}
-                                className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                            />
-                        </div>
-                    </div>
-                </div>
             </div>
         );
     };
@@ -4110,6 +2928,85 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
             </div>
         );
     }
+
+    const renderChecklistTab = () => (
+        <div className="space-y-6">
+            {/* CHECKLIST OF DOCUMENTS */}
+            <div className="mb-6 p-6 bg-yellow-50 rounded-2xl border border-yellow-200">
+                <h4 className="font-bold text-gray-900 mb-4 text-base">Checklist of Documents</h4>
+                <div className="w-full overflow-x-auto">
+                    <table className="min-w-full text-sm border-collapse">
+                        <thead>
+                            <tr className="bg-yellow-100 border border-yellow-300">
+                                <th className="px-3 py-2 text-left font-bold text-gray-900 border border-yellow-300">Description</th>
+                                <th className="px-3 py-2 text-center font-bold text-gray-900 border border-yellow-300 min-w-[120px]">Yes / No</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {[
+                                { key: 'pdfDetails.checklistOfDocuments.engagementLetterConfirmation', label: 'Engagement Letter / Confirmation for Assignment' },
+                                { key: 'pdfDetails.checklistOfDocuments.ownershipDocumentsSaleDeed', label: 'Ownership Documents: Sale Deed / Conveyance Deed' },
+                                { key: 'pdfDetails.checklistOfDocuments.advTcrLsr', label: 'Adv. TCR / LSR' },
+                                { key: 'pdfDetails.checklistOfDocuments.agreementForSaleBanaKhat', label: 'Agreement For Sale / Bana khat' },
+                                { key: 'pdfDetails.checklistOfDocuments.propertyCard', label: 'Property Card' },
+                                { key: 'pdfDetails.checklistOfDocuments.mortgageDeed', label: 'Mortgage Deed' },
+                                { key: 'pdfDetails.checklistOfDocuments.leaseDeed', label: 'Lease Deed' },
+                                { key: 'pdfDetails.checklistOfDocuments.index2', label: 'Index - 2' },
+                                { key: 'pdfDetails.checklistOfDocuments.vf712InCaseOfLand', label: 'VF: 7/12 in case of Land' },
+                                { key: 'pdfDetails.checklistOfDocuments.naOrder', label: 'NA order - mentioned in Sale deed, Title report' },
+                                { key: 'pdfDetails.checklistOfDocuments.approvedLayoutPlan', label: 'Approved Layout Plan' },
+                                { key: 'pdfDetails.checklistOfDocuments.commencementLetter', label: 'Commencement Letter' },
+                                { key: 'pdfDetails.checklistOfDocuments.buPermission', label: 'BU Permission' },
+                                { key: 'pdfDetails.checklistOfDocuments.eleMeterPhoto', label: 'Ele. Meter Photo' },
+                                { key: 'pdfDetails.checklistOfDocuments.lightBill', label: 'Light Bill' },
+                                { key: 'pdfDetails.checklistOfDocuments.muniTaxBill', label: 'Muni. Tax Bill' },
+                                { key: 'pdfDetails.checklistOfDocuments.numberingFlatBungalowPlotNo', label: 'Numbering - Flat / bungalow / Plot No. / Identification on Site' },
+                                { key: 'pdfDetails.checklistOfDocuments.boundariesOfPropertyProperDemarcation', label: 'Boundaries of Property - Proper Demarcation' },
+                                { key: 'pdfDetails.checklistOfDocuments.mergedProperty', label: 'Merged Property?' },
+                                { key: 'pdfDetails.checklistOfDocuments.premiseCanBeSeparatedEntranceDoor', label: 'Premise can be Separated, and Entrance / Dorr is available for the mortgaged property?' },
+                                { key: 'pdfDetails.checklistOfDocuments.landIsLocked', label: 'Land is Locked?' },
+                                { key: 'pdfDetails.checklistOfDocuments.propertyIsRentedToOtherParty', label: 'Property is rented to Other Party' },
+                                { key: 'pdfDetails.checklistOfDocuments.ifRentedRentAgreementIsProvided', label: 'If Rented - Rent Agreement is Provided?' },
+                                { key: 'pdfDetails.checklistOfDocuments.siteVisitPhotos', label: 'Site Visit Photos' },
+                                { key: 'pdfDetails.checklistOfDocuments.selfieWithOwnerIdentifier', label: 'Selfie with Owner / Identifier' },
+                                { key: 'pdfDetails.checklistOfDocuments.mobileNo', label: 'Mobile No.' },
+                                { key: 'pdfDetails.checklistOfDocuments.dataSheet', label: 'Data Sheet' },
+                                { key: 'pdfDetails.checklistOfDocuments.tentativeRate', label: 'Tentative Rate' },
+                                { key: 'pdfDetails.checklistOfDocuments.saleInstanceLocalInquiryVerbalSurvey', label: 'Sale Instance / Local Inquiry / Verbal Survey' },
+                                { key: 'pdfDetails.checklistOfDocuments.brokerRecording', label: 'Broker Recording' },
+                                { key: 'pdfDetails.checklistOfDocuments.pastValuationRate', label: 'Past Valuation Rate' }
+                            ].map((item, index) => (
+                                <tr key={item.key} className={index % 2 === 0 ? 'bg-white border border-yellow-200' : 'bg-yellow-50 border border-yellow-200'}>
+                                    <td className="px-3 py-2 border border-yellow-300 text-gray-900">{item.label}</td>
+                                    <td className="px-3 py-2 border border-yellow-300 text-center">
+                                        {(() => {
+                                            const value = getNestedProperty(formData, item.key);
+                                            return (
+                                                <select
+                                                    value={value === 'yes' || value === true ? 'yes' : value === 'no' || value === false ? 'no' : ''}
+                                                    onChange={(e) => setFormData(prev => {
+                                                        const newFormData = JSON.parse(JSON.stringify(prev));
+                                                        setNestedProperty(newFormData, item.key, e.target.value === 'yes' ? 'yes' : e.target.value === 'no' ? 'no' : '');
+                                                        return newFormData;
+                                                    })}
+                                                    disabled={!canEdit}
+                                                    className="h-7 text-xs rounded border border-gray-300 bg-white px-2 py-1"
+                                                >
+                                                    <option value="">Select...</option>
+                                                    <option value="yes">Yes</option>
+                                                    <option value="no">No</option>
+                                                </select>
+                                            );
+                                        })()}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-neutral-50 p-4">
@@ -4254,11 +3151,16 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                                                 handleCoordinateChange={handleCoordinateChange}
                                                 setFormData={setFormData}
                                                 locationFileInputRef={locationFileInputRef}
+                                                bankFileInputRef={bankFileInputRef}
                                                 fileInputRef1={fileInputRef1}
                                                 fileInputRef2={fileInputRef2}
                                                 fileInputRef3={fileInputRef3}
                                                 fileInputRef4={fileInputRef4}
                                                 documentFileInputRef={documentFileInputRef}
+                                                bankImagePreview={bankImagePreview}
+                                                handleBankImageUpload={handleBankImageUpload}
+                                                removeBankImage={removeBankImage}
+                                                areaImagePreviews={formData.areaImages || {}}
                                                 formType="rajeshhouse"
                                             />
                                         </div>
@@ -4272,7 +3174,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                                                 {[
                                                     { id: 'general', label: 'GENERAL' },
                                                     { id: 'valuation', label: 'VALUATION' },
-                                                    { id: 'analysis', label: 'ANALYSIS' }
+                                                    { id: 'checklist', label: 'CHECKLIST' }
                                                 ].map(tab => (
                                                     <button
                                                         key={tab.id}
@@ -4292,7 +3194,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                                             <div className="space-y-6">
                                                 {activeValuationSubTab === 'general' && renderGeneralTab()}
                                                 {activeValuationSubTab === 'valuation' && renderValuationTab()}
-                                                {activeValuationSubTab === 'analysis' && renderValuationAnalysisTab()}
+                                                {activeValuationSubTab === 'checklist' && renderChecklistTab()}
                                             </div>
                                         </div>
                                     )}
@@ -4414,9 +3316,8 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                                                             </div>
                                                         ))}
                                                     </div>
-                                                </div>
+                                                </div> 
                                             )}
-
                                             {/* Empty State */}
                                             {customFields.length === 0 && !customFieldName && !customFieldValue && (
                                                 <div className="p-8 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 text-center">
@@ -4426,9 +3327,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                                             )}
                                         </div>
                                     )}
-
                                 </form>
-
                                 {/* Submit Buttons - OUTSIDE FORM, ALWAYS VISIBLE */}
                                 <div className="flex-shrink-0 flex flex-wrap gap-2 pt-4 px-0 border-t border-neutral-200 mt-auto bg-white">
                                     {/* Download PDF Button - Always visible */}
@@ -4498,7 +3397,7 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                                             disabled={loading}
                                             className="min-w-fit px-4 h-10 text-xs font-bold rounded-lg border border-neutral-300 bg-white hover:border-neutral-400 hover:bg-neutral-50 text-neutral-900 transition-all disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                                         >
-                                            <FaArrowLeft size={14} />
+                                            <FaArrowLeft size={14} /> 
                                             Back
                                         </Button>
                                     )}
@@ -4559,7 +3458,6 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
                             Are you sure you want to remove all custom fields? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
-
                     <DialogFooter>
                         <Button
                             type="button"
@@ -4584,5 +3482,4 @@ const RajeshHouseEditForm = ({ user, onLogin }) => {
         </div>
     );
 };
-
 export default RajeshHouseEditForm;

@@ -1198,10 +1198,169 @@ const RajeshBankEditForm = ({ user, onLogin }) => {
         return errors;
     };
 
-    const handleManagerAction = (action) => {
-        setModalAction(action);
-        setModalFeedback("");
-        setModalOpen(true);
+    const handleManagerAction = async (action) => {
+        // For Approve action, trigger Save first
+        if (action === "approve") {
+            try {
+                // Create a promise to handle the async save
+                const savePromise = new Promise((resolve, reject) => {
+                    dispatch(showLoader("Saving form..."));
+
+                    // Call the save logic (from onFinish but without redirect)
+                    (async () => {
+                        try {
+                            if (!user) {
+                                showError('Authentication required. Please log in.');
+                                onLogin?.();
+                                reject(new Error('Not authenticated'));
+                                return;
+                            }
+
+                            // Build the complete payload
+                            const payload = {
+                                clientId: user.clientId,
+                                uniqueId: formData.uniqueId || id,
+                                username: formData.username || user.username,
+                                dateTime: formData.dateTime,
+                                day: formData.day,
+                                bankName: bankName || "",
+                                city: city || "",
+                                clientName: formData.clientName,
+                                mobileNumber: formData.mobileNumber,
+                                address: formData.address,
+                                payment: formData.payment,
+                                collectedBy: formData.collectedBy,
+                                dsa: dsa || "",
+                                engineerName: engineerName || "",
+                                notes: formData.notes,
+                                elevation: formData.elevation,
+                                directions: formData.directions,
+                                coordinates: formData.coordinates,
+                                ...(valuation?._id && { status: "on-progress" }),
+                                managerFeedback: formData.managerFeedback,
+                                submittedByManager: formData.submittedByManager,
+                                customFields: customFields,
+                                pdfDetails: formData.pdfDetails
+                            };
+
+                            // Parallel image uploads
+                            const [uploadedPropertyImages, uploadedLocationImages, uploadedSupportingImages, uploadedAreaImages] = await Promise.all([
+                                (async () => {
+                                    const newPropertyImages = imagePreviews.filter(p => p && p.file);
+                                    if (newPropertyImages.length > 0) {
+                                        return await uploadPropertyImages(newPropertyImages, valuation.uniqueId);
+                                    }
+                                    return [];
+                                })(),
+                                (async () => {
+                                    const newLocationImages = locationImagePreviews.filter(p => p && p.file);
+                                    if (newLocationImages.length > 0) {
+                                        return await uploadLocationImages(newLocationImages, valuation.uniqueId);
+                                    }
+                                    return [];
+                                })(),
+                                (async () => {
+                                    // Handle supporting images (documents) - upload any with file objects
+                                    const newSupportingImages = (formData.documentPreviews || []).filter(d => d && d.file);
+                                    if (newSupportingImages.length > 0) {
+                                        return await uploadPropertyImages(newSupportingImages, valuation.uniqueId);
+                                    }
+                                    return [];
+                                })(),
+                                (async () => {
+                                    const areaImagesObj = {};
+                                    const areaImagesToUpload = {};
+                                    for (const [key, file] of Object.entries(formData.areaImages || {})) {
+                                        if (file instanceof File) {
+                                            areaImagesToUpload[key] = { file, inputNumber: key };
+                                        } else {
+                                            areaImagesObj[key] = file;
+                                        }
+                                    }
+                                    if (Object.keys(areaImagesToUpload).length > 0) {
+                                        const uploadedAreaImgs = await uploadAreaImages(Object.values(areaImagesToUpload), valuation.uniqueId);
+                                        uploadedAreaImgs.forEach((img, index) => {
+                                            const keys = Object.keys(areaImagesToUpload);
+                                            if (keys[index]) {
+                                                areaImagesObj[keys[index]] = img.url;
+                                            }
+                                        });
+                                    }
+                                    return areaImagesObj;
+                                })()
+                            ]);
+
+                            // Combine previously saved images with newly uploaded URLs
+                            const previousPropertyImages = imagePreviews
+                                .filter(p => p && !p.file && p.preview)
+                                .map((preview, idx) => ({
+                                    url: preview.preview,
+                                    index: idx
+                                }));
+
+                            // For location images: if new image uploaded, use only the new one; otherwise use previous
+                            const previousLocationImages = (uploadedLocationImages.length === 0)
+                                ? locationImagePreviews
+                                    .filter(p => p && !p.file && p.preview)
+                                    .map((preview, idx) => ({
+                                        url: preview.preview,
+                                        index: idx
+                                    }))
+                                : [];
+
+                            // Combine supporting images with previously saved ones
+                            const previousSupportingImages = (formData.documentPreviews || [])
+                                .filter(d => d && !d.file && d.url)
+                                .map(d => ({
+                                    fileName: d.fileName,
+                                    size: d.size,
+                                    url: d.url
+                                }));
+
+                            payload.propertyImages = [...previousPropertyImages, ...uploadedPropertyImages];
+                            payload.locationImages = uploadedLocationImages.length > 0 ? uploadedLocationImages : previousLocationImages;
+                            payload.documentPreviews = [...previousSupportingImages, ...uploadedSupportingImages.map(img => ({
+                                fileName: img.originalFileName || img.publicId || 'Image',
+                                size: img.bytes || img.size || 0,
+                                url: img.url
+                            }))];
+                            payload.areaImages = uploadedAreaImages || {};
+
+                            // Clear draft before API call
+                            localStorage.removeItem(`valuation_draft_${user.username}`);
+
+                            // Call API to update rajesh bank
+                            await updateRajeshBank(id, payload, user.username, user.role, user.clientId);
+                            invalidateCache("/rajesh-Bank");
+
+                            showSuccess('Rajesh Bank form saved successfully');
+                            resolve();
+                        } catch (error) {
+                            console.error("Error saving Rajesh Bank form:", error);
+                            showError('Failed to save Rajesh Bank form');
+                            reject(error);
+                        } finally {
+                            dispatch(hideLoader());
+                        }
+                    })();
+                });
+
+                await savePromise;
+
+                // If save succeeded, proceed with approval
+                setModalAction(action);
+                setModalFeedback("");
+                setModalOpen(true);
+            } catch (error) {
+                console.error('Save failed before approval:', error);
+                return;
+            }
+        } else {
+            // For Reject action, open modal directly
+            setModalAction(action);
+            setModalFeedback("");
+            setModalOpen(true);
+        }
     };
 
     const handleModalOk = async () => {

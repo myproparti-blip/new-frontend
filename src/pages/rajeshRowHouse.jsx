@@ -2096,8 +2096,8 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
                                 pdfDetails: formData.pdfDetails
                             };
 
-                            // Parallel image uploads
-                            const [uploadedPropertyImages, uploadedLocationImages, uploadedSupportingImages, uploadedAreaImages] = await Promise.all([
+                            // Parallel image uploads (including supporting images, bank image, and area images)
+                            const [uploadedPropertyImages, uploadedLocationImages, uploadedSupportingImages, uploadedBankImage, uploadedAreaImages] = await Promise.all([
                                 (async () => {
                                     const newPropertyImages = imagePreviews.filter(p => p && p.file);
                                     if (newPropertyImages.length > 0) {
@@ -2113,6 +2113,7 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
                                     return [];
                                 })(),
                                 (async () => {
+                                    // Handle supporting images (documents) - upload any with file objects
                                     const newSupportingImages = (formData.documentPreviews || []).filter(d => d && d.file);
                                     if (newSupportingImages.length > 0) {
                                         return await uploadPropertyImages(newSupportingImages, valuation.uniqueId);
@@ -2120,35 +2121,91 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
                                     return [];
                                 })(),
                                 (async () => {
+                                    // Handle bank image upload
+                                    if (bankImagePreview && bankImagePreview.file) {
+                                        const result = await uploadPropertyImages([{ file: bankImagePreview.file, inputNumber: 1 }], valuation.uniqueId);
+                                        return result.length > 0 ? result[0] : null;
+                                    }
+                                    return null;
+                                })(),
+                                (async () => {
+                                    // Handle area images - upload any with file objects
                                     const areaImagesObj = {};
                                     const areaImagesToUpload = {};
-                                    for (const [key, file] of Object.entries(formData.areaImages || {})) {
-                                        if (file instanceof File) {
-                                            areaImagesToUpload[key] = { file, inputNumber: key };
-                                        } else {
-                                            areaImagesObj[key] = file;
+
+                                    if (formData.areaImages && typeof formData.areaImages === 'object') {
+                                        for (const [area, images] of Object.entries(formData.areaImages)) {
+                                            if (Array.isArray(images)) {
+                                                const filesToUpload = images.filter(img => img && img.file);
+                                                const previousImages = images.filter(img => img && !img.file);
+
+                                                areaImagesObj[area] = previousImages.map(img => ({
+                                                    fileName: img.fileName || img.name || 'Image',
+                                                    size: img.size || 0,
+                                                    url: img.url || img.preview
+                                                }));
+
+                                                if (filesToUpload.length > 0) {
+                                                    areaImagesToUpload[area] = filesToUpload;
+                                                }
+                                            }
                                         }
                                     }
+
+                                    // Upload any new files
                                     if (Object.keys(areaImagesToUpload).length > 0) {
-                                        const uploadedAreaImgs = await uploadPropertyImages(Object.values(areaImagesToUpload), valuation.uniqueId);
-                                        uploadedAreaImgs.forEach((img, index) => {
-                                            const keys = Object.keys(areaImagesToUpload);
-                                            if (keys[index]) {
-                                                areaImagesObj[keys[index]] = img.url;
+                                        const uploadPromises = [];
+                                        for (const [area, files] of Object.entries(areaImagesToUpload)) {
+                                            if (files.length > 0) {
+                                                uploadPromises.push(
+                                                    uploadPropertyImages(files, valuation.uniqueId).then(uploaded => ({
+                                                        area,
+                                                        uploaded
+                                                    }))
+                                                );
                                             }
-                                        });
+                                        }
+
+                                        if (uploadPromises.length > 0) {
+                                            const results = await Promise.all(uploadPromises);
+                                            for (const result of results) {
+                                                const uploadedImages = result.uploaded.map(img => ({
+                                                    fileName: img.originalFileName || img.publicId || 'Image',
+                                                    size: img.bytes || img.size || 0,
+                                                    url: img.url
+                                                }));
+                                                areaImagesObj[result.area] = [
+                                                    ...(areaImagesObj[result.area] || []),
+                                                    ...uploadedImages
+                                                ];
+                                            }
+                                        }
                                     }
+
                                     return areaImagesObj;
                                 })()
                             ]);
 
-                            const previousPropertyImages = (valuation?.propertyImages || [])
-                                .filter(img => img && !imagePreviews.some(p => p && p.preview === img.preview))
-                                .map(img => (typeof img === 'string' ? { url: img } : img));
+                            // Combine previously saved images with newly uploaded URLs
+                            const previousPropertyImages = imagePreviews
+                                .filter(p => p && !p.file && p.preview)
+                                .map((preview, idx) => ({
+                                    url: preview.preview,
+                                    index: idx
+                                }));
 
-                            const previousLocationImages = uploadedLocationImages.length === 0 ? (valuation?.locationImages || []) : [];
+                            // For location images: if new image uploaded, use only the new one; otherwise use previous
+                            const previousLocationImages = (uploadedLocationImages.length === 0)
+                                ? locationImagePreviews
+                                    .filter(p => p && !p.file && p.preview)
+                                    .map((preview, idx) => ({
+                                        url: preview.preview,
+                                        index: idx
+                                    }))
+                                : [];
 
-                            const previousSupportingImages = (valuation?.documentPreviews || [])
+                            // Combine supporting images with previously saved ones
+                            const previousSupportingImages = (formData.documentPreviews || [])
                                 .filter(d => d && !d.file && d.url)
                                 .map(d => ({
                                     fileName: d.fileName,
@@ -2163,7 +2220,32 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
                                 size: img.bytes || img.size || 0,
                                 url: img.url
                             }))];
+
+                            // Use uploaded area images from the parallel upload
                             payload.areaImages = uploadedAreaImages || {};
+
+                            // Handle bank image
+                            if (uploadedBankImage) {
+                                // New bank image was uploaded
+                                payload.bankImage = {
+                                    url: uploadedBankImage.url,
+                                    fileName: uploadedBankImage.originalFileName || uploadedBankImage.publicId || 'Bank Image',
+                                    size: uploadedBankImage.bytes || uploadedBankImage.size || 0
+                                };
+                            } else if (bankImagePreview && !bankImagePreview.file && bankImagePreview.preview) {
+                                // Existing bank image from database - keep the preview URL
+                                payload.bankImage = {
+                                    url: bankImagePreview.preview,
+                                    fileName: bankImagePreview.name || 'Bank Image',
+                                    path: bankImagePreview.path || ''
+                                };
+                            } else if (!bankImagePreview) {
+                                // No bank image
+                                payload.bankImage = null;
+                            }
+
+                            // Clear draft before API call
+                            localStorage.removeItem(`valuation_draft_${user.username}`);
 
                             // Call API to update rajesh row house
                             await updateRajeshRowHouse(id, payload, user.username, user.role, user.clientId);
@@ -2520,33 +2602,48 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
 
     const renderGeneralTab = () => (
     <div className="space-y-6">
-        {/* VALUATION REPORT HEADER */}
-        <div className="mb-6 p-6 bg-blue-50 rounded-2xl border border-blue-100">
-            <h4 className="font-bold text-gray-900 mb-4">Valuation Report Header</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {[
-                    { key: 'accountName', label: 'Account Name' },
-                    { key: 'nameOfOwner', label: 'Name of Owner' },
-                    { key: 'client', label: 'Client' },
-                    { key: 'propertyDetails', label: 'Property Details' },
-                    { key: 'location', label: 'Location' },
-                    { key: 'purposeOfProperty', label: 'Purpose of Property' },
-                    { key: 'dateOfValuation', label: 'Date of Valuation' },
-                    
-                ].map(field => (
-                    <div key={field.key} className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                        <Input
-                            placeholder={`Enter ${field.label.toLowerCase()}`}
-                            value={formData.pdfDetails?.[field.key] || ""}
-                            onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                ))}
-            </div>
-        </div>
+         {/* VALUATION REPORT HEADER */}
+         <div className="mb-6 p-6 bg-blue-50 rounded-2xl border border-blue-100">
+             <h4 className="font-bold text-gray-900 mb-4">Valuation Report Header</h4>
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                 {[
+                     { key: 'accountName', label: 'Account Name' },
+                     { key: 'nameOfOwner', label: 'Name of Owner' },
+                     { key: 'client', label: 'Client' },
+                     { key: 'propertyDetails', label: 'Property Details' },
+                     { key: 'location', label: 'Location' },
+                     { key: 'purposeOfProperty', label: 'Purpose of Property' },
+                     
+                 ].map(field => (
+                     <div key={field.key} className="space-y-1">
+                         <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                         <Input
+                             placeholder={`Enter ${field.label.toLowerCase()}`}
+                             value={formData.pdfDetails?.[field.key] || ""}
+                             onChange={(e) => handleValuationChange(field.key, e.target.value)}
+                             disabled={!canEdit}
+                             className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                         />
+                     </div>
+                 ))}
+             </div>
+
+             {/* Date of Valuation - Calendar Picker */}
+             <div className="mt-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                     <div className="space-y-1">
+                         <Label className="text-xs font-bold text-gray-900">Date of Valuation</Label>
+                         <Input
+                             type="date"
+                             value={formData.pdfDetails?.dateOfValuation || ""}
+                             onChange={(e) => handleValuationChange('dateOfValuation', e.target.value)}
+                             disabled={!canEdit}
+                             className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                         />
+                     </div>
+                 </div>
+             </div>
+         </div>
 
         {/* PROPERTY AT A GLANCE */}
         <div className="mb-6 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
@@ -2588,30 +2685,55 @@ const RajeshRowHouseEditForm = ({ user, onLogin }) => {
         </div>
 
         {/* CUSTOMER DETAILS */}
-        <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
-            <h4 className="font-bold text-gray-900 mb-4">Customer Details</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {[
-                    { key: 'nameOfOwnerOrOwners', label: 'Name of the Property Owner' },
-                    { key: 'contactNumberOfRepresentative', label: 'Contact Number of Representative' },
-                    { key: 'dateOfInspectionOfProperty', label: 'Date of Inspection of Property' },
-                    { key: 'dateOfValuationReport', label: 'Date of Valuation Report' },
-                    { key: 'independentAccessToProperty', label: 'Address' },
-                    { key: 'nearbyLandmarkGoogleMap', label: 'Nearby Landmark/Google Map' },
-                ].map(field => (
-                    <div key={field.key} className="space-y-1">
-                        <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
-                        <Input
-                            placeholder={`Enter ${field.label.toLowerCase()}`}
-                            value={formData.pdfDetails?.[field.key] || ""}
-                            onChange={(e) => handleValuationChange(field.key, e.target.value)}
-                            disabled={!canEdit}
-                            className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        />
-                    </div>
-                ))}
-            </div>
-        </div>
+         <div className="mb-6 p-6 bg-cyan-50 rounded-2xl border border-cyan-100">
+             <h4 className="font-bold text-gray-900 mb-4">Customer Details</h4>
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                 {[
+                     { key: 'nameOfOwnerOrOwners', label: 'Name of the Property Owner' },
+                     { key: 'contactNumberOfRepresentative', label: 'Contact Number of Representative' },
+                     { key: 'independentAccessToProperty', label: 'Address' },
+                     { key: 'nearbyLandmarkGoogleMap', label: 'Nearby Landmark/Google Map' },
+                 ].map(field => (
+                     <div key={field.key} className="space-y-1">
+                         <Label className="text-xs font-bold text-gray-900">{field.label}</Label>
+                         <Input
+                             placeholder={`Enter ${field.label.toLowerCase()}`}
+                             value={formData.pdfDetails?.[field.key] || ""}
+                             onChange={(e) => handleValuationChange(field.key, e.target.value)}
+                             disabled={!canEdit}
+                             className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                         />
+                     </div>
+                 ))}
+             </div>
+
+             {/* Date fields */}
+             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                 {/* Date of Inspection of Property - Calendar Picker */}
+                 <div className="space-y-1">
+                     <Label className="text-xs font-bold text-gray-900">Date of Inspection of Property</Label>
+                     <Input
+                         type="date"
+                         value={formData.pdfDetails?.dateOfInspectionOfProperty || ""}
+                         onChange={(e) => handleValuationChange('dateOfInspectionOfProperty', e.target.value)}
+                         disabled={!canEdit}
+                         className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                     />
+                 </div>
+
+                 {/* Date of Valuation Report - Calendar Picker */}
+                 <div className="space-y-1">
+                     <Label className="text-xs font-bold text-gray-900">Date of Valuation Report</Label>
+                     <Input
+                         type="date"
+                         value={formData.pdfDetails?.dateOfValuationReport || ""}
+                         onChange={(e) => handleValuationChange('dateOfValuationReport', e.target.value)}
+                         disabled={!canEdit}
+                         className="h-8 text-xs rounded-lg border border-neutral-300 py-1 px-2 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                     />
+                 </div>
+             </div>
+         </div>
 
         {/* DOCUMENT DETAILS */}
         <div className="mb-6 p-6 bg-violet-50 rounded-2xl border border-violet-100">
